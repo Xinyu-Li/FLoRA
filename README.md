@@ -18,9 +18,9 @@ https://www.floraengine.org/home
 If you have any questions or suggestions, please contact us at xinyu.li1@monash.edu
 
 
-@article{li2025floraengine,
-  title={The FLoRA Engine: Using Analytics to Measure and Facilitate Learners' own Regulation Activities},
-  author={Li, Xinyu and Fan, Yizhou and Li, Tongguang and Raković, Mladen and Singh, Shaveen and van der Graaf, Joep and Lim, Lyn and Moore, Johanna and Molenaar, Inge and Bannert, Maria and Ga\v{s}evi\'{c}, Dragan},
-  journal={Journal of Learning Analytics},
-  year={2025}
+@article{li2025floraengine,<br>
+  title={The FLoRA Engine: Using Analytics to Measure and Facilitate Learners' own Regulation Activities},<br>
+  author={Li, Xinyu and Fan, Yizhou and Li, Tongguang and Raković, Mladen and Singh, Shaveen and van der Graaf, Joep and Lim, Lyn and Moore, Johanna and Molenaar, Inge and Bannert, Maria and Ga\v{s}evi\'{c}, Dragan},<br>
+  journal={Journal of Learning Analytics},<br>
+  year={2025}<br>
 }
