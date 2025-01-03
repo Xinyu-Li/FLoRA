@@ -1,0 +1,879 @@
+/*.annotator-adder-actions:hover .annotator-adder-actions__button:not(:hover) {*/
+/*    color: #9c9c9c;*/
+/*}*/
+/*-------------------------- planner style -------------------------------------*/
+
+/**,*/
+/**:before,*/
+/**:after {*/
+/*    -webkit-box-sizing: content-box;*/
+/*    -moz-box-sizing: content-box;*/
+/*    box-sizing: content-box;*/
+/*}*/
+
+/*.container .row ,*/
+/*.container .row:before,*/
+/*.container .row:after {*/
+/*    -webkit-box-sizing: border-box;*/
+/*    -moz-box-sizing: border-box;*/
+/*    box-sizing: border-box;*/
+/*}*/
+.ui-state-highlight {
+    width: 100%;
+    height: 100px;
+    /*margin: 10px;*/
+}
+.ui-resizable-handle {
+    background-color: grey;
+}
+.my-resize {
+    /*top: 10px;*/
+    top:0;
+    /*width: 50px;*/
+    /*height: 50px;*/
+    height: 100px;
+    /*width: 15%;*/
+    /*width: 142px;*/
+    /*padding: 0.5em;*/
+    float: left;
+    /*border: #0f1011 medium solid;*/
+    /*border-right-width: 12px;*/
+    border-radius: 8px;
+    text-align: center;
+    border-right-color: #797777;
+    position: absolute;
+    z-index:99999;
+}
+.timecolumn {
+    /*display: table-cell;*/
+    /*    top: 100px;*/
+    height: 1px;
+    background-color: white;
+    border-top: 1px solid transparent;
+    border-color: black;
+    margin: 20px;
+}
+.timecolumn:last-child {
+    border-top: none;
+    border-bottom: none;
+}
+/* Diamond square */
+.timecolumn:nth-child(5n+1) .tick {
+    width: 0;
+    height: 0;
+    border: 8px solid transparent;
+    border-bottom-color: black;
+    position: relative;
+    top: -17px;
+}
+/* Diamond square */
+.timecolumn:nth-child(5n+1) .tick:after {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 8px;
+    width: 0;
+    height: 0;
+    border: 8px solid transparent;
+    border-top-color: black;
+}
+.timecolumn:nth-child(5n+1) .tick.bottom-right {
+    right: 9px;
+    bottom: 8px;
+    /*    border-color: black;*/
+}
+
+.dropzone-column {
+    /*-webkit-box-sizing: content-box !important;*/
+    /*-moz-box-sizing: content-box !important;*/
+    /*box-sizing: content-box;*/
+    /*display: table-cell;*/
+    height: 100px;
+    background-color: white;
+    border-right: 2px dashed #aaaaaa;
+
+}
+.dropzone-column:first-child {
+    border-left: 2px solid #aaaaaa;
+}
+.dropzone-column:last-child {
+    border-right: none;
+}
+/**:not(.dropzone-column) {*/
+/*    box-sizing : border-box;*/
+/*}*/
+/*every fifth element a solid right border*/
+.dropzone-column:nth-child(5n+0) {
+    border-right: 2px solid #aaaaaa;
+}
+.drop-destination {
+    position:relative;
+}
+.drop-source {
+    position:relative;
+}
+/*td {*/
+/*    border: gray thin solid;*/
+/*}*/
+
+label.plan-item-finish {
+    color: #44ff71;
+    filter: brightness(80%);
+}
+label.plan-item-unfinish {
+    color: #ff585a;
+    filter: brightness(80%);
+}
+
+
+
+/*-------------------------- planner style end -------------------------------------*/
+
+/*-------------------------- horizontal collapse style -----------------------------*/
+.my-horizontal-collapse-tools {
+    transition-duration: .3s;
+    visibility: visible;
+    white-space: nowrap;
+    vertical-align: middle;
+    /*line-height: 175px;   line height 会导致文字行高也是175px*/
+    position: fixed;
+    right: 0;
+    overflow: auto;
+
+}
+/*.my-horizontal-collapse-tools.planner {*/
+/*    bottom: 0;*/
+/*    z-index:99;*/
+/*    width: 960px;*/
+/*    margin-right: -960px;*/
+/*}*/
+.my-horizontal-collapse-tools.planner2 {
+    bottom: 0;
+    z-index:100;
+    height: 90%;
+    width: 40%;
+    margin-right: -40%;
+}
+
+.my-horizontal-collapse-tools.search-panel {
+    bottom: 0;
+    z-index:100;
+    height: 90%;
+    width: 40%;
+    margin-right:-40%;
+}
+.my-horizontal-collapse-tools.write-essay {
+    height: 60vh;   /*420px*/
+    bottom: 0;
+    z-index:100;
+    width: 50%;
+    margin-right: -50%;
+}
+.my-horizontal-collapse-tools.collaborate-write {
+    height: 98vh;   /*420px*/
+    bottom: 0;
+    z-index:100;
+    width: 50vw;
+    margin-right: -1150px;
+}
+.my-horizontal-collapse-tools.timer {
+    /*line-height: 175px;   line height 会导致文字行高也是175px*/
+    overflow: hidden;
+    height: 180px;
+    bottom: 20%;
+    z-index:101;
+    width: 455px;
+    margin-right: -455px;
+}
+.my-horizontal-collapse-tools.my-writing-suggestion {
+    height:420px;
+    bottom: 0;
+    z-index:100;
+    width: 455px;
+    margin-right: -455px;
+}
+.my-horizontal-collapse-tools.chatgpt-assistant {
+    height: 90vh;   /*420px*/
+    bottom: 0;
+    z-index:100;
+    width: 40%;
+    margin-right: -40%;    /* 455px*/
+}
+.my-horizontal-collapse-tools.chatgpt-multi-separate-agents {
+    height: 90vh;   /*420px*/
+    bottom: 0;
+    z-index:100;
+    width: 40%;
+    margin-right: -40%;    /* 455px*/
+}
+.my-horizontal-collapse-tools.my-classification {
+    height: 90vh;   /*420px*/
+    bottom: 0;
+    z-index:100;
+    width: 40%;
+    margin-right: -40%;    /* 455px*/
+}
+
+/* checklist tools */
+.my-horizontal-collapse-tools.my-checklist {
+    height: 60vh; /*420px*/
+    bottom: 0;
+    z-index: 100;
+    width: 605px;
+    margin-right: -605px;    
+}
+
+.my-horizontal-collapse-tools.math-editor {
+    height: 60vh;   /*420px*/
+    bottom: 0;
+    z-index:100;
+    width: 50%;
+    margin-right: -50%;
+}
+
+
+.checklist-foot {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* zoteroNotes tool */
+.my-horizontal-collapse-tools.my-zoteronotes {
+    height: 60vh;   /*420px*/
+    bottom: 0;
+    z-index:100;
+    width: 50%;
+    margin-right: -50%;
+}
+/* processVisual tool */
+.my-horizontal-collapse-tools.my-processVisual {
+    height: 60vh;   /*420px*/
+    bottom: 0;
+    z-index:100;
+    width: 50%;
+    margin-right: -50%;
+}
+.my-jsmind-style {
+    width: 100%;
+    min-height: 200px; /* 确保有足够的高度 */
+    overflow: auto;
+    position: relative; /* 确保 z-index 生效 */
+    z-index: 1100; /* 确保在最前面 */
+}
+
+
+.my-horizontal-collapse-tools.in-tools {
+    transition-duration: .3s;
+    margin-right: 50px;
+}
+
+.my-horizontal-collapse-tools.in-tools-move-left {
+    transition-duration: .3s;
+    margin-right: 42%;    /* 505px*/
+    width: 50%;      /* 645px*/
+}
+
+
+
+.my-side-annotation-toolbar {
+    transition-duration: .3s;
+    left: -41px;
+}
+.my-side-annotation-toolbar.clicked {
+    transition-duration: .4s;
+    left: -535px;
+}
+
+a {
+    text-decoration: none;
+}
+
+/* Teacher typing status */
+.toolheader {
+    display: flex;
+    justify-content: space-between;
+}
+
+.tooltitle {
+    flex: 3
+}
+
+.toolstatus {
+    flex: 1;
+    padding-top: 12px;
+}
+
+/* Essay Product Visual Tool */
+.my-horizontal-collapse-tools.my-essay-product-visual {
+    height: 40vh; /*420px*/
+    bottom: 0;
+    z-index: 100;
+    width: 405px;
+    margin-right: -405px;
+}
+.essay-product-visual-dot {
+    height: 20px;
+    width: 20px;
+    background-color: gray;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 0 5px;
+}
+
+.essay-product-visual-status-mainpoint-active {
+    background-color: #ffff7b; /* Customize color based on data */
+}
+.essay-product-visual-status-relevance-active {
+    background-color: rgb(170, 110, 241);
+}
+.essay-product-visual-status-structure-active {
+    background-color: rgb(237, 123, 237);
+}
+/*------------------------ horizontal collapse style end ---------------------------*/
+
+
+
+
+
+
+
+
+
+
+/*------writer diet--------------------*/
+.graph-container {
+    display: flex;
+    flex-direction: column;
+    height: 120px;
+    background-color: #f3f3ee;
+    position: relative;
+    padding-top: 5px;
+    margin-bottom: 5px;
+}
+.graph-part-sections {
+    display: flex;
+    flex-direction: row;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+.graph-part-section-slice--1, .graph-part-section-slice--2 {
+    opacity: 0;
+}
+.graph-part-section-slice--3 {
+    opacity: .18;
+}
+.graph-part-section-slice--4 {
+    opacity: .28;
+}
+.graph-part-section-slice--5 {
+    opacity: .38;
+}
+
+.graph-part-section-slice {
+    flex: 1 1;
+    background: linear-gradient(
+            45deg,
+            rgba(139, 147, 143, 0.5) 0, rgba(139, 147, 143, 0.5) 25%, transparent 25%, transparent 50%,
+            rgba(139, 147, 143, 0.5) 50%, rgba(139, 147, 143, 0.5) 75%, transparent 75%, transparent
+    );
+    background-size: 15px 15px;
+}
+.graph-part-lines {
+    z-index: 3;
+}
+.graph-part-section-line {
+    flex: 1 1;
+    border-right: 1px solid #a5a6a9;
+}
+.graph-part--active {
+    z-index: 199;
+}
+
+.graph-part .ms-Checkbox {
+    position: absolute;
+    z-index: 9000;
+    pointer-events: none;
+    top: 2px;
+    left: 2px;
+}
+.root-67 {
+    position: relative;
+    display: flex;
+}
+.root-60 {
+    position: relative;
+    display: flex;
+}
+.input-61 {
+    position: absolute;
+    background: none;
+    opacity: 0;
+}
+.label-62 {
+    font-family: "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    font-size: 14px;
+    font-weight: 400;
+    display: flex;
+    align-items: flex-start;
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+}
+.graph-part .ms-Checkbox-checkbox {
+    height: 16px;
+    width: 16px;
+}
+.checkbox-68 {
+    position: relative;
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    height: 20px;
+    width: 20px;
+    border: 1px solid rgb(0, 120, 212);
+    border-radius: 2px;
+    box-sizing: border-box;
+    transition-property: background, border, border-color;
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.23, 1);
+    overflow: hidden;
+    margin-right: 4px;
+    background: rgb(0, 120, 212);
+}
+.graph-part {
+    flex: 1 1;
+    position: relative;
+    z-index: 99;
+}
+.graph-part.graph-part-emojis {
+    width: 100%;
+    display: flex;
+}
+.graph-part-emojis-callout {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+.svg-inline--fa {
+    display: inline-block;
+    font-size: inherit;
+    height: 1em;
+    overflow: visible;
+    vertical-align: -0.125em;
+}
+
+.svg-inline--fa.fa-w-16 {
+    width: 1em;
+}
+svg:not(:root).svg-inline--fa {
+    overflow: visible;
+}
+
+
+/* -------------------------Notes Hover effect-------------------- */
+.my-notes-hover { /* used when the highlights are hovered, add this to sidebar annotations*/
+    box-shadow: 0 0 11px rgba(33,33,33,.2);
+    opacity: 0.8;
+    filter: brightness(70%);
+    /*filter: drop-shadow(0,0,0 black);*/
+}
+
+#writeEssayEditorMain span:hover {
+    box-shadow: 0 0 11px rgba(33,33,33,.2);
+    opacity: 0.8;
+    filter: brightness(70%);
+    cursor: pointer;
+}
+
+span.highlighted:hover {
+    box-shadow: 0 0 11px rgba(33,33,33,.2);
+    opacity: 0.8;
+    filter: brightness(70%);
+    cursor: pointer;
+}
+span.classification-sentence:hover {
+    box-shadow: 0 0 11px rgba(33,33,33,.2);
+    opacity: 0.8;
+    filter: brightness(70%);
+    cursor: pointer;
+}
+
+/* 文字过长，显示省略号 */
+.text-ellipsis {
+    text-overflow:ellipsis;
+    overflow:hidden;
+    white-space:nowrap;
+    width:100%;
+
+    /*background:#ccc;*/
+}
+
+.scaffold-todo-item-finish {
+    text-decoration: line-through;
+}
+
+/*----------------my modal--------------------------------*/
+/* The Modal (background) */
+.my-modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 200; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.my-modal-content {
+    position: relative;
+    background-color: #fefefe;
+    margin: auto;
+    padding: 0;
+    border: 1px solid #888;
+    width: 500px;
+    height: 280px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+    -webkit-animation-name: animatetop;
+    -webkit-animation-duration: 0.4s;
+    animation-name: animatetop;
+    animation-duration: 0.4s
+}
+
+/* Add Animation */
+@-webkit-keyframes animatetop {
+  from {
+    top: -300px;
+    opacity: 0;
+  }
+  to {
+    top: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes animatetop {
+  from {
+    top: -300px;
+    opacity: 0;
+  }
+  to {
+    top: 0;
+    opacity: 1;
+  }
+}
+
+.my-modal-header {
+  padding: 16px 16px;
+  background-color: #e0e0e0;
+  color: black;
+}
+
+.my-modal-body {
+  padding: 2px 16px;
+  font-size: 13pt;
+}
+.my-modal-button {
+  width: 190px;
+  cursor: pointer;
+  color: #fff;
+  background-color: #6c757d;
+  border-color: #6c757d;
+  display: inline-block;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: center;
+  vertical-align: middle;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  border-radius: 0.25rem;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/*---------------------------------Chatgpt ------------------------------------------------------------*/
+
+#send-question {
+  background-color: #0d6efd;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  outline: none;
+  padding: 0px;
+  margin: 0px;
+  border-radius: 5px;
+  box-shadow: 0px 0px 10px 4px rgb(227, 227, 227); /* outer shadow */
+  width: 70px;
+}
+
+.form-control {
+  height: 100%;
+  word-wrap: break-word;
+  white-space: normal;
+  font-size: 10pt;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.justify-content-end {
+  justify-content: flex-end !important;
+}
+
+.form-control .message-content {
+  font-size: 16px;
+  display: flex;
+}
+
+.form-control .doc-scaffold-content{
+    font-size: 16px;
+}
+.form-control .doc-scaffold-content .doc-scaffold-answer{
+    text-align: left;
+    margin-bottom: 10px;
+    word-wrap: break-word;
+    padding: 10px;
+    /* float: left; */
+    background-color: rgba(13, 110, 253, .25);
+    color: #333;
+    border-radius: 10px;
+    font-size: 18px;
+}
+
+.form-control .doc-scaffold-content .timestamp {
+    font-size: 12px;
+    color: #b7b7b7;
+    margin-bottom: 20px;
+}
+
+.form-control .user-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 20%;
+    margin-left: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0px 0px 10px 4px rgb(227, 227, 227);
+}
+
+.form-control .bot-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 20%;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0px 0px 10px 4px rgb(227, 227, 227);
+}
+.user-avatar-wrapper {
+    display: flex;
+    flex-direction: column;
+    /*align-items: center; !* 使头像和用户名居中对齐 *!  不需要设置，已经对齐了*/
+}
+
+.agent-avatar-wrapper {
+    display: flex;
+    flex-direction: column;
+    /*align-items: center; !* 使头像和用户名居中对齐 *!*/
+}
+
+.agent-name{
+    font-size: 12px;
+}
+
+
+.user-name{
+    font-size: 10px;
+    text-align: center;
+    margin-left: 5px;
+    font-weight: bold;
+}
+
+.form-control .message-content .user-question {
+  display: inline-block;
+  text-align: left;
+  background-color: #0d6efd;
+  color: #fff;
+  padding: 10px;
+  border-radius: 10px 10px 0 10px;
+  margin-bottom: 10px;
+  max-width: 60%;
+  word-wrap: break-word;
+  box-shadow: 0px 0px 10px 4px rgb(227, 227, 227);
+}
+
+.form-control .message-content .user-consultation {
+    display: inline-block;
+    text-align: left;
+    background-color: #0dc4fd3d;
+    padding: 10px;
+    border-radius: 10px 10px 0 10px;
+    margin-bottom: 10px;
+    max-width: 90%;
+    word-wrap: break-word;
+    box-shadow: 0px 0px 10px 4px rgb(227, 227, 227);
+}
+
+.form-control .message-content .bot-answer {
+  display: inline-block;
+  align-self: flex-start;
+  text-align: left;
+  margin-bottom: 10px;
+  max-width: 60%;
+  word-wrap: break-word;
+  padding: 10px;
+  /* float: left; */
+  background-color: #e0e0e0;
+  color: #333;
+  border-radius: 10px;
+}
+.form-control .gpt-scaffold-message-content .gpt-scaffold-bot-answer {
+    display: inline-block;
+    align-self: flex-start;
+    text-align: left;
+    margin-bottom: 10px;
+    max-width: 100%;
+    word-wrap: break-word;
+    padding: 10px;
+    /* float: left; */
+    background-color: #e0e0e0;
+    color: #333;
+    border-radius: 10px;
+}
+
+.form-control .message-content .timestamp {
+  font-size: 12px;
+  color: #b7b7b7;
+  margin-bottom: 20px;
+}
+
+@keyframes gpt-scaffold-flashing {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+.gpt-scaffold-flash-icon {
+    animation: gpt-scaffold-flashing 1s infinite;
+}
+
+/* Teacher handler tool status */
+.type-status {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.rounded-circle {
+  border-radius: 50% !important;
+}
+
+.online-status {
+  display: flex;
+}
+
+.status {
+  border: 1px solid;
+  z-index: 1;
+  width: 12px;
+  height: 12px;
+  margin-top: 6px;
+  margin-left: 3px;
+  background-color: gray;
+}
+
+.online {
+  background-color: aquamarine;
+}
+
+.none-resize-textarea {
+    resize: none;
+}
+
+.none-outline-textarea:focus {
+    outline: none !important;
+    border-color: #ccc;
+    box-shadow: none !important;
+}
+.rounds {
+    font-size: 10px;
+    color: #fd0d45;
+    margin-bottom: 10px;
+}
+
+#toeflEditor {
+    /*width: 100%;*/
+    height: 100px;
+    border: 1px solid #ddd;
+    outline: none;
+    padding: 10px;
+    font-size: 16px;
+    line-height: 1.5;
+    background-color: #fafafa;
+    border-radius: 4px;
+    overflow: auto;
+    word-wrap: break-word;
+    white-space: pre-wrap; /* 保持空格和换行符 */
+    float: left;
+}
+
+#toeflEditor:focus {
+    border-color: #0095ff;
+    box-shadow: 0 0 5px #0095ff;
+}
+
+#multi-agents-input {
+    /*width: 100%;*/
+    height: 100px;
+    border: 1px solid #ddd;
+    outline: none;
+    padding: 10px;
+    font-size: 16px;
+    line-height: 1.5;
+    background-color: #fafafa;
+    border-radius: 4px;
+    overflow: auto;
+    word-wrap: break-word;
+    white-space: pre-wrap; /* 保持空格和换行符 */
+    float: left;
+}
+
+#multi-agents-input:focus {
+    border-color: #0095ff;
+    box-shadow: 0 0 5px #0095ff;
+}
+
+#multi-agents-input .highlight {
+    color: #0077ff;
+}
+
+/*.highlight {*/
+    /*color: #0077ff;*/   /* 这里注释掉是因为，当用户自行删除内容时，无法彻底删除font的color样式，目前暂未解决 */
+/*}*/
+
+.form-control .message-content .structure-expert-bg {
+    background-color: #feeebf;
+}
+
+.form-control .message-content .grammar-expert-bg {
+    background-color: #e0f2ff;
+}
+
+.form-control .message-content .language-expert-bg {
+    background-color: #fde0e0;
+}
+
+.form-control .message-content .mediator-bg {
+    background-color: #f9d6ff;
+}
+
+.placeholder {
+    color: #aaa;
+}

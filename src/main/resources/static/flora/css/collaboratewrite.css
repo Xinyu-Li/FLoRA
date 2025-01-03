@@ -1,0 +1,105 @@
+.highLight-bkg{
+    background-color: red;
+}
+.custom-select {
+<<<<<<< HEAD
+  /*min-width: 350px;*/
+  width: 100%;
+}
+
+.custom-select select {
+  appearance: auto;
+  width: 100%;
+=======
+  min-width: 350px;
+}
+
+.custom-select select {
+  appearance: none;
+  width: 50%;
+>>>>>>> e003e628 (resolove conflicts first pull from flora-2.4.1)
+  font-size: 1.1rem;
+  padding: 0.1em 0.1em 0.1em 0.1em;
+  background-color: #fff;
+  border: 1px solid #caced1;
+  border-radius: 0.25rem;
+  color: #000;
+  cursor: pointer;
+}
+<<<<<<< HEAD
+
+=======
+>>>>>>> e003e628 (resolove conflicts first pull from flora-2.4.1)
+.custom-select {
+  display: none;
+  /* other styling */
+}
+.custom-select.open {
+  display: block;
+<<<<<<< HEAD
+}
+
+/*.custom-select::before,
+.custom-select::after {
+  --size: 0.3rem;
+  content: "";
+  position: absolute;
+  right: 1rem;
+  pointer-events: none;
+}
+
+.custom-select::before {
+  border-left: var(--size) solid transparent;
+  border-right: var(--size) solid transparent;
+  border-bottom: var(--size) solid black;
+  top: 40%;
+}
+
+.custom-select::after {
+  border-left: var(--size) solid transparent;
+  border-right: var(--size) solid transparent;
+  border-top: var(--size) solid black;
+  top: 55%;
+}*/
+
+.option-list {
+            /* display: none; /* Hide by default */
+            position: absolute; /* Positioning for dropdown */
+            font-size: 1.1rem;
+              padding: 0.1em 0.1em 0.1em 0.1em;
+              background-color: #fff;
+              border: 1px solid #caced1;
+              border-radius: 0.25rem;
+            width: 100% /* Set a fixed width for the list */
+        }
+
+.option-list.open {
+    display: block; /* Show when open */
+}
+
+/* Basic styling for the options list */
+ul {
+    list-style-type: none; /* Remove bullet points */
+    padding: 0; /* Remove default padding */
+}
+
+/* Styles for selectable options */
+#optionList li {
+    padding: 8px 12px; /* Add padding for each item */
+    cursor: pointer; /* Change cursor on hover */
+    border: 1px solid #ccc; /* Add border for each item */
+    margin: 4px 0; /* Space between items */
+}
+
+#optionList li:hover {
+    background-color: #f0f0f0; /* Change background on hover */
+}
+
+/* Style for selected item */
+#optionList li.selected {
+    background-color: #d0e0ff; /* Different color for selected item */
+    font-weight: bold; /* Bold text for selected item */
+}
+=======
+}
+>>>>>>> e003e628 (resolove conflicts first pull from flora-2.4.1)

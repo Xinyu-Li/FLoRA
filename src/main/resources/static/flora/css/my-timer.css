@@ -1,0 +1,14 @@
+/* 隐藏天数和小时 */
+.flipdown .rotor-group:nth-child(1) {
+    display: none;
+}
+/*.flipdown .rotor-group:nth-child(2) {
+  display: none;
+}*/
+
+/* 调整分钟和秒数的位置 */
+.flipdown .rotor-group:nth-child(2),
+.flipdown .rotor-group:nth-child(3),
+.flipdown .rotor-group:nth-child(4) {
+    margin-left: 0;
+}

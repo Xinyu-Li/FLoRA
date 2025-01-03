@@ -1,0 +1,351 @@
+/*.annotator-adder-actions:hover .annotator-adder-actions__button:not(:hover) {*/
+/*    color: #9c9c9c;*/
+/*}*/
+/*-------------------------- planner style -------------------------------------*/
+
+/**,*/
+/**:before,*/
+/**:after {*/
+/*    -webkit-box-sizing: content-box;*/
+/*    -moz-box-sizing: content-box;*/
+/*    box-sizing: content-box;*/
+/*}*/
+
+/*.container .row ,*/
+/*.container .row:before,*/
+/*.container .row:after {*/
+/*    -webkit-box-sizing: border-box;*/
+/*    -moz-box-sizing: border-box;*/
+/*    box-sizing: border-box;*/
+/*}*/
+.ui-state-highlight {
+    width: 100%;
+    height: 100px;
+    /*margin: 10px;*/
+}
+.ui-resizable-handle {
+    background-color: grey;
+}
+.my-resize {
+    /*top: 10px;*/
+    top:0;
+    /*width: 50px;*/
+    /*height: 50px;*/
+    height: 100px;
+    /*width: 15%;*/
+    /*width: 142px;*/
+    /*padding: 0.5em;*/
+    float: left;
+    /*border: #0f1011 medium solid;*/
+    /*border-right-width: 12px;*/
+    border-radius: 8px;
+    text-align: center;
+    border-right-color: #797777;
+    position: absolute;
+    z-index:99999;
+}
+.timecolumn {
+    /*display: table-cell;*/
+    /*    top: 100px;*/
+    height: 1px;
+    background-color: white;
+    border-top: 1px solid transparent;
+    border-color: black;
+    margin: 20px;
+}
+.timecolumn:last-child {
+    border-top: none;
+    border-bottom: none;
+}
+/* Diamond square */
+.timecolumn:nth-child(5n+1) .tick {
+    width: 0;
+    height: 0;
+    border: 8px solid transparent;
+    border-bottom-color: black;
+    position: relative;
+    top: -17px;
+}
+/* Diamond square */
+.timecolumn:nth-child(5n+1) .tick:after {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 8px;
+    width: 0;
+    height: 0;
+    border: 8px solid transparent;
+    border-top-color: black;
+}
+.timecolumn:nth-child(5n+1) .tick.bottom-right {
+    right: 9px;
+    bottom: 8px;
+    /*    border-color: black;*/
+}
+
+.dropzone-column {
+    /*-webkit-box-sizing: content-box !important;*/
+    /*-moz-box-sizing: content-box !important;*/
+    /*box-sizing: content-box;*/
+    /*display: table-cell;*/
+    height: 100px;
+    background-color: white;
+    border-right: 2px dashed #aaaaaa;
+
+}
+.dropzone-column:first-child {
+    border-left: 2px solid #aaaaaa;
+}
+.dropzone-column:last-child {
+    border-right: none;
+}
+/**:not(.dropzone-column) {*/
+/*    box-sizing : border-box;*/
+/*}*/
+/*every fifth element a solid right border*/
+.dropzone-column:nth-child(5n+0) {
+    border-right: 2px solid #aaaaaa;
+}
+.drop-destination {
+    position:relative;
+}
+.drop-source {
+    position:relative;
+}
+/*td {*/
+/*    border: gray thin solid;*/
+/*}*/
+
+
+/*-------------------------- planner style end -------------------------------------*/
+
+/*-------------------------- horizontal collapse style -----------------------------*/
+.my-horizontal-collapse-tools {
+    transition-duration: .3s;
+    visibility: visible;
+    white-space: nowrap;
+    vertical-align: middle;
+    /*line-height: 175px;   line height 会导致文字行高也是175px*/
+    position: fixed;
+    right: 0;
+    overflow: auto;
+
+}
+.my-horizontal-collapse-tools.planner {
+    bottom: 0;
+    z-index:99;
+    width: 960px;
+    margin-right: -960px;
+}
+
+.my-horizontal-collapse-tools.search-panel {
+    top: 10%;
+    z-index:100;
+    width: 540px;
+    margin-right:-540px;
+}
+.my-horizontal-collapse-tools.write-essay {
+    height:400px;
+    bottom: 0;
+    z-index:100;
+    width: 80%;
+    margin-right: -80%;
+}
+.my-horizontal-collapse-tools.timer {
+    /*line-height: 175px;   line height 会导致文字行高也是175px*/
+    height: 175px;
+    bottom: 20%;
+    z-index:100;
+    width: 400px;
+    margin-right:400px;
+}
+
+.my-horizontal-collapse-tools.in-tools {
+    transition-duration: .3s;
+    margin-right: 45px;
+}
+
+
+/*.my-horizontal-collapse-planner {*/
+/*    transition-duration: .3s;*/
+/*    !*transition: width 1s;*!*/
+/*    !*display: inline-block;*!*/
+/*    visibility: visible;*/
+/*    overflow: hidden;*/
+/*    white-space: nowrap;*/
+/*    !*background: yellow;*!*/
+/*    vertical-align: middle;*/
+/*    !*line-height: 600px;*!*/
+/*    !*height: 600px;*!*/
+/*    position: fixed;*/
+/*    right: 0;*/
+/*    bottom: 0;*/
+/*    z-index:99;*/
+/*    width: 960px;*/
+/*    margin-right: -960px;*/
+
+/*}*/
+.my-horizontal-collapse-tools.in-planner {
+    transition-duration: .3s;
+    margin-right: 45px;
+}
+
+.my-horizontal-collapse-write-essay {
+    transition-duration: .3s;
+    visibility: visible;
+    overflow: auto;
+    white-space: nowrap;
+    vertical-align: middle;
+    height:400px;
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    z-index:100;
+    width: 80%;
+    margin-right: -80%;
+}
+.my-horizontal-collapse-write-essay.in-essay {
+    transition-duration: .3s;
+    margin-right: 45px;
+}
+
+.my-horizontal-collapse-timer {
+    transition-duration: .3s;
+    /*transition: width .3s;*/
+    /*display: block;*/
+    visibility: visible;
+    /*overflow: hidden;*/
+    white-space: nowrap;
+    /*background: yellow;*/
+    vertical-align: middle;
+    /*line-height: 175px;   line height 会导致文字行高也是175px*/
+    height: 175px;
+    position: fixed;
+    right: 0;
+    bottom: 20%;
+    z-index:100;
+    width: 540px;
+    margin-right:-540px;
+}
+.my-horizontal-collapse-timer.in-timer {
+    transition-duration: .3s;
+    margin-right: 0;
+}
+
+.myHighlightText:hover {
+    border-left: #58cef4 3px solid;
+}
+.my-notes-hover {
+    /*box-shadow: 5px 2px 2px #888888;*/
+    opacity: 0.7;
+    filter: brightness(120%);
+    /*filter: drop-shadow();*/
+}
+
+.my-horizontal-collapse-search-panel {
+    transition-duration: .3s;
+    /*transition: width .3s;*/
+    /*display: block;*/
+    visibility: visible;
+    /*overflow: hidden;*/
+    white-space: nowrap;
+    /*background: yellow;*/
+    vertical-align: middle;
+    /*line-height: 175px;   line height 会导致文字行高也是175px*/
+    position: fixed;
+    right: 0;
+    top: 10%;
+    z-index:100;
+    width: 540px;
+    margin-right:-540px;
+}
+.my-horizontal-collapse-search-panel.in-search {
+    transition-duration: .3s;
+    margin-right: 45px;
+}
+
+.my-side-annotation-toolbar {
+    transition-duration: .3s;
+    left: -41px;
+}
+.my-side-annotation-toolbar.clicked {
+    transition-duration: .4s;
+    left: -535px;
+}
+
+a {
+    text-decoration: none;
+}
+
+/*------------------------ horizontal collapse style end ---------------------------*/
+
+/*----------------my modal--------------------------------*/
+/* The Modal (background) */
+.my-modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 200; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.my-modal-content {
+    position: relative;
+    background-color: #fefefe;
+    margin: auto;
+    padding: 0;
+    border: 1px solid #888;
+    width: 500px;
+    height: 220px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+    -webkit-animation-name: animatetop;
+    -webkit-animation-duration: 0.4s;
+    animation-name: animatetop;
+    animation-duration: 0.4s
+}
+
+/* Add Animation */
+@-webkit-keyframes animatetop {
+    from {top:-300px; opacity:0}
+    to {top:0; opacity:1}
+}
+
+@keyframes animatetop {
+    from {top:-300px; opacity:0}
+    to {top:0; opacity:1}
+}
+
+.my-modal-header {
+    padding: 16px 16px;
+    background-color: #E0E0E0;
+    color: black;
+}
+
+.my-modal-body {
+    padding: 2px 16px;
+    font-size: 13pt;
+}
+.my-modal-button {
+    width: 190px;
+    cursor: pointer;
+    color: #fff;
+    background-color: #6c757d;
+    border-color: #6c757d;
+    display: inline-block;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: center;
+    vertical-align: middle;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    border-radius: 0.25rem;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+
+}

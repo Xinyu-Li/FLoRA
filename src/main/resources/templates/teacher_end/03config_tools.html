@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Config tools</title>
+   <link href="/flora/css/bootstrap.min.css" rel="stylesheet"/>
+   <script src="../flora/js/jquery.min.js"></script>
+   <script src="../flora/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
+                <a href="/manage/list-all-students" class="d-flex align-items-center text-dark text-decoration-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="32" class="me-2" viewBox="0 0 118 94" role="img"><title>Bootstrap</title><path fill-rule="evenodd" clip-rule="evenodd" d="M24.509 0c-6.733 0-11.715 5.893-11.492 12.284.214 6.14-.064 14.092-2.066 20.577C8.943 39.365 5.547 43.485 0 44.014v5.972c5.547.529 8.943 4.649 10.951 11.153 2.002 6.485 2.28 14.437 2.066 20.577C12.794 88.106 17.776 94 24.51 94H93.5c6.733 0 11.714-5.893 11.491-12.284-.214-6.14.064-14.092 2.066-20.577 2.009-6.504 5.396-10.624 10.943-11.153v-5.972c-5.547-.529-8.934-4.649-10.943-11.153-2.002-6.484-2.28-14.437-2.066-20.577C105.214 5.894 100.233 0 93.5 0H24.508zM80 57.863C80 66.663 73.436 72 62.543 72H44a2 2 0 01-2-2V24a2 2 0 012-2h18.437c9.083 0 15.044 4.92 15.044 12.474 0 5.302-4.01 10.049-9.119 10.88v.277C75.317 46.394 80 51.21 80 57.863zM60.521 28.34H49.948v14.934h8.905c6.884 0 10.68-2.772 10.68-7.727 0-4.643-3.264-7.207-9.012-7.207zM49.948 49.2v16.458H60.91c7.167 0 10.964-2.876 10.964-8.281 0-5.406-3.903-8.178-11.425-8.178H49.948z" fill="currentColor"></path></svg>
+                    <span class="fs-4">FLoRA Management</span>
+                </a>
+
+                <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
+                    <a class="me-3 py-2 text-dark text-decoration-none" href="/manage/list-all-students">Home</a>
+                    <a class="me-3 py-2 text-dark text-decoration-none" href="/manage/config-tools">Config tools</a>
+                </nav>
+            </div>
+
+        </header>
+        <div class="row">
+            <h3>Generico template key</h3>
+            <div>
+                <label class="form-label" for="generico-template-key-input">Generico template key:</label>
+                <input type="text" class="form-control" id="generico-template-key-input" />
+            </div>
+
+            <hr class="mt-2"/>
+            <table class="table table-striped border-1">
+                <thead>
+                    <tr>
+                        <th>Tools</th>
+                        <th>ON/OFF</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Video recording tool</td>
+                        <td>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="use-video-recording-tool-check" checked>
+                                <label class="form-check-label" for="use-video-recording-tool-check">Record video</label>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Timer tool</td>
+                        <td>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="use-timer-tool-check" checked>
+                                <label class="form-check-label" for="use-timer-tool-check">Use timer tool</label>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Annotation tool</td>
+                        <td>
+                            <div class=" form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="annotation-tool-check" checked>
+                                <label class="form-check-label" for="annotation-tool-check">Use annotation tool</label>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Scaffolding tool</td>
+                        <td>
+                            <div class=" form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="scaffolding-tool-check" checked>
+                                <label class="form-check-label" for="scaffolding-tool-check">Use scaffolding tool</label>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Essay writing tool</td>
+                        <td>
+                            <div class=" form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="essay-writing-tool-check" checked>
+                                <label class="form-check-label" for="essay-writing-tool-check">Use essay writing tool</label>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Planner tool</td>
+                        <td>
+                            <div class=" form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="planner-tool-check" checked>
+                                <label class="form-check-label" for="planner-tool-check">Use planner tool</label>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Feedback tool</td>
+                        <td>
+                            <div class=" form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="grammarly-feedback-tool-check" checked>
+                                <label class="form-check-label" for="grammarly-feedback-tool-check">Use Grammarly</label>
+                            </div>
+                            <div class=" form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="checklist-feedback-tool-check" checked>
+                                <label class="form-check-label" for="checklist-feedback-tool-check">Use Writing checklist</label>
+                            </div>
+                            <div class=" form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="chatgpt-feedback-tool-check" checked>
+                                <label class="form-check-label" for="chatgpt-feedback-tool-check">Use Chatgpt</label>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="border border-5 p-3 mt-3" id="scaffolding-config-div">
+                <h4>Config Scaffolding content</h4>
+                <div class="customise-scaffolding-label-item" style="display: flex; margin-bottom: 15px;">
+                    <div class="input-group">
+                        <span style="width: 80px; padding: 5px;">title:</span>
+                        <input type="text" class="form-control label-text" placeholder="Scaffold title" value="It is important to understand what the task is about."/>
+                        <div class="input-group content-group">
+                            <span style="width: 80px; padding: 5px;">content:</span>
+                            <input type="text" class="form-control label-content" placeholder="Input Scaffold content" value="(a) Use menu to get an overview and skim text"/>
+                            <input type="text" class="form-control label-content" placeholder="Input Scaffold content" value="(b) Check the essay rubric"/>
+                            <input type="text" class="form-control label-content" placeholder="Input Scaffold content" value="(c) Check the learning goals and instructions"/>
+                        </div>
+                    </div>
+                    <button class="btn btn-danger delete-scaffolding-label-btn" style="">X</button>
+                </div>
+
+                <div class="customise-scaffolding-label-item" style="display: flex; margin-bottom: 15px;">
+                    <div class="input-group">
+                        <span style="width: 80px; padding: 5px;">title:</span>
+                        <input type="text" class="form-control label-text" placeholder="Scaffold title" value="It is important to read information about the topics."/>
+                        <div class="input-group content-group">
+                            <span style="width: 80px; padding: 5px;">content:</span>
+                            <input type="text" class="form-control label-content" placeholder="Input Scaffold content" value="(a) Note down important information"/>
+                            <input type="text" class="form-control label-content" placeholder="Input Scaffold content" value="(b) Select what to read"/>
+                            <input type="text" class="form-control label-content" placeholder="Input Scaffold content" value="(c) Check the time left"/>
+                        </div>
+                    </div>
+                    <button class="btn btn-danger delete-scaffolding-label-btn" style="">X</button>
+                </div>
+
+                <div class="customise-scaffolding-label-item" style="display: flex; margin-bottom: 15px;">
+                    <div class="input-group">
+                        <span style="width: 80px; padding: 5px;">title:</span>
+                        <input type="text" class="form-control label-text" placeholder="Scaffold title" value="It is important to read relevant information and review your reading."/>
+                        <div class="input-group content-group">
+                            <span style="width: 80px; padding: 5px;">content:</span>
+                            <input type="text" class="form-control label-content" placeholder="Input Scaffold content" value="(a) Review annotations to check learning so far"/>
+                            <input type="text" class="form-control label-content" placeholder="Input Scaffold content" value="(b) Review the learning goals and instructions"/>
+                            <input type="text" class="form-control label-content" placeholder="Input Scaffold content" value="(c) Check essay to determine what to read next"/>
+                        </div>
+                    </div>
+                    <button class="btn btn-danger delete-scaffolding-label-btn" style="">X</button>
+                </div>
+
+                <div class="customise-scaffolding-label-item" style="display: flex; margin-bottom: 15px;">
+                    <div class="input-group">
+                        <span style="width: 80px; padding: 5px;">title:</span>
+                        <input type="text" class="form-control label-text" placeholder="Scaffold title" value="It is important to write a good essay."/>
+                        <div class="input-group content-group">
+                            <span style="width: 80px; padding: 5px;">content:</span>
+                            <input type="text" class="form-control label-content" placeholder="Input Scaffold content" value="(a) Check the remaining time"/>
+                            <input type="text" class="form-control label-content" placeholder="Input Scaffold content" value="(b) Check the essay rubric"/>
+                            <input type="text" class="form-control label-content" placeholder="Input Scaffold content" value="(c) Draft essay by transferring learning to main points"/>
+                        </div>
+                    </div>
+                    <button class="btn btn-danger delete-scaffolding-label-btn" style="">X</button>
+                </div>
+
+                <div class="customise-scaffolding-label-item" style="display: flex; margin-bottom: 15px;">
+                    <div class="input-group">
+                        <span style="width: 80px; padding: 5px;">title:</span>
+                        <input type="text" class="form-control label-text" placeholder="Scaffold title" value="It is important to write relevant information and check your writing."/>
+                        <div class="input-group content-group">
+                            <span style="width: 80px; padding: 5px;">content:</span>
+                            <input type="text" class="form-control label-content" placeholder="Input Scaffold content" value="(a) Check the essay rubric"/>
+                            <input type="text" class="form-control label-content" placeholder="Input Scaffold content" value="(b) Edit your essay"/>
+                            <input type="text" class="form-control label-content" placeholder="Input Scaffold content" value="(c) Check the learning goals and instructions"/>
+                        </div>
+                    </div>
+                    <button class="btn btn-danger delete-scaffolding-label-btn" style="">X</button>
+                </div>
+
+                <button id="add-more-scaffolding-item-btn" class="btn btn-secondary">Add more</button>
+            </div>
+
+            <div class="border border-5 p-3 mt-3" id="timer-config-div">
+                <h4>Change Time</h4>
+                <div class="input-group">
+                    <label class="form-label" for="timer-task-length-input">Task length：</label>
+                    <input type="number" step="1" min="0" max="200" value="45" class="form-control" id="timer-task-length-input" />
+                </div>
+                <div class="form-check">
+                    <label class="form-check-label" for="timer-task-unlimited-check">Set unlimited time</label>
+                    <input class="form-check-input" type="checkbox" value="" id="timer-task-unlimited-check">
+                </div>
+            </div>
+
+            <div class="border border-5 p-3 mt-3" id="annotation-config-div">
+                <h4>Change Annotation label and colors</h4>
+
+                <div class="customise-annotation-label-item">
+                    <div class="input-group">
+                        <input type="text" class="form-control label-text" placeholder="Annotation label" value="important"/>
+                        <input type="text" class="form-control label-color" placeholder="Input annotation label color" value="#99CCFF"/>
+                        <button class="btn btn-danger delete-annotation-label-btn" style="">X</button>
+                    </div>
+                </div>
+
+                <div class="customise-annotation-label-item">
+                    <div class="input-group">
+                        <input type="text" class="form-control label-text" placeholder="Annotation label" value="useful"/>
+                        <input type="text" class="form-control label-color" placeholder="Input annotation label color" value="#CCFFCC"/>
+                        <button class="btn btn-danger delete-annotation-label-btn" style="">X</button>
+                    </div>
+                </div>
+
+                <div class="customise-annotation-label-item">
+                    <div class="input-group">
+                        <input type="text" class="form-control label-text" placeholder="Annotation label" value="concept"/>
+                        <input type="text" class="form-control label-color" placeholder="Input annotation label color" value="#FFCCE5"/>
+                        <button class="btn btn-danger delete-annotation-label-btn" style="">X</button>
+                    </div>
+                </div>
+
+                <div class="customise-annotation-label-item">
+                    <div class="input-group">
+                        <input type="text" class="form-control label-text" placeholder="Annotation label" value="confusing"/>
+                        <input type="text" class="form-control label-color" placeholder="Input annotation label color" value="#75ff66"/>
+                        <button class="btn btn-danger delete-annotation-label-btn" style="">X</button>
+                    </div>
+                </div>
+
+                <button id="add-more-annotation-label-btn" class="btn btn-secondary">Add more</button>
+            </div>
+
+            <hr class="mt-3"/>
+            <div>
+                <button class="btn btn-success" id="save-config-btn">Save Config</button>
+            </div>
+
+        </div>
+    </div>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+<script inline="javascript">
+
+    $(document).ready(function () {
+        /*<![CDATA[*/
+        var myUrl = /*[[${myUrl}]]*/ {};
+        console.log(myUrl);
+        /*]]>*/
+
+        $("#use-timer-tool-check").on("change", function () {
+            console.log("use-timer-tool-check");
+            console.log($(this)[0].checked);
+            // if ($(this)[0].checked) {
+            //     $("#timer-config-div").removeClass("d-none");
+            // } else {
+            //     $("#timer-config-div").addClass("d-none");
+            // }
+            $("#timer-config-div").toggleClass("d-none");
+        });
+
+        $("#annotation-tool-check").on("change", function () {
+            $("#annotation-config-div").toggleClass("d-none");
+        });
+
+        $("#scaffolding-tool-check").on("change", function () {
+            $("#scaffolding-config-div").toggleClass("d-none");
+        });
+
+        $("#add-more-annotation-label-btn").on("click", function() {
+            $('<div class="customise-annotation-label-item">' +
+                '                    <div class="input-group">' +
+                '                        <input type="text" class="form-control label-text" placeholder="Annotation label" />' +
+                '                        <input type="text" class="form-control label-color" placeholder="Input annotation label color"/>' +
+                '                        <button class="btn btn-danger delete-annotation-label-btn" style="">X</button>' +
+                '                    </div>' +
+                '                </div>').insertBefore("#add-more-annotation-label-btn");
+        });
+
+        $("#annotation-config-div").on("click", ".delete-annotation-label-btn", function() {
+            $(this).closest(".customise-annotation-label-item").remove(); //点击 x 时候删除该行
+        });
+
+        $("#add-more-scaffolding-item-btn").on("click", function() {
+            $(
+                '<div class="customise-scaffolding-label-item" style="display: flex; margin-bottom: 15px;">' +
+                '        <div class="input-group">' +
+                '            <span style="width: 80px; padding: 5px;">title:</span>' +
+                '            <input type="text" class="form-control label-text" placeholder="Scaffold title" value=""/>' +
+                '            <div class="input-group content-group">' +
+                '                <span style="width: 80px; padding: 5px;">content:</span>'+
+                '                <input type="text" class="form-control label-content" placeholder="Input Scaffold content" value="(a) "/>' +
+                '                <input type="text" class="form-control label-content" placeholder="Input Scaffold content" value="(b) "/>' +
+                '                <input type="text" class="form-control label-content" placeholder="Input Scaffold content" value="(c) "/>' +
+                '            </div>' +
+                '        </div>' +
+                '        <button class="btn btn-danger delete-scaffolding-label-btn" style="">X</button>'+
+                '</div>').insertBefore("#add-more-scaffolding-item-btn");
+        });
+
+        $("#scaffolding-config-div").on("click", ".delete-scaffolding-label-btn", function() {
+            $(this).closest(".customise-scaffolding-label-item").remove(); //点击 x 时候删除该行
+        });
+
+        $("#save-config-btn").on("click", function () {
+            let useVideoTool = $("#use-video-recording-tool-check")[0].checked;
+
+            let useTimerTool = $("#use-timer-tool-check")[0].checked;
+            let useAnnotationTool = $("#annotation-tool-check")[0].checked;
+            let useScaffoldingTool = $("#scaffolding-tool-check")[0].checked;
+            let useEssayWritingTool = $("#essay-writing-tool-check")[0].checked;
+            let usePlannerTool = $("#planner-tool-check")[0].checked;
+            let useGrammarlyFeedbackTool = $("#grammarly-feedback-tool-check")[0].checked;
+            let useChecklistFeedbackTool = $("#checklist-feedback-tool-check")[0].checked;
+            let useChatgptFeedbackTool = $("#chatgpt-feedback-tool-check")[0].checked;
+            let unlimitedTime = false;
+            let totalMinutes = 0;
+
+            let genericoTemplateKey = $("#generico-template-key-input").val();
+
+            let annotationLabelArr = [];
+            let annotationLabelColorArr = [];
+            let scaffoldingTitleArr = [];
+            let scaffoldingContentArr = [];
+
+            if (genericoTemplateKey.length === 0) {
+                alert("genericoTemplateKey cannot be empty");
+                return;
+            }
+
+            if (useTimerTool) {
+                if ($("#timer-task-unlimited-check")[0].checked) {
+                    unlimitedTime = true;
+                } else {
+                    totalMinutes = $("#timer-task-length-input").val();
+                    unlimitedTime = false;
+                }
+            }
+
+            if (useAnnotationTool) {
+
+                let labelTextItems = $("#annotation-config-div").find(".label-text");
+                console.log(labelTextItems);
+                for (let i = 0; i < labelTextItems.length; i++) {
+                    if (labelTextItems[i].value.length !== 0) {
+                        annotationLabelArr.push(labelTextItems[i].value);
+                    }
+                }
+
+                let labelColorItems = $("#annotation-config-div").find(".label-color");
+                for (let i = 0; i < labelColorItems.length; i++) {
+                    console.log(labelColorItems[i].value);
+                    if (labelColorItems[i].value.length !== 0) {
+                        annotationLabelColorArr.push(labelColorItems[i].value);
+                    }
+                }
+                if (annotationLabelArr.length !== annotationLabelColorArr.length) {
+                    alert("label and color cannot be empty");
+                    return;
+                }
+            }
+
+            if (useScaffoldingTool) {
+                let scaffoldingTitleItems = $("#scaffolding-config-div").find(".label-text");
+                for (let i = 0; i < scaffoldingTitleItems.length; i++) {
+                    if (scaffoldingTitleItems[i].value.length !== 0) {
+                        scaffoldingTitleArr.push(scaffoldingTitleItems[i].value);
+                    }
+                }
+                console.log(scaffoldingTitleArr);
+
+                let scaffoldingContentItems = $("#scaffolding-config-div").find(".content-group");
+                console.log(scaffoldingContentItems);
+                for (let i = 0; i < scaffoldingContentItems.length; i++) {
+                    let contentArr = [];
+                    for(let j = 1; j < scaffoldingContentItems[i].children.length; j++) {
+                        if (scaffoldingContentItems[i].children[j].value.length !== 0) {
+                            contentArr.push(scaffoldingContentItems[i].children[j].value);
+                        }
+                    }
+                    scaffoldingContentArr.push(contentArr);
+                }
+                console.log(scaffoldingContentArr);
+            }
+
+            console.log(annotationLabelArr);
+            console.log(annotationLabelColorArr);
+            $.post(myUrl + "/manage/config-tools", {
+                useVideoTool: useVideoTool,
+                useTimerTool: useTimerTool,
+                useAnnotationTool: useAnnotationTool,
+                useScaffoldingTool: useScaffoldingTool,
+                useEssayWritingTool: useEssayWritingTool,
+                usePlannerTool: usePlannerTool,
+                useGrammarlyFeedbackTool: useGrammarlyFeedbackTool,
+                useChecklistFeedbackTool: useChecklistFeedbackTool,
+                useChatgptFeedbackTool: useChatgptFeedbackTool,
+                unlimitedTime: unlimitedTime,
+                totalMinutes: totalMinutes,
+                annotationLabelList: annotationLabelArr,
+                annotationLabelColorList: annotationLabelColorArr,
+                genericoTemplateKey: genericoTemplateKey
+            }, function(data, status) {
+                if (data.status === 200) {
+                    alert("save config success");
+                } else {
+                    alert("save config error.");
+                }
+            });
+
+        });
+
+        // $("#timer-task-unlimited-input")[0].checked
+    });
+
+</script>
+</body>
+</html>

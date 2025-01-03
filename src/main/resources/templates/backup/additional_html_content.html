@@ -1,0 +1,224 @@
+<!-- Within Head -->
+
+<link href="/flora/css/jquery-ui.min.css" rel="stylesheet"/>
+<link href="/flora/css/flipclock.css" rel="stylesheet">
+<link href="/flora/css/quill.snow.min.css" rel="stylesheet"/>
+<link href="/flora/css/instrumentationTools.css" rel="stylesheet" />
+
+<!---->
+
+
+<!-- when body opened -->
+
+<!-- The Modal -->
+<div id="myModal" class="my-modal">
+
+  <!-- Modal content -->
+  <div class="my-modal-content">
+    <div class="my-modal-header">
+      <!-- <span class="close">&times;</span> -->
+      <h2>Start Main Essay Activity</h2>
+    </div>
+    <div class="my-modal-body">
+      <p>This task has a time limit of 120 minutes. Note that only <strong>1 attempt</strong> is allowed. Are you sure you want enter the task?</p>
+
+    </div>
+    <div style="text-align: center;">
+      <button type="button" class="my-modal-button" id="continueMainTaskBtn">Yes - Continue</button>
+      <button type="button" class="my-modal-button" id="backToHomepageBtn">No - Go to Homepage</button>
+    </div>
+  </div>
+</div>
+
+<div id="myTaskFinishModal" class="my-modal">
+
+  <!-- Modal content -->
+  <div class="my-modal-content">
+    <div class="my-modal-header">
+      <!-- <span class="close">&times;</span> -->
+      <h2>Time is up</h2>
+    </div>
+    <div class="my-modal-body">
+      <p></p>
+
+    </div>
+    <div style="text-align: center;">
+<!--      <button type="button" class="my-modal-button" id="taskFinishSubmitEssayBtn">Submit Essay</button>-->
+      <button type="button" class="my-modal-button" id="taskFinishBackToHomepageBtn">Back to Homepage</button>
+
+    </div>
+  </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+<!-- Before body close  -->
+
+<script>
+  /*使用此代码使页面link 无效*/
+  window.onload = function(){
+    //let baseUrl = "http://localhost:8088";
+    let baseUrl = "https://study.floralearn.cn";
+    let courseId = 4; //local: 2, cloud: 4
+    let instructionPageId = 7; //local: 2, cloud 7
+
+
+
+    let elementHomeBtn = document.querySelector("li[data-key='home']"); //查找到第一个元素
+    if (elementHomeBtn != null) {elementHomeBtn.className+= " d-none";}
+
+    let elementPreviewFeedbackBtnList = document.querySelectorAll("div.navitem");
+    if (elementPreviewFeedbackBtnList != null) {
+      for (let i = 0; i < elementPreviewFeedbackBtnList.length; i++) {
+        if (elementPreviewFeedbackBtnList[i].innerText === "Preview questions") {
+          elementPreviewFeedbackBtnList[i].className += " d-none";
+        }
+      }
+    }
+
+    let navTagA = document.querySelector("#page-navbar>nav>ol>li>a");
+    if (navTagA != null) {
+      console.log(navTagA.href);
+      // navTagA.href = "#";
+      navTagA.onclick = "return false;";
+    }
+
+    let elementsTagAList= document.getElementsByClassName("courseindex-link text-truncate");
+    if (elementsTagAList != null) {
+      for (let i = 0; i < elementsTagAList.length; i++) {
+        //console.log(elementsTagAList[i].dataset.for);
+        if (elementsTagAList[i].dataset.for === "section_title") {
+          elementsTagAList[i].href = "#";
+        }
+      }
+    }
+
+    // localStorage.myUserEnterPageTimestamp = new Date().getTime();
+    console.log("window onload finish");
+
+    // Get the modal
+    var myModal = document.getElementById("myModal");
+    console.log(myModal);
+    var continueMainTaskBtn = document.getElementById("continueMainTaskBtn");
+    var backToHomepageBtn = document.getElementById('backToHomepageBtn');
+    var taskFinishBackToHomepageBtn = document.getElementById("taskFinishBackToHomepageBtn");
+    console.log(window.location.href);
+    if (window.location.href === baseUrl + "/moodle/course/view.php?id=" + courseId) {
+      console.log(myModal.style.display);
+      myModal.style.display = "block";
+    }
+    backToHomepageBtn.onclick = function() {
+      window.location.href = baseUrl + "/moodle/my/courses.php";
+    }
+    continueMainTaskBtn.onclick = function() {
+      window.location.href = baseUrl + "/moodle/mod/page/view.php?id=" + instructionPageId; //跳转到general instruction page
+    }
+    taskFinishBackToHomepageBtn.onclick = function () {
+      // localStorage.removeItem("myPlannerElements");
+      // localStorage.removeItem("myCurrentEssayContent");
+      // localStorage.removeItem("mySerializeHighlightsJson");
+      // localStorage.removeItem("myPlannerElements");
+      // localStorage.removeItem("myUserId");
+      // localStorage.removeItem("myUsername");
+      // localStorage.removeItem("myUserFirstname");
+      // localStorage.removeItem("myUserLastname");
+      localStorage.clear();
+      window.location.href = baseUrl + "/moodle/my/courses.php";
+    }
+
+    if (window.location.href === baseUrl + "/moodle/login/signup.php") {
+      let email = document.getElementById("id_email");
+      let email2 = document.getElementById("id_email2");
+      let lastname = document.getElementById("id_lastname");
+
+      let email2Element = document.getElementById("fitem_id_email2");
+      let lastnameElement = document.getElementById("fitem_id_lastname");
+      let cityElement = document.getElementById("fitem_id_city");
+      let country = document.getElementById("fitem_id_country");
+
+      email2Element.className+= " d-none";
+      lastnameElement.className+= " d-none";
+      cityElement.className+= " d-none";
+      country.className+= " d-none";
+
+      email.onblur = function () {
+        email2.value = email.value;
+      }
+      const random = Math.floor(Math.random() * 3);
+      const groupList = ["cn", "pl", "ge"];
+
+      lastname.value = groupList[random];
+
+      let usernameLabel = document.querySelector("#fitem_id_username>div>label");
+      usernameLabel .innerText = "学号";
+
+    }
+  };
+
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--  filter generico template 2 -->
+
+
+<link href="/flora/css/bootstrap.min.css" rel="stylesheet"/>
+
+<script src="/flora/js/jquery.min.js"></script>
+<script src="/flora/js/bootstrap.bundle.min.js"></script>
+<script src="/flora/js/jquery-ui.min.js" id="myJqueryUI"></script>
+
+<script src="/flora/js/test/flipclock.js"></script>
+<script src="/flora/js/quill.min.js"></script>
+<script>
+  var currentRange = null;
+  var whetherDoHighlight = false;
+  var saveHighlight = null;
+  var saveHighlightText = '';
+</script>
+<script src="/flora/js/text.js" defer></script>
+<script src="/flora/js/generateToolsHtml.js" defer></script>
+<script src="/flora/js/setupInstrumentationTools.js" defer></script>
+
+
+
+
+
+function getUserInfo() {
+let firstname = @@USER:firstname@@;
+//@@USER:PIC@@
+let lastname = @@USER:lastname@@;
+let userid = @@USER:id@@;
+let username = @@USER:username@@;
+
+// root url path @@WWWROOT@@
+localStorage.myUserFirstname = firstname;
+localStorage.myUserLastname = lastname;
+localStorage.myUserId = userid;
+localStorage.myUsername = username;
+}
+getUserInfo();

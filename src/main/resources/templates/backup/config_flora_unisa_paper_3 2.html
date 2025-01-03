@@ -1,0 +1,258 @@
+<!--start_PLUGINS_GENERICO_TEMPLATE_BODY-->
+
+<script src="/flora/js/jquery.min.js"></script>
+<link href="/flora/css/bootstrap.min.css" rel="stylesheet"/>
+<script src="/flora/js/bootstrap.bundle.min.js"></script>
+<!--    <script src="/flora/js/jquery-ui.min.js" id="myJqueryUI" ></script>-->
+<script src="/flora/js/quill.min.js"></script>
+<script src="/flora/js/flipdown.min.js"></script>
+
+<script>
+    var currentRange = null;
+    var whetherDoHighlight = false;
+    var saveHighlight = null;
+    var saveHighlightText = '';
+
+
+    var totalMinutes = 45;
+    var unlimitedTime = true; //如果使用unlimited time 则让timer 变成增长，不再是count down
+    var hintMinutesBeforeEnd = 5; // 提示学生，当任务快结束时候
+
+    var annotationTakeNoteLabel = "Takenote";
+    var annotationDefaultLabel = ["Research methods", "Data sample size", "Demographics of sample group", "Gap in knowledge", "Study aims", "Recommendations for changes in practice", "Ethics approval gained", "Conflict of interest", "Attention to sensitivity of participants", "Seeking consent"]; // maximum length设置为10， 自定义标签不能超过9个，第一个note 是必须有的
+    var annotationDefaultLabelColor = ["#99CCFF", "#CCFFCC", "#FFCCE5", "#f2b1ac", "#a6f5f7", "#e5f7c1", "#e6ff99", "#b3ffe0", "#99e6ff", "#b3b3ff", "#e0ccff", "#f5ccff", "#89CBE2", "#A3E289", "#ECCC90", "#EE91D8"];
+
+
+    var scaffoldShowingTime = [2, 7, 16, 21, 35]; // time point   native speaker
+    // var scaffoldShowingTime = [5, 17, 40, 52, 88]; // time point   non-native speaker
+    // var scaffoldShowingTime = [1, 2, 3, 4, 5]; // test time point
+    // var scaffoldForceDisplayTime = [2, 4, 6, 8, 10];
+    var scaffoldPromptMessage = ["It is important to understand what the task is about.", "It is important to read information about the topics.", "It is important to read relevant information and review your reading.", "It is important to write a good essay.", "It is important to write relevant information and check your writing."];
+    var scaffoldContent = [["(a) Use menu to get an overview and skim text", "(b) Check the essay rubric", "(c) Check the learning goals and instructions"], ["(a) Note down important information", "(b) Select what to read", "(c) Check the time left"], ["(a) Review annotations to check learning so far", "(b) Review the learning goals and instructions", "(c) Check essay to determine what to read next"], ["(a) Check the remaining time", "(b) Check the essay rubric", "(c) Draft essay by transferring learning to main points"], ["(a) Check the essay rubric", "(b) Edit your essay", "(c) Check the learning goals and instructions"]];
+
+    // var useWriteEssayGrammarly = true;
+
+    var plannerSelectStrategyHint = "Please select one strategy to continue!!!";
+    var plannerAllocateTimeHint = "Please allocate time to all tasks and total time must within " + totalMinutes + " minutes!!!";
+    var plannerSelectSkillsHint = "Please selected skills you plan to use!!!";
+    var plannerSavePlanHint = "Please fill all the strategy name and correct time!!!";
+    var plannerOverallStrategy = ["Read First, then Write", "Read and Write Simultaneously", "Write Intensively, Read Selectively"];
+    var plannerStep2Task = [["Read first module - AI", "Read second module - Differentiation", "Read third module - Scaffolding", "Write essay"], ["Read/writing about first module - AI", "Read/writing about second module - Differentiation", "Read/writing about third module - Scaffolding"], ["Conceive the structure of the essay", "Write the first draft", "Read additional information in relation to the essay", "Review, refine and enhance the essay"]];
+    var plannerStep2Instruction = ["How much time do you plan to spend on reading and writing respectively?", "How much time do you plan to spend on each topic?", "How much time do you plan to spend on different stages of writing?"];
+
+    var defaultStep3ReadingStrategy = ["Read the material page by page", "Quick browsing and then detailed reading", "Use the highlight tool to mark key content", "Write down my understanding in notes while reading", "Question-guided reading with focus on certain content", "Read selectively and skip irrelevant content"];
+    var defaultStep3ReadingInstruction = "What reading skills do you plan to use (multiple choice)?";
+    var defaultStep3WritingStrategy = ["First draft an essay structure and then fill in with details", "Use my notes and highlighting when writing the essay", "Review instructions and rubrics to get writing in line", "Copy Paste key sentences and then rewrite them fluently", "Use the writing framework and patterns I have learned to write"];
+    var defaultStep3WritingInstruction = "What writing skills do you plan to use (multiple choice)?";
+
+    var customiseStep2Instruction = "Please describe in detail the learning strategy you plan to adopt and how you will allocate your time. You may also include the reasons for the strategy and time allocation.";
+
+
+    let eventWebsocket = null;
+    let teacherChatWebsocket = null;
+
+    var apiBaseUrl = "http://localhost:8080";
+    var websocketApiBaseUrl = "ws://localhost:8080";
+    var mainEditor = null;
+    var editors = {}; //多个不同的侧边栏editor
+
+
+    // 是否展示工具
+    var useAnnotationTool = true;
+    var useScaffoldTool = false;  // if set to true, must use group      cn, ge, pl
+    var useGPTScaffoldTool = false;
+
+    var srlModel = "maria";    // copes
+    var gptScaffoldRole = "assistant";
+    var gptScaffoldRoleDescription = "You are a helpful assistant, please give suggestions based on the given text.";
+    var gptScaffoldPromptIncludeEssay = true;
+    var gptScaffoldPromptTemplate = "";
+    var gptScaffoldBackgroundFileNameList = [];
+    var gptScaffoldParameters = [200, 1, 2]; //  response max token, n, temperature/10
+
+    var gptScaffoldNeedCheckSubActionPrompt = [
+        {
+            "subAction": "SAVE_PLANNER", "notExistPrompt": "This student didn’t create explicit plans for how they will go about the task.", "existPrompt": "", "threshold": 0, "appearOverThresholdPrompt": "", "appearLessThanEqualThresholdPrompt": ""
+        },
+        {
+            "subAction": "TIMER", "notExistPrompt": "This student is not aware of the time left to complete the task.", "existPrompt": "This student is aware of the time left to complete the task.", "threshold": 0, "appearOverThresholdPrompt": "", "appearLessThanEqualThresholdPrompt": ""
+        },
+        {
+            "subAction": "TRY_OUT_TOOLS", "notExistPrompt": "This student is not aware of the tools in the environment that may help them with the task.", "existPrompt": "This student seems aware of the available tools in the environment that may help them with the task.", "threshold": 0, "appearOverThresholdPrompt": "", "appearLessThanEqualThresholdPrompt": ""
+        },
+        {
+            "subAction": "PAGE_NAVIGATION", "notExistPrompt": "This student seems not aware of the available reading materials.", "existPrompt": "This student seems aware of the available reading materials in the environment that may help them with the task.", "threshold": 0, "appearOverThresholdPrompt": "", "appearLessThanEqualThresholdPrompt": ""
+        },
+        {
+            "subAction": "RUBRIC", "notExistPrompt": "This student seems not to understand the rubric.", "existPrompt": "This student seems to understand the task rubric.", "threshold": 0, "appearOverThresholdPrompt": "", "appearLessThanEqualThresholdPrompt": ""
+        },
+        {
+            "subAction": "TASK_REQUIREMENT", "notExistPrompt": "This student seems not to understand the task instructions.", "existPrompt": "This student seems to understand the task instructions.", "threshold": 0, "appearOverThresholdPrompt": "", "appearLessThanEqualThresholdPrompt": ""
+        }];
+
+    var gptScaffoldNeedCheckSavePlannerSelectIndexPrompt = ["", "This student came up with the plan to [read first then write] for this task.", "This student came up with the plan to [read and write simultaneously] for this task.", "This student came up with the plan to [write intensively and read selectively] for this task.", "This student came up with the plan to [design his own plan] for the task"]; // 确保此处数量和planner 选项数量一致
+
+    var testISDIMUName = "ISDIMU Questionnaire";
+    var preTestName = "Questionnaire 2: Pre-Test Activity";
+    var hasTakePreviousStudyTestName = "Questionnaire 1: About yourself (study_2)";
+
+    var testISDIMUCourseId = 2;
+    var hasTakePreviousStudyTestNameCourseId = 2;
+    var pretestNameCourseId = 2;
+
+    var pretestGradesPrompt = [{"threshold": 0, "prompt": "This student has a high level of knowledge about AI in medicine."},
+        {"threshold": 5, "prompt": "This student has a low level of knowledge about AI in medicine."},
+        {"threshold": 10, "prompt": "This student has a medium level of knowledge about AI in medicine."}];
+    var isdimuScorePrompt = [{"threshold": 0, "prompt": "This student seems to have good understanding of various strategies or techniques that can be applied to facilitate learning."},
+        {"threshold": 16, "prompt": "This student seems to have a low level of understanding of various strategies or techniques that can be applied to facilitate learning."},
+        {"threshold": 32, "prompt": "This student seems to have some understanding of various strategies or techniques that can be applied to facilitate learning."}];
+
+    var userTakePreviousStudyPrompt = "This student has participated in the prior study so he/she has a certain level of task knowledge.";
+
+    var classifySentenceBackgroundFileNameList = ["CELLA_main_task_reading.docx"]; // cella_monash_main_task2_medicine.docx, TODO 使其可以支持docx 和pdf
+    var gptScaffoldTriggerMinute = [1, 3, 5]; //[14, 21, 28]
+    var gptScaffoldCheckSRLProcessTimeBlock = [[7, 14], [14, 21], [21, 28]]; // [beginMinute, endMinute]
+    // if threshold == 0, -> only check exist/not exist      if threshold > 0, only check over threshold/ less than equal threshold
+    var gptScaffoldNeedCheckSRLProcessPrompt = [
+        [
+            {
+                "srlProcess": "CMTR2",
+                "notExistPrompt": "Up until this point in the learning session, students who performed well in this task would double-check task instructions at least once. This doesn’t seem to be the case with this student. Could you please provide the student with paragraph-style (don't use the bullet points and numbered lists) feedback on how to make sure they checked task instructions and they do this regularly until the end of this writing session?\n\nPlease don’t advise the student on conditions listed above, just provide advice on how to check task instructions and keep doing this occasionally until the end of this writing session.\nFor this feedback, please follow the effective feedback framework. It is learner-centred and it should include three main components:\n1. Highlight both strengths and weaknesses of the student’s performance in relation to what they did in the task so far. This should come from conditions listed above.\n2. Focus on the future impact by providing comments with actionable information to help the student achieve the learning outcomes for the task. This should come from the advice listed above.\n3. Support the student to feel in control of their learning, attend to their social, emotional and motivational needs, and encourage them to be open to evaluative comments.\n\nThe feedback should not exceed 50 words.",
+                "existPrompt": "",
+                "threshold": 0,
+                "appearOverThresholdPrompt": "",
+                "appearLessThanEqualThresholdPrompt": ""
+            }
+        ],
+        [
+            {
+                "srlProcess": "OR2",
+                "notExistPrompt": "Up until this point in the learning session, students who performed well in this task made sure they had already included some information from the reading material in their essays. This doesn’t seem to be the case with this student. Could you please provide the student with paragraph-style (don't use the bullet points and numbered lists) feedback on how to include information from the reading material to their essay draft, based on task requirements?\n\nPlease don’t advise the student on conditions listed above, just provide advice on how to include information from the reading material to their essay draft, based on task requirements.\n\nFor this feedback, please follow the effective feedback framework. It is learner-centred and it should include three main components:\n1. Highlight both strengths and weaknesses of the student’s performance in relation to what they did in the task so far. This should come from conditions listed above.\n2. Focus on the future impact by providing comments with actionable information to help the student achieve the learning outcomes for the task. This should come from the advice listed above.\n3. Support the student to feel in control of their learning, attend to their social, emotional and motivational needs, and encourage them to be open to evaluative comments.\nThe feedback should not exceed 50 words.",
+                "existPrompt": "",
+                "threshold": 0,
+                "appearOverThresholdPrompt": "",
+                "appearLessThanEqualThresholdPrompt": ""
+            }
+        ],
+        [
+            {
+                "srlProcess": "OT2",
+                "notExistPrompt": "",
+                "existPrompt": "",
+                "threshold": 3,
+                "appearOverThresholdPrompt": "",
+                "appearLessThanEqualThresholdPrompt": "Up until this point in the learning session, students who performed well in this task made sure they had already started adding novel information in their own words, based on the reading material. This doesn’t seem to be the case with this student. Could you please provide the student with paragraph-style (don't use the bullet points and numbered lists) feedback on how to expand on the information they used from reading materials. The student should do this in their own words.\n\nPlease don’t advise the student on conditions listed above, just provide advice on how to expand on the information they used from reading materials.\n\nFor this feedback, please follow the effective feedback framework. It is learner-centred and it should include three main components:\n1. Highlight both strengths and weaknesses of the student’s performance in relation to what they did in the task so far. This should come from conditions listed above.\n2. Focus on the future impact by providing comments with actionable information to help the student achieve the learning outcomes for the task. This should come from the advice listed above.\n3. Support the student to feel in control of their learning, attend to their social, emotional and motivational needs, and encourage them to be open to evaluative comments.\n\nThe feedback should not exceed 50 words."
+            }
+        ],
+    ];
+
+
+    var useWriteEssayTool = true;
+    var useWriteEssayWordCountButton = false;
+    var useCollaborativeWriteEssayTool = false;
+    var useCollaborativeWriteEssayWordCountButton = false;
+    var includeChatgptToCollaborativeWriteEssay = false;
+    var usePlannerTool = true;
+    var useChatgptTool = false;
+
+    var chatgptBackgroundFileNameList = ["cella_monash_background.pdf", "cella_monash_main_task2_medicine.pdf"]; // add pdf file names here
+    var chatgptRoleDescription = "You are a helpful assistant and please answers questions based on the provided text."; //这个会和question 一起发送给GPT
+    var chatgptRole = "assistant";
+    var chatgptPromptIncludeEssay = true;
+    var includeSurveyToChatgptPrompt = []; // [1, 2, 3]
+    var chatgptParameters = [1000, 1, 2]; //  response max token, n, temperature/10
+
+    var useChecklistTool = true;
+    var useChecklistToolGrammar = false;
+    var useChecklistToolAcademic = false;
+    var useChecklistToolOriginality = true;
+    var useChecklistToolClassification = true;
+    var useDictionaryTool = false;
+    var dictionarySourceLanguage = "zh-cn";
+    var dictionaryTargetLanguage = "en";
+    var useTeacherChat = false;
+    var useTimerTool = true;
+    var useVideoRecordingTool = false;
+
+    var toolsLanguage = "en";
+
+    // var feedbackToolGroupSetup = {'cn': [false, false, false], 'ai': [true, false, false], 'he': [false, true, false], 'cl': [false, false, true]};
+
+    const toolList1 = [];
+    var studyName = "flora_unisa_paper_3";
+    function loadScript(url) {
+        let currentDate = new Date();
+
+        // Get the year, month, and day from the date object
+        let year = currentDate.getFullYear();
+        let month = currentDate.getMonth() + 1; // Month is 0-indexed
+        let day = currentDate.getDate();
+
+        // Pad the month and day with leading zeros if they are less than 10
+        month = month < 10 ? '0' + month : month;
+        day = day < 10 ? '0' + day : day;
+
+        // Concatenate the year, month, and day to form the desired format
+        let formattedDate = year.toString() + month.toString() + day.toString();
+
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = url + "?v=" + formattedDate;
+        script.defer = true;
+        script.async = false;
+        document.head.appendChild(script);
+    }
+    function getURLParameters(url) {
+        var params = {};
+        var parser = document.createElement('a');
+        parser.href = url;
+        var query = parser.search.substring(1);
+        var vars = query.split('&');
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split('=');
+            params[pair[0]] = decodeURIComponent(pair[1]);
+        }
+        return params; // string 类型
+    }
+    let navTagAList = document.querySelectorAll("#page-navbar>nav>ol>li a");
+    let currentCourseId = 0;
+    if (navTagAList != null) {
+        navTagAList.forEach(link => {
+            if (link.href.includes("course/view.php?id=")) {
+                currentCourseId = getURLParameters(link.href).id;
+            }
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+            });
+        });
+    }
+</script>
+
+<script>
+    loadScript("/flora/js/text.js");
+    loadScript("/flora/js/i18n_function.js");
+    loadScript("/flora/js/generateToolsHtml.js");
+    loadScript("/flora/js/tools_00common.js");
+
+    if(useAnnotationTool) loadScript("/flora/js/tools_01annotation.js");
+    if(useScaffoldTool) loadScript("/flora/js/tools_02scaffolding.js");
+    if(useWriteEssayTool) loadScript("/flora/js/tools_03essay_writing.js");
+    if(usePlannerTool) loadScript("/flora/js/tools_04planner.js");
+    if(useChatgptTool) loadScript("/flora/js/tools_05chatgpt.js");
+    if(useChecklistTool) loadScript("/flora/js/tools_06checklist.js");
+    if(useVideoRecordingTool) {
+        loadScript("/flora/js/MediaStreamRecorder.js");
+        loadScript("/flora/js/tools_09record_video.js");
+    }
+
+    // if(useTimerTool) 不确定timer是否需要按需加载
+    loadScript("/flora/js/tools_08timer.js");
+    if(useDictionaryTool) loadScript("/flora/js/tools_10dictionary.js");
+    if(useTeacherChat) loadScript("/flora/js/tools_11teacherchat.js");
+    if(useGPTScaffoldTool) loadScript("/flora/js/tools_07gpt_scaffolding.js");
+
+    loadScript("/flora/js/setupInstrumentationTools.js");
+
+</script>
+
+<!--end_PLUGINS_GENERICO_TEMPLATE_BODY-->

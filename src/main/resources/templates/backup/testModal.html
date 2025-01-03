@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<!--  <link rel="stylesheet" href="http://localhost:8080/css/flipclock.css">-->
+  <link href="https://cdn.quilljs.com/1.0.0/quill.snow.css" rel="stylesheet" />
+<!--  <link href="http://localhost:8080/css/instrumentationTools.css" rel="stylesheet" />-->
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+          crossOrigin="anonymous"></script>
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+<!--  <script src="http://localhost:8080/js/flipclock.js"></script>-->
+<!--  <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>-->
+<!--  <script>-->
+<!--    var currentRange = null;-->
+<!--    var whetherDoHighlight = false;-->
+<!--    var saveHighlight = null;-->
+<!--    var saveHighlightText = '';-->
+<!--  </script>-->
+<!--  <script src="http://localhost:8080/js/text.js"></script>-->
+<!--  <script src="http://localhost:8080/js/generateToolsHtml.js"></script>-->
+<!--  <script src="http://localhost:8080/js/setupInstrumentationTools.js"></script>-->
+  <style>
+    /* The Modal (background) */
+    .my-modal {
+      display: none; /* Hidden by default */
+      position: fixed; /* Stay in place */
+      z-index: 200; /* Sit on top */
+      padding-top: 100px; /* Location of the box */
+      left: 0;
+      top: 0;
+      width: 100%; /* Full width */
+      height: 100%; /* Full height */
+      overflow: auto; /* Enable scroll if needed */
+      background-color: rgb(0,0,0); /* Fallback color */
+      background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    }
+
+    /* Modal Content */
+    .my-modal-content {
+      position: relative;
+      background-color: #fefefe;
+      margin: auto;
+      padding: 0;
+      border: 1px solid #888;
+      width: 500px;
+      height: 220px;
+      box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+      -webkit-animation-name: animatetop;
+      -webkit-animation-duration: 0.4s;
+      animation-name: animatetop;
+      animation-duration: 0.4s
+    }
+
+    /* Add Animation */
+    @-webkit-keyframes animatetop {
+      from {top:-300px; opacity:0}
+      to {top:0; opacity:1}
+    }
+
+    @keyframes animatetop {
+      from {top:-300px; opacity:0}
+      to {top:0; opacity:1}
+    }
+
+    .my-modal-header {
+      padding: 16px 16px;
+      background-color: #E0E0E0;
+      color: black;
+    }
+
+    .my-modal-body {
+      padding: 2px 16px;
+      font-size: 13pt;
+    }
+    .my-modal-button {
+      width: 190px;
+      cursor: pointer;
+      color: #fff;
+      background-color: #6c757d;
+      border-color: #6c757d;
+      display: inline-block;
+      font-weight: 400;
+      line-height: 1.5;
+      text-align: center;
+      vertical-align: middle;
+      padding: 0.375rem 0.75rem;
+      font-size: 1rem;
+      border-radius: 0.25rem;
+      transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+
+    }
+  </style>
+</head>
+<body>
+
+<!-- The Modal -->
+<div id="myModal" class="my-modal">
+
+  <!-- Modal content -->
+  <div class="my-modal-content">
+    <div class="my-modal-header">
+      <!-- <span class="close">&times;</span> -->
+      <h2>Start Main Essay Activity</h2>
+    </div>
+    <div class="my-modal-body">
+      <p>This task has a time limit of 120 minutes. Note that only <strong>1 attempt</strong> is allowed. Are you sure you want enter the task?</p>
+
+    </div>
+    <div style="text-align: center;">
+      <button type="button" class="my-modal-button" id="continueMainTaskBtn">Yes - Continue</button>
+      <button type="button" class="my-modal-button" id="backToHomepageBtn">No - Go to Homepage</button>
+    </div>
+  </div>
+
+</div>
+
+<div id="myTaskFinishModal" class="my-modal">
+
+  <!-- Modal content -->
+  <div class="my-modal-content">
+    <div class="my-modal-header">
+      <!-- <span class="close">&times;</span> -->
+      <h2>Time is up</h2>
+    </div>
+    <div class="my-modal-body">
+      <p>Task finish here.</p>
+
+    </div>
+    <div style="text-align: center;">
+      <button type="button" class="my-modal-button" id="taskFinishSubmitEssayBtn">Submit Essay</button>
+      <button type="button" class="my-modal-button" id="taskFinishBackToHomepageBtn">Back to Homepage</button>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /*使用此代码使页面link 无效*/
+  window.onload = function(){
+    //console.log("div.courseindex-section");
+    let elementsTagA = document.getElementsByClassName("courseindex-link text-truncate");
+    //console.log(elementsTagA);
+    //console.log(elementsTagA.length);
+    for (let i = 0; i < elementsTagA.length; i++) {
+      //console.log(elementsTagA[i].dataset.for);
+      if (elementsTagA[i].dataset.for === "section_title") {
+        elementsTagA[i].href = "#";
+      }
+    }
+    // localStorage.myUserEnterPageTimestamp = new Date().getTime();
+    console.log("window onload finish");
+
+    // Get the modal
+    var myModal = document.getElementById("myModal");
+    console.log(myModal);
+    var continueMainTaskBtn = document.getElementById("continueMainTaskBtn");
+    var backToHomepageBtn = document.getElementById('backToHomepageBtn');
+    var taskFinishBackToHomepageBtn = document.getElementById("taskFinishBackToHomepageBtn");
+    console.log(window.location.href);
+    if (window.location.href == "http://localhost:8088/moodle/course/view.php?id=2") {
+      console.log(myModal.style.display);
+      myModal.style.display = "block";
+    }
+    backToHomepageBtn.onclick = function() {
+      window.location.href = "http://localhost:8088/moodle/my/courses.php";
+    }
+    continueMainTaskBtn.onclick = function() {
+      window.location.href = "http://localhost:8088/moodle/mod/page/view.php?id=2"; //跳转到general instruction page
+    }
+    taskFinishBackToHomepageBtn.onclick = function () {
+      window.location.href = "http://localhost:8088/moodle/my/courses.php";
+    }
+  };
+
+
+</script>
+</body>
+</html>

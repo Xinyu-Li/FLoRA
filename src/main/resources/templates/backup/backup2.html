@@ -1,0 +1,604 @@
+function loadStyle(url){
+let link = document.createElement('link');
+link.type = 'text/css';
+link.rel = 'stylesheet';
+link.href = url;
+let head = document.getElementsByTagName('head')[0];
+head.appendChild(link);
+}
+function loadJs(url) {
+let theHead = document.getElementsByTagName('head').item(0);
+let myScript = document.createElement('script');
+myScript.src = url;           //指定脚本路径
+myScript.type = 'text/javascript';  //指定脚本类型
+myScript.defer = true;              //程序下载完后再解析和执行
+theHead.appendChild(myScript);      //把dom挂载到头部
+}
+
+/*使用此代码使页面link 无效*/
+window.onload = function(){
+console.log("div.courseindex-section");
+let elementsTagA = document.getElementsByClassName("courseindex-link text-truncate");
+console.log(elementsTagA);
+console.log(elementsTagA.length);
+for (let i = 0; i < elementsTagA.length; i++) {
+console.log(elementsTagA[i].dataset.for);
+if (elementsTagA[i].dataset.for === "section_title") {
+elementsTagA[i].href = "#";
+}
+}
+loadStyle("https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css");
+loadJs("https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js");
+
+var myModal = new bootstrap.Modal(document.getElementById('myTaskControlModal'), {
+keyboard: false
+
+});
+
+$("#continueMainTaskBtn").on("click", function() {
+myModal.hide();
+console.log("ESSAY_TASK_START");
+});
+$("#backToHomepageBtn").on("click", function() {
+window.location.href = "http://localhost:8088/moodle/my/courses.php";
+});
+
+myModal.show();
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div id="start_dialog" title=" Start Main Essay Activity">
+  This task has a time limit of 120 minutes.  Note that only <b> 1 attempt </b> is allowed. Are you sure you want enter the task?
+</div>
+
+<div id="home" title="Test Account Verification">
+  You are  currently using a Test account which has multiple privileges. How would you like to proceed?
+</div>
+
+<div id="dialog" title="Resetting User Session">
+  <div class="progress-label">Initializing Database...</div>
+  <div id="progressbar"></div>
+</div>
+
+<script>
+  if (localStorage.getItem("user_c") != null){
+    document.getElementById("user_c").innerHTML = localStorage.getItem("user_c");
+    localStorage.setItem("grp",(localStorage.getItem("usertext").split('_'))[1]);
+    // localStorage.setItem('moodle-lang', $('html').attr('lang'));
+    localStorage.setItem('moodle-lang', 'zh-cn');
+  }else{
+    document.getElementById("start_dialog").style.visibility="hidden";
+    document.getElementById("home").style.visibility="hidden";
+    document.getElementById("dialog").style.visibility="hidden";
+  }
+</script>
+
+
+
+<script>
+
+
+  if (window.location.href != (root_url + "/lms/course/view.php?id=" + task_course_id.substr(-1) )){
+    $("#home").hide();
+    $(".progress-label").hide();
+  }
+</script>
+
+
+
+<script src= "/flora/Timer/jquery.min.js"></script>
+<script type="text/javascript" src=  "/flora/js/jquery-ui.min.js"></script>
+<script>
+
+
+  var start_dialog;
+  var progress_dialog;
+  var home_dialog;
+
+  if ((document.getElementsByClassName("logininfo")[0].innerHTML != "You are not logged in.")&& (document.getElementsByClassName("logininfo")[0].innerHTML != "You are currently using guest access")){
+    var USER_id = (new URL(document.getElementsByClassName("logininfo")[0].getElementsByTagName("a")[0].href).searchParams).get("id");
+//var USER_session = (new URL(document.getElementsByClassName("logininfo")[0].getElementsByTagName("a")[1].href).searchParams).get("sesskey");
+    localStorage.setItem("uid", USER_id);
+
+
+    if(document.getElementsByClassName("usertext").length != 0){
+      var u_name = "";
+      if($('html').attr('lang') == "zh-cn"){
+        u_name = document.getElementsByClassName("usertext")[0].innerHTML.substring(2, 99) + " " + document.getElementsByClassName("usertext")[0].innerHTML.substring(0, 2) ;
+      }else{
+        u_name = document.getElementsByClassName("usertext")[0].innerHTML;
+      }
+      localStorage.setItem("usertext", u_name.replace(/ /g,"_"));
+      localStorage.setItem("user_c", localStorage.getItem("uid") + "_" + localStorage.getItem("usertext")) ;
+      localStorage.setItem("grp",(localStorage.getItem("usertext").split('_'))[1]);
+    }
+
+  }
+
+  // fix navigation panel
+  if (document.querySelectorAll('[aria-controls="nav-drawer"]')[0] != undefined){
+    if (document.querySelectorAll('[aria-controls="nav-drawer"]')[0].getAttribute('aria-expanded') == "false"){
+      document.querySelectorAll('[aria-controls="nav-drawer"]')[0].click();
+    }
+    document.querySelectorAll('[aria-controls="nav-drawer"]')[0].style.display = "none";
+  }
+  if (document.getElementById("page-navbar")){
+    document.getElementById("page-navbar").style.display = "none";
+  }
+
+  // get essay data HACK + global LOGGER
+
+  var gLOG = {
+    source : "flora",
+    url: window.location.href,
+    uid: "000",
+    username: "anonymous",
+    action : "PAGE",
+    sub_action: "LOAD",
+    value: "Value",
+    timestamp: "DATE TIME",
+    logServer: "URL_OF_LOGSERVER",
+    tool_essay: "CLOSED",
+    tool_planner: "CLOSED",
+    tool_timer: "CLOSED",
+    tool_hyp_sidebar: "CLOSED",
+    tool_hyp_search: "CLOSED",
+    tool_scaffold: "CLOSED",
+    tool_todoList: "CLOSED",
+    tool_notification: "CLOSED",
+    tool_mouse: "x y t",
+    tool_eyetracker: "x y t"
+  };
+
+  if (localStorage.length > 0){
+    var u_id = (localStorage.getItem("uid") == null) ? "-99" : localStorage.getItem("uid");
+    var user_name = (localStorage.getItem("username") == null) ? "-99" : localStorage.getItem("username");
+    var essay = (localStorage.getItem("essay") == null) ? "null" : localStorage.getItem("essay");
+    gLOG.uid = u_id; gLOG.username = user_name; gLOG.value = essay;
+  }
+
+  $("#start_dialog").dialog({
+    autoOpen: false,
+    modal: true
+  });
+  var targetUrl = root_url + "/lms/mod/lesson/view.php?id=14&pageid=1";
+  $("#start_dialog").dialog({
+    buttons : {
+      "Yes - Continue" : function() {
+        window.location.href = targetUrl;
+        window.location.href = targetUrl;
+      },
+      "No - Go to Homepage" : function() {
+        window.location.href =root_url + "/lms/my/";
+        //$(this).dialog("close");
+      }
+    }
+  });
+
+
+  if ($('html').attr('lang') == "nl"){
+
+    $(".ui-dialog-title")[0].innerHTML = "Start essay-opdracht";
+    $("#start_dialog").html("De opdracht heeft een tijdslimiet van 120 minuten. Je krijgt slechts <b>1 poging </b>. Weet je zeker dat je met de opdracht wilt beginnen?");
+
+    $("#start_dialog").dialog({
+      buttons : {
+        "Ja – doorgaan" : function() {
+          window.location.href = targetUrl;
+          window.location.href = targetUrl;
+        },
+        "Nee – ga naar de startpagina" : function() {
+          window.location.href =root_url + "/lms/my/";
+          //$(this).dialog("close");
+        }
+      }
+    });
+  }
+
+  if ($('html').attr('lang') == "de"){
+
+    $(".ui-dialog-title")[0].innerHTML = "Aufsatzaufgabe starten";
+    $("#start_dialog").html("Die Aufgabe hat ein Zeitlimit von 120 Minuten. Sie erhalten nur <b>1 Versuch </b>. Möchten Sie die Aufgabe wirklich starten?");
+
+    $("#start_dialog").dialog({
+      buttons : {
+        "Ja – weiter" : function() {
+          // window.location.href = targetUrl;
+          window.location.href = targetUrl;
+        },
+        "Nein – gehe zur Startseite" : function() {
+          window.location.href =root_url + "/lms/my/";
+          //$(this).dialog("close");
+        }
+      }
+    });
+  }
+
+  function launch_Task(){
+    localStorage.setItem("usertext", document.getElementsByClassName("usertext")[0].innerHTML.replace(/ /g,"_"));
+    localStorage.setItem("user_c", localStorage.getItem("uid") + "_" + localStorage.getItem("usertext")) ;
+    localStorage.setItem("grp",(localStorage.getItem("usertext").split('_'))[1]);
+    progress_dialog.dialog( "open" );
+
+    // start_dialog.dialog("open");
+  }
+
+  function continue_Task(){
+    //progress_dialog.dialog( "open" );
+    start_dialog.dialog("open");
+    if(document.getElementsByClassName("ui-widget-overlay")){
+      document.getElementsByClassName("ui-widget-overlay")[0].style.opacity = "1";
+    }
+  }
+
+  // test account function
+  $("#home").dialog({
+    autoOpen: false,
+    modal: true
+  });
+
+  $("#home").dialog({
+    buttons : {
+      "Continue session": function() {
+        // do nothing
+        //$(this).dialog("close");
+        home_dialog.dialog("close");
+        continue_Task();
+      },
+      "♳ Control" : function() {
+        localStorage.clear();
+        sessionStorage.clear();
+        localStorage.setItem("uid", USER_id);
+        localStorage.setItem("userclass", "Control");
+        gDBQuery('DELETE_USER_PREVIOUS_SESSION', localStorage.getItem('uid'));
+        home_dialog.dialog("close");
+        launch_Task();
+      },
+      "♴ Generalised " : function() {
+        localStorage.clear();
+        sessionStorage.clear();
+        localStorage.setItem("uid", USER_id);
+        localStorage.setItem("userclass", "Generalised");
+        gDBQuery('DELETE_USER_PREVIOUS_SESSION', localStorage.getItem('uid'));
+        home_dialog.dialog("close");
+        launch_Task();
+      },
+      "♵ Personalised" : function() {
+        localStorage.clear();
+        sessionStorage.clear();
+        localStorage.setItem("uid", USER_id);
+        localStorage.setItem("userclass", "Personalised");
+        gDBQuery('DELETE_USER_PREVIOUS_SESSION', localStorage.getItem('uid'));
+        home_dialog.dialog("close");
+        launch_Task();
+      }
+
+    }
+  });
+
+  // progress bar
+
+  var progressTimer,
+          progressbar = $( "#progressbar" ),
+          progressLabel = $( ".progress-label" ),
+          dialogButtons = [{
+            text: "Please wait ... ",
+            disabled: true,
+            click: ""
+          }],
+          dialog = $( "#dialog" ).dialog({
+            autoOpen: false,
+            closeOnEscape: false,
+            resizable: false,
+            modal: true,
+            buttons: dialogButtons,
+            open: function() {
+              progressTimer = setTimeout( progress, 2000 );
+            },
+            beforeClose: function() {
+              downloadButton.button( "option", {
+                disabled: false,
+                label: "Start Download"
+              });
+            }
+          }),
+          downloadButton = $( "#downloadButton" )
+                  .button()
+                  .on( "click", function() {
+                    $( this ).button( "option", {
+                      disabled: true,
+                      label: "Downloading..."
+                    });
+                    dialog.dialog( "open" );
+                  });
+
+  progressbar.progressbar({
+    value: false,
+    change: function() {
+      progressLabel.text( "Current Progress: " + progressbar.progressbar( "value" ) + "%" );
+    },
+    complete: function() {
+      progressLabel.text( "Complete!" );
+      dialog.dialog( "option", "buttons", [{
+        text: "Start new attempt",
+        click: closeDownload
+      }]);
+      $(".ui-dialog button").last().trigger( "focus" );
+    }
+  });
+
+  function progress() {
+    var val = progressbar.progressbar( "value" ) || 0;
+
+    progressbar.progressbar( "value", val + Math.floor( Math.random() * 3 ) );
+
+    if ( val <= 99 ) {
+      progressTimer = setTimeout( progress, 50 );
+    }
+  }
+
+  function closeDownload() {
+    clearTimeout( progressTimer );
+    dialog
+            .dialog( "option", "buttons", dialogButtons )
+            .dialog( "close" );
+    progressbar.progressbar( "value", false );
+    start_dialog.dialog("open");
+    /*progressLabel
+      .text( "Starting download..." );
+    downloadButton.trigger( "focus" );*/
+  }
+
+  if (window.location.href == (root_url + "/lms/course/view.php?id=" + task_course_id.substr(-1)) ){
+
+    if (localStorage.getItem("grp") == "AD") {
+      if (localStorage.getItem("userclass") === null) {
+        localStorage.setItem("userclass", "Control");
+      }
+      progress_dialog = $("#dialog").dialog();
+      start_dialog = $("#start_dialog").dialog();
+      $("#home").html("You are  currently using a test account and subscribed to the <b>"  + localStorage.getItem("userclass")  + "</b> group. How would you like to proceed?");
+      home_dialog = $("#home").dialog();
+
+      $("#home").dialog("open");
+    }else{
+      start_dialog = $("#start_dialog").dialog();
+      continue_Task();
+      if(document.getElementsByClassName("ui-widget-overlay")){
+        document.getElementsByClassName("ui-widget-overlay")[0].style.opacity = "0.95";
+      }
+    }
+  }
+
+
+  if (localStorage.getItem("grp") == "CN"){
+    localStorage.setItem("userclass" , "Control");
+  }else if (localStorage.getItem("grp") == "GE"){
+    localStorage.setItem("userclass" , "Generalised");
+  }else if (localStorage.getItem("grp") == "PL"){
+    localStorage.setItem("userclass" , "Personalised");
+  }
+
+  if (localStorage.getItem("grp") != null){
+    if ( (localStorage.getItem("grp") == "CN"))
+    {
+      if (document.getElementById("block-region-side-pre")) {
+        if ((window.location.href).includes(root_url + "/lms/mod/book/view.php?id=32")){
+          document.getElementById("block-region-side-pre").style.display = "none";
+          document.getElementById("region-main").style.width = "100%";
+        }
+      }
+    }
+  }
+
+  if(window.location.href == root_url + "/lms/course/view.php?id=4"){
+
+    if ( localStorage.getItem("userclass")!= null){
+      if ( localStorage.getItem("grp") == "CN"){
+        document.getElementById("module-49").style.display = "none";
+      }
+    }
+  }
+
+  setInterval(function() {
+    if ( (typeof course !== 'undefined') && (course == task_course_id )){
+      if (localStorage.getItem("ESSAY_START") != null){
+        var now = new Date();
+        var lapsed_time =  Math.floor((now.getTime() - parseInt(localStorage.getItem("ESSAY_START")))/1000);
+        var remaining_time = ((TASK_DURATION*60) - lapsed_time) > 0 ? ((TASK_DURATION*60) - lapsed_time) : 0;
+        if (remaining_time <= 0 ){
+          gDBQuery('CHECK_USER_TIMEUP', localStorage.getItem('uid'));
+
+        }
+
+        //check for scaffolds  launch
+
+        if (localStorage.getItem("userclass") != "Control"){
+          if ((document.getElementById("myToDo") == null) || (document.getElementById("scaffoldlogo") == null) || ($("#sortable") == null) ){
+            logData("SCAFFOLD_LOG", "Attaching_Scaffold_Using_TIMER", localStorage.getItem("url"));
+            attach_Scaffold();
+          }
+
+          var curr_time = Math.floor(lapsed_time/60);
+          console.log("Lapsed Time so far: " + curr_time + " | " + curr_time + ":"  + (lapsed_time - curr_time * 60) );
+          Scaffold_Meta(curr_time);
+        }
+        //  end scaffold code
+      }
+
+    }
+  }, 10000);
+
+
+</script>
+
+
+
+<script>
+  /*使用此代码使页面link 无效*/
+  window.onload = function(){
+    console.log("div.courseindex-section");
+    let elementsTagA = document.getElementsByClassName("courseindex-link text-truncate");
+    console.log(elementsTagA);
+    console.log(elementsTagA.length);
+    for (let i = 0; i < elementsTagA.length; i++) {
+      console.log(elementsTagA[i].dataset.for);
+      if (elementsTagA[i].dataset.for === "section_title") {
+        elementsTagA[i].href = "#";
+      }
+    }
+
+    let myModalStr = '    <!-- Modal 控制task 能否继续 -->' +
+            '    <div class="modal fade" id="myTaskControlModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">' +
+            '        <div class="modal-dialog">' +
+            '            <div class="modal-content">' +
+            '                <div class="modal-header">' +
+            '                    <h5 class="modal-title" id="staticBackdropLabel">Start Main Essay Activity</h5>' +
+            //'                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>' +
+            '                </div>' +
+            '                <div class="modal-body">' +
+            '                    This task has a time limit of 120 minutes. Note that only <strong>1 attempt</strong> is allowed. Are you sure you want enter the task?' +
+            '                </div>' +
+            '                <div class="modal-footer">' +
+            '                    <button type="button" id="continueMainTaskBtn" class="btn btn-secondary">Yes - Continue</button>' +
+            '                    <button type="button" id="backToHomepageBtn" class="btn btn-secondary">No - Go to Homepage</button>' +
+            '                </div>' +
+            '            </div>' +
+            '        </div>' +
+            '    </div>';
+    $("body").append(myModalStr);
+    var myModal = new bootstrap.Modal(document.getElementById('myTaskControlModal'), {
+      keyboard: false
+
+    });
+
+    $("#continueMainTaskBtn").on("click", function() {
+      myModal.hide();
+      console.log("ESSAY_TASK_START");
+    });
+    $("#backToHomepageBtn").on("click", function() {
+      window.location.href = "http://localhost:8088/moodle/my/courses.php";
+    });
+
+    if (window.location.href.includes("/moodle/course/view.php")) {
+      myModal.show();
+    }
+
+  };
+
+
+  // Save periodically
+  setInterval(function() {
+    if (change.length() > 0) {
+      console.log('Saving changes', change);
+      // console.log(mainEditor.getText().split(/\s+/).length);
+
+      /*
+      Send partial changes
+      $.post('/your-endpoint', {
+        partial: JSON.stringify(change)
+      });
+
+      Send entire document
+      $.post('/your-endpoint', {
+        doc: JSON.stringify(quill.getContents())
+      });
+      */
+
+      // let bsAlert = new bootstrap.Toast($("#liveToast"));
+      // bsAlert.show();
+      $("#writeEssayToast").toast("show");
+      // Send entire document
+      let essaySaveTimestamp = getCurrentTimestamp();
+      $.post(apiBaseUrl + '/save-essay-content', {
+        userId: userId,
+        saveTime: essaySaveTimestamp,
+        username: username,
+        url: getCurrentUrl(),
+        essayContent: mainEditor.getText(),
+        essayContentJson: JSON.stringify(mainEditor.getContents()),
+        courseId: currentCourseId
+      }, function(data, status) {
+        console.log(data);
+
+      });
+      $.post(apiBaseUrl + '/action-essay-save', {
+        userId: userId,
+        username: username,
+        firstname: firstname,
+        lastname: lastname,
+        url: window.location.href.replace(/#.*/, "").replace(/&.*/, ""),
+        saveTime: essaySaveTimestamp
+      });
+      change = new Delta();
+    }
+  }, 5*1000);
+</script>
+
+
+
+
+// $("#taskFinishSubmitEssayBtn").on("click", function() {
+//     if (!e) var e = window.event;
+//     e.cancelBubble = true;
+//     if (e.stopPropagation) e.stopPropagation();
+//
+//     $("#writeEssayToast").toast("show");
+//     // Send entire document
+//     let essaySaveTimestamp = getCurrentTimestamp();
+//     $.post(apiBaseUrl + 'save-essay-content-manually', {
+//         userId: userId,
+//         saveTime: essaySaveTimestamp,
+//         username: username,
+//         url: window.location.href.replace(/#.*/, ""),
+//         essayContent: mainEditor.getText(),
+//         essayContentJson: JSON.stringify(mainEditor.getContents())
+//     });
+//     $.post(apiBaseUrl + "trace-essay", {
+//         userId: userId,
+//         saveTime: essaySaveTimestamp,
+//         url: window.location.href.replace(/#.*/, ""),
+//         username: username,
+//         firstname: firstname,
+//
+//         lastname: lastname,
+//         source: "ESSAY",
+//         pageEvent: "MOUSE_CLICK",
+//         targetObject: e.target.nodeName + "#" + (e.target.id == null || e.target.id == "" ? "NO_ID" : e.target.id),
+//         instantEvent: "SAVE",
+//         screenX: e.screenX,
+//         screenY: e.screenY,
+//         clientX: e.clientX,
+//         clientY: e.clientY,
+//
+//         windowInnerWidth: window.innerWidth,
+//         windowInnerHeight: window.innerHeight,
+//         screenWidth: window.screen.width,
+//         screenHeight: window.screen.height,
+//         eventValue: ""
+//     });
+//
+//     window.location.href = "https://study.floralearn.cn/moodle/my/courses.php";
+// });
+

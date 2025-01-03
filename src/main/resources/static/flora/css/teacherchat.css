@@ -1,0 +1,125 @@
+.chat-history {
+  margin-top: 10px;
+  /* width: 300px;
+  height: 150px;
+  border: 1px solid; */
+  height: 100%;
+  word-wrap: break-word;
+  white-space: normal;
+  /* font-size: 10pt; */
+  overflow: auto;
+  background: rgb(243, 243, 243);
+  overflow-y: auto;
+}
+
+.user-id-btn {
+  font: normal;
+}
+
+.teacher-answer {
+  text-align: left;
+  background-color: #3682f3;
+  color: #fff;
+  display: inline-block;
+  padding: 10px;
+  border-radius: 10px 10px 0 10px;
+  margin-bottom: 10px;
+  margin-top: 10px;
+  margin-right: 10px;
+  max-width: 100%;
+  word-wrap: break-word;
+  float: right;
+  box-shadow: 1px 0;
+  font-size: 16px;
+}
+
+.student-question {
+  align-self: flex-start;
+  text-align: left;
+  float: left;
+  background-color: #e0e0e0;
+  color: #333;
+  border-radius: 10px;
+}
+
+.timestamp {
+  font-size: 10px;
+  color: #b7b7b7;
+  margin-bottom: 10px;
+}
+
+.active .card-body {
+  background-color: hsl(0, 0%, 89%);
+  /* border-color: hsl(177, 12%, 66%); */
+}
+
+.leftpanel {
+  display: flex;
+  flex-direction: column;
+  max-height: 86vh;
+}
+
+.leftpanel .student-list-div {
+  flex: 1;
+  height: 10vh;
+  display: grid;
+  grid-template-columns: 1fr;
+  row-gap: 12px;
+  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  scrollbar-width: none;
+}
+
+.leftpanel .essayContent {
+  flex: 1;
+  min-height: 60vh;
+  /*max-height: 60vh;*/
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-right: 2px;
+  border-width: 2px;
+  padding: 5px;
+  padding-bottom: 10px;
+  font-size: 16px;
+  border-style: dashed;
+  text-align: justify;
+  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  scrollbar-width: none;
+}
+
+.type-status {
+  position: relative;
+  margin-top: 20px;
+}
+
+.type-status h4 h5 h6 {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding-right: 15px;
+}
+
+.online-status {
+  display: flex;
+}
+
+.status {
+  border: 1px solid;
+  z-index: 1;
+  width: 12px;
+  height: 12px;
+  margin-top: 3px;
+  margin-left: 3px;
+  background-color: gray;
+}
+
+.online {
+  background-color: aquamarine;
+}
+
+#message-input {
+  resize: none;
+}

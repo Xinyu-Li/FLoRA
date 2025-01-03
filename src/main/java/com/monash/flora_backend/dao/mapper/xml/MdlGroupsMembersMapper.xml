@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.monash.flora_backend.dao.mapper.MdlGroupsMembersMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.monash.flora_backend.dao.entity.MdlGroupsMembers">
+        <id column="id" property="id" />
+        <result column="groupid" property="groupid" />
+        <result column="userid" property="userid" />
+        <result column="timeadded" property="timeadded" />
+        <result column="component" property="component" />
+        <result column="itemid" property="itemid" />
+    </resultMap>
+</mapper>

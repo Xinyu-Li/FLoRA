@@ -1,0 +1,115 @@
+#mybatis-plus:
+#  mapper-locations: classpath*:com/monash/flora_backend/**/xml/*Mapper.xml
+#  global-config:
+#    id-type: 0
+#    db-column-underline: false
+#    refresh-mapper: true
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#    jdbc-type-for-null: null
+
+spring:
+  autoconfigure:
+    exclude: com.alibaba.druid.spring.boot.autoconfigure.DruidDataSourceAutoConfigure
+  datasource:
+
+    dynamic:
+      druid:
+        initial-size: 5
+        max-active: 20
+        min-idle: 5
+        max-wait: 120000 # 单位毫秒，等待连接的最大时间
+        max-wait-thread-count: 100
+
+        time-between-eviction-runs-millis: 110000 # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+        min-evictable-idle-time-millis: 300000 # 配置一个连接在池中的最小生存时间，单位是毫秒
+
+        keep-alive: true # 连接池中的minIdle数量以内的连接，空闲时间超过minEvictableIdleTimeMillis，则会执行keepAlive操作
+        phy-timeout-millis: 2520000 # 允许物理连接最大存活时间, 单位是毫秒
+        query-timeout: 120000
+      primary: master  #设置默认的数据源或者数据源组,默认值即为master
+      strict: false #设置严格模式,默认false不启动. 启动后在未匹配到指定数据源时候会抛出异常,不启动则使用默认数据源.
+      datasource:
+        master:
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          url: jdbc:mysql://127.0.0.1:3306/flora_annotation?autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=CONVERT_TO_NULL&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=True&connectTimeout=1000&socketTimeout=30000
+          username: root
+          password: 1q2w3e4R
+        slave_1:
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          url: jdbc:mysql://127.0.0.1:3306/moodle?autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=CONVERT_TO_NULL&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=True&connectTimeout=1000&socketTimeout=30000
+          username: root
+          password: 1q2w3e4R
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  thymeleaf:
+    prefix: classpath:/templates/ #
+    suffix: .html
+  redis:
+    database: 0
+    host: localhost
+    port: 6379
+    password: # 未配置 默认为空
+    timeout: 1000
+    jedis:
+      pool:
+        max-active: 20  # 连接池最大连接数
+        max-wait: -1    # 连接池最大阻塞等待时间，负值表示没有限制
+        max-idle: 30    # 连接池最大空闲连接
+        min-idle: 2     # 连接池最小空闲连接
+  kafka:
+    bootstrap-servers: 127.0.0.1:9092
+    listener:
+      type: batch
+    producer:
+      retries: 0
+      batch-size: 16384
+      buffer-memory: 33554432
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: test-consumer-group
+      auto-offset-reset: earliest
+      enable-auto-commit: true
+      auto-commit-interval: 100
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      max-poll-records: 100
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: guanliang.chen@monash.edu # xinyu.li1@monash.edu
+    password: clkpwefattfqfmis # clkpwefattfqfmis  # orhysnvfqgibaied
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  output:
+    ansi:
+      enabled: detect
+
+
+my:
+  elasticsearch:
+    index-name: annotation
+    fulltext-index-name: fulltext
+    http-host: 127.0.0.1 # local cella-monash
+
+#  excel-export: /root/export_excel/ # cloud
+#  excel-export: C:\develop\flora_project\ # local
+  # excel-export: /Users/luod/codes/flora/FLoRA_backend/target/excel
+#  website-url: https://cella-monash.floraproject.org
+#  website-url: https://study.floralearn.cn
+server:
+  port: 8080
+  tomcat:
+    connection-timeout: 600000
+
+# 部署前 修改
+

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Chatbot</title>
+    <!-- Add Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Add jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <!-- Add jQuery UI -->
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <!-- Add Bootstrap JS -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Add custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+    <link href="/css/chattest.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mt-4">Simple Chatbot</h1>
+        <div id="chatbox" class="rounded border p-3 mt-4">
+            <!-- Chat messages will be displayed here -->
+        </div>
+        <form id="message-form" class="mt-4">
+            <div class="input-group">
+                <input id="message-input" type="text" class="form-control" placeholder="Type your message...">
+                <div class="input-group-append">
+                    <button type="submit" class="btn btn-primary">Send</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="my-horizontal-collapse-tools my-classification" id="chatgpt-collapse">
+        <div class="container">
+            <h1 class="text-center mt-4">Chatgpt Conversation</h1>
+            <div id="chatbox" class="rounded border p-3 mt-4">
+                <!-- Chat messages will be displayed here -->
+            </div>
+            <form id="message-form" class="mt-4">
+                <div class="input-group">
+                    <input id="message-input" type="text" class="form-control" placeholder="Type your message...">
+                    <div class="input-group-append">
+                        <button type="submit" class="btn btn-primary">Send</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="my-horizontal-collapse-tools my-classification" id="chatgpt-collapse">
+        <div class="card card-body" style="height:100%;">
+            <h3 class="mb-2">Chatgpt Tool</h3>
+            <div style="height:80%;">
+                <div class="input-group" id="chatgptPanelBox">
+                    <div class="input-group-text" id="btnGroupAddonChatgpt">
+                        <svg id="chatgptPanelSvg" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
+                        <div class="spinner-border spinner-border-sm d-none" id="chatgptPanelSpinner" role="status"><span class="visually-hidden">Loading...</span></div>
+                    </div>
+                    <input type="text" class="form-control" id="chatgptPanelInput" placeholder="Input a question..." aria-label="Input group example" aria-describedby="btnGroupAddonChatgpt">
+                    <button type="button" class="btn btn-outline-primary" id="chatgptPanelBtn">Submit</button>
+                </div>
+                <div class="form-control" style="height:100%; word-wrap: break-word;white-space : normal; font-size:10pt; overflow: auto;" id="chatgpt-textarea"></div>
+            </div>
+        </div>
+    </div>
+    <!-- Add custom JavaScript -->
+    <script src="/js/chattest.js"></script>
+</body>
+</html>

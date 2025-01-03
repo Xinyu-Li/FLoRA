@@ -1,0 +1,343 @@
+<!--start_PLUGINS_GENERICO_TEMPLATE_BODY-->
+
+<script src="/flora/js/jquery.min.js"></script>
+<link href="/flora/css/bootstrap.min.css" rel="stylesheet"/>
+<script src="/flora/js/bootstrap.bundle.min.js"></script>
+<!--    <script src="/flora/js/jquery-ui.min.js" id="myJqueryUI" ></script>-->
+<script src="/flora/js/quill.min.js"></script>
+<script src="/flora/js/flipdown.min.js"></script>
+<script>
+    var currentRange = null;
+    var whetherDoHighlight = false;
+    var saveHighlight = null;
+    var saveHighlightText = '';
+
+
+    var totalMinutes = 45;
+    var unlimitedTime = true; //如果使用unlimited time 则让timer 变成增长，不再是count down
+    var hintMinutesBeforeEnd = 5; // 提示学生，当任务快结束时候
+
+    var annotationLabelColors = [
+        { annotationLabel: 'P-hacking', annotationLabelColor: '#99CCFF'},
+        { annotationLabel: 'cherry-picking', annotationLabelColor: '#CCFFCC'},
+        { annotationLabel: 'sampling bias', annotationLabelColor: '#FFCCE5'},
+        { annotationLabel: 'manipulating visualisations', annotationLabelColor: '#75ff66'}
+    ];
+
+    //修改预定义的reading strategy 和writing strategy
+    defaultStep3ReadingStrategy = ["Read the material page by page", "Quick browsing and then detailed reading", "Read selectively and skip irrelevant content"];
+    defaultStep3WritingStrategy = ["First draft an essay structure and then fill in with details", "Review instructions and rubrics to get writing in line", "Copy Paste key sentences and then rewrite them fluently"];
+
+
+    let eventWebsocket = null;
+    let teacherChatWebsocket = null;
+
+    var apiBaseUrl = "http://localhost:8080";
+    var websocketApiBaseUrl = "ws://localhost:8080";
+    var mainEditor = null;
+    var editors = {}; //多个不同的侧边栏editor
+
+
+    // 是否展示工具
+    var useAnnotationTool = true;
+    var useScaffoldTool = false;  // if set to true, must use group      cn, ge, pl
+    var useGPTScaffoldTool = true;
+
+    var srlModel = "copes";    // copes
+    var gptScaffoldRole = "assistant";
+    // var gptScaffoldRoleDescription = "You are a helpful assistant, please give suggestions based on the given text.";
+    var gptScaffoldPromptIncludeEssay = false;
+
+    var gptScaffoldPromptTemplate = `An undergraduate student is working on an essay writing task.
+
+These are task instructions for the student:
+You have been provided with four scenarios that describe a company’s approach to improving its cloud services, focusing on customer surveys, productivity software, cybersecurity, and AI chatbots. Each scenario presents a study or project that is part of the company’s efforts to gather data, develop solutions, and make informed decisions. However, within these scenarios, there may be biases that impact the validity of the research and conclusions.
+Your task is to carefully read each scenario and identify any biases or flaws in the way the studies were conducted, the data was analysed, or the findings were presented. Think about how these biases may have influenced the outcomes and what consequences they might have for the company’s decisions moving forward.
+Once you have identified the biases, write a 200-300 word essay that
+(1) explains which biases you found
+(2) explain how they could potentially distort the results or lead to misguided conclusions
+(3) and proposes solutions for how the company could avoid or minimise these biases to ensure that future research and projects produce more accurate and reliable results.
+Support your points with specific examples from the scenarios to illustrate your analysis.
+You can write the essay using the tool with the pen icon on the right side of the screen.
+This is the rubric.
+
+1. Bias Identification
+Identifies all the 8 key biases - 4 points
+Identifies 6 or 7 key biases - 3 points
+Identifies 3, 4 or 5 key biases - 2 points
+Identifies 1 or 2 key biases - 1 points
+Identifies no bias - 0 points
+
+2. Explanation of Impact
+Clearly explains how biases affect the results - 4 points
+Provides a good explanation of bias impact - 3 points
+Explains some impact of biases - 2 points
+Limited explanation of bias impact - 1 points
+Fails to explain how biases impact results - 0 points
+
+3. Proposed Solutions
+Proposes thoughtful and practical solutions - 4 points
+Proposes reasonable solutions - 3 points
+Proposes basic or partial solutions - 2 points
+Solutions lack practicality OR detail - 1 points
+Fails to propose any solutions - 0 points
+
+4. Clarity and Structure
+Essay is well-organised, clear, and concise - 4 points
+Essay is clear but could be more organised - 3 points
+Essay is somewhat clear but disorganised - 2 points
+Essay lacks clarity OR organisation - 1 points
+Essay is unclear and disorganised - 0 points
+
+5. Use of Examples
+Provides detailed examples from all scenarios - 4 points
+Uses examples from most scenarios - 3 points
+Uses few examples from the scenarios - 2 points
+Provides unclear OR limited examples - 1 points
+Fails to use any examples - 0 points
+
+
+This is the reading material for the task:
+
+Text 1: Surveying Global Cloud Needs for a New IT Initiative
+
+An international IT company embarked on an ambitious project to redefine its cloud computing services, aiming to better align them with the unique needs of businesses worldwide. The company decided to start by gathering extensive data from businesses across different regions, sectors, and scales. The strategy involved distributing a comprehensive online survey to capture how companies are currently utilising cloud technology, what challenges they face, and what improvements they would like to see.
+
+The survey was designed to collect demographic information such as the size of the business, the sector in which it operates, and its geographic location. There were also detailed questions on how often companies used cloud services, what specific tools they relied on, and how satisfied they were with the company’s current offerings. The survey was distributed online, with the aim of reaching a broad, international audience, and was only available in English, under the assumption that most global businesses operate in English or have the resources to translate the questions.
+
+Once the survey responses started flowing in, the research team was excited by the volume of data they had collected. Early analysis showed what appeared to be clear trends. For instance, North American businesses seemed to heavily rely on cloud storage, while European companies placed more emphasis on security features. These regional insights were highlighted in several visualisations. A bar chart showing cloud usage by region was especially striking, illustrating significant differences in the adoption of cloud services across the world.
+
+The research team moved quickly, eager to provide guidance for the company’s cloud services development roadmap. As part of their data presentation, they created a series of graphs to communicate key findings. One of the most important visuals was a line graph showing changes in customer satisfaction over time. The graph showed a steady upward trend in satisfaction, particularly among newer users of the company’s advanced cloud tools. While the data suggested gradual improvements, the scaling of the graph made the growth seem more substantial than it was, enhancing the visual impact.
+
+Despite the research team’s enthusiasm, some members noted an uneven distribution of responses across regions. The majority of the data came from North American and European businesses, while regions like Africa, Southeast Asia, and South America were underrepresented. This discrepancy was noted in the final report but downplayed in its impact, as the company was eager to use the insights to inform the next stages of product development. The lower response rates from regions with less internet infrastructure or where English proficiency might be lower were not given much weight in the analysis.
+
+The report, filled with rich visualisations, made a strong case for the company’s new direction. The graphs and charts appeared to tell a cohesive story, highlighting the strengths of the company's cloud services and pinpointing areas for improvement.  The company moved forward, confident that the insights gathered would help them build more regionally tailored cloud solutions.
+
+Text 2: Developing Productivity Software to Match the New Cloud Services
+
+Following the success of its global cloud survey, the IT company identified a growing need for productivity tools that integrated seamlessly with cloud services. As businesses increasingly adopted cloud-based platforms, the demand for more sophisticated project management software was evident. To meet this need, the company developed a new software suite aimed at improving workplace productivity. This suite was designed to automate repetitive tasks, streamline project workflows, and enhance collaboration across teams using cloud services.
+
+To test the software’s effectiveness, the research team decided to conduct a study. They selected employees from organisations that had been early adopters of the company’s existing cloud products. These individuals were chosen because they had consistently demonstrated high productivity levels in the past, making them ideal candidates for evaluating the new software. The team reasoned that these employees would be the most likely to provide meaningful feedback on how the software impacted their work.
+
+The study was conducted over a six-month period, during which the research team tracked key metrics such as project completion rates, task delegation efficiency, and team collaboration frequency. At the end of the study, the results were analysed using a variety of statistical tests. The researchers were particularly pleased to find that many of these tests showed a significant improvement in productivity among employees who had used the new software.
+
+To illustrate these findings, the team created a series of graphs and charts. One particularly compelling graph was a line chart showing a steady increase in project completion rates over the six months. Another bar chart compared productivity levels across different sectors, with certain industries—such as technology and finance—showing marked improvements. These visualisations were presented to the company’s leadership as evidence of the software’s broad effectiveness.
+
+However, not all statistical tests conducted during the study yielded significant results. Some tests showed little to no difference in productivity between employees using the new software and those who were not. These inconclusive results were largely set aside in the final report, as the research team focused on the data points that best demonstrated the software’s potential. This selective focus painted a highly positive picture of the software’s effectiveness.
+
+In their final report, the research team recommended that the company move forward with a large-scale rollout of the software. They argued that the improvements observed in the study were indicative of the software’s overall value, even though the results had primarily been drawn from employees who were already high performers. The company’s leadership agreed, seeing the software as a key piece of their future cloud services offering. As the study provided strong evidence of the software’s potential, the company was confident that the software would deliver similar benefits to a broader audience once it was fully integrated into their cloud services package.
+
+Text 3: Evaluating Security Software for Enhanced Cloud Solutions
+
+As part of their broader strategy to enhance cloud computing services, the IT company introduced a new cybersecurity solution designed to protect businesses from increasingly sophisticated cyber threats. This security software promised to offer superior protection against a wide range of attacks, including phishing, malware, and ransomware, building on the company’s reputation for providing reliable cloud infrastructure.
+
+To evaluate the effectiveness of the new security software, the company conducted a study involving 100 businesses that had experienced cyber attacks in the past. These participants were chosen because they had a history of being vulnerable to attacks, which made them the ideal candidates for testing the new software’s ability to provide protection. The company believed that if the software could prove effective in this group, it would likely be valuable for a wider range of businesses.
+
+The study lasted for several months, during which the research team monitored the participants’ experiences with the new security software. Multiple statistical tests were conducted to compare the effectiveness of the new software against the company’s previous security solutions. While many of the tests showed little to no difference in the number of attacks prevented by the new software, one particular test—a t-test—revealed a statistically significant reduction in successful attacks when the new software was used.
+
+The research team quickly seized on this finding as evidence of the software’s superiority. They created a series of visualisations to demonstrate the effectiveness of the new software, including a line graph showing a sharp decline in cyber attacks post-implementation. The graph was visually impactful, with the y-axis scale adjusted to emphasise the drop in attacks, making the improvement seem more dramatic than it might have been based on the raw numbers.
+
+Armed with this data, the research team presented their findings to the company’s leadership, recommending that the new security software be included as a standard feature in all cloud service packages. They argued that the significant reduction in cyber attacks observed in the study was strong evidence of the software’s effectiveness and that businesses using the company’s cloud infrastructure would benefit from this added layer of protection. The leadership was impressed by the findings and the company proceeded with the plan, confident that the new security software would provide a key differentiator in the competitive cloud services market.
+
+Text 4: Improving Customer Support with AI Chatbots
+
+To complement the company’s new cloud services and software offerings, the IT team developed an AI-powered chatbot designed to improve customer support for businesses adopting their cloud infrastructure. The chatbot was intended to streamline interactions with customers, resolve issues more quickly, and reduce the burden on human support teams. It was marketed as a cutting-edge solution that could enhance customer satisfaction across the board.
+
+The company conducted a study to evaluate the effectiveness of the chatbot, focusing on a group of customers who had previously interacted with the company’s support services. The research team carefully selected customers who had provided positive feedback on the company’s existing services, believing that these individuals would offer the most useful insights into the chatbot’s effectiveness.
+
+Over the course of the study, customers were asked to rate their satisfaction with the chatbot and compare it to their experiences with traditional support channels. The results were overwhelmingly positive, with many customers reporting that the chatbot provided faster and more accurate responses to their inquiries. The research team performed several statistical analyses to evaluate the data, and while not all tests showed significant differences between the chatbot and traditional support, those that did were highlighted in the final report.
+
+The research team also created several visualisations to illustrate the chatbot’s effectiveness. A pie chart showing customer satisfaction levels revealed that a large majority of users were highly satisfied with the chatbot’s performance. Another bar chart compared the chatbot’s response times to those of human support agents, with the chatbot consistently outperforming human agents in speed. These visuals were included in the final report as evidence that the chatbot was a valuable addition to the company’s customer support strategy.
+
+In their final recommendation, the research team suggested that the chatbot be implemented across all of the company’s platforms, citing the high satisfaction rates observed during the study. They acknowledged that the study had focused primarily on customers who had already provided positive feedback about the company’s services but argued that the chatbot’s performance was strong enough to warrant a wider rollout. The company moved forward with the chatbot’s implementation, confident that it would improve customer support for all users of their cloud services.
+
+
+;;;SRL_PROCESS_PROMPT;;;
+
+For this feedback, please follow the effective feedback framework. It is learner-centred and it should include three main components:
+1. Highlight both strengths and weaknesses of the student’s performance in relation to what they did in the task so far.
+2. Focus on the future impact by providing comments with actionable information to help the student achieve the learning outcomes for the task. This should come from the advice listed above.
+3. Support the student to feel in control of their learning, attend to their social, emotional and motivational needs, and encourage them to be open to evaluative comments.
+
+The feedback should not exceed 100 words.`;
+
+    var gptScaffoldBackgroundFileNameList = [];
+    var gptScaffoldParameters = [300, 1, 2]; //  response max token, n, temperature/10
+
+
+    var testISDIMUCourseId = 2;
+    var hasTakePreviousStudyTestNameCourseId = 2;
+    var pretestNameCourseId = 2;
+
+
+    var pretestGradesPrompt = [{"threshold": 0, "prompt": "This student has a high level of knowledge about AI in medicine."},
+        {"threshold": 5, "prompt": "This student has a low level of knowledge about AI in medicine."},
+        {"threshold": 10, "prompt": "This student has a medium level of knowledge about AI in medicine."}];
+    var isdimuScorePrompt = [{"threshold": 0, "prompt": "This student seems to have good understanding of various strategies or techniques that can be applied to facilitate learning."},
+        {"threshold": 16, "prompt": "This student seems to have a low level of understanding of various strategies or techniques that can be applied to facilitate learning."},
+        {"threshold": 32, "prompt": "This student seems to have some understanding of various strategies or techniques that can be applied to facilitate learning."}];
+    var classifySentenceBackgroundFileNameList = ["cella_monash_FIT5125.docx"]; // cella_monash_main_task2_medicine.docx, TODO 使其可以支持docx 和pdf
+    var gptScaffoldNeedCheckSRLProcessPrompt = [
+        {
+            triggerMinute: 14,
+            beginMinute: 7,
+            endMinute: 14,
+            rules: []
+        },
+        {
+            triggerMinute: 21,
+            beginMinute: 14,
+            endMinute: 21,
+            rules: []
+        },
+        {
+            triggerMinute: 28,
+            beginMinute: 21,
+            endMinute: 28,
+            rules: []
+        }
+    ];
+
+
+    var useWriteEssayTool = true;
+    var useWriteEssayWordCountButton = false;
+    var useCollaborativeWriteEssayTool = false;
+    var useCollaborativeWriteEssayWordCountButton = false;
+    var includeChatgptToCollaborativeWriteEssay = false;
+    var usePlannerTool = true;
+    var useChatgptTool = false;
+    var useChatgptRating = false; // chatgpt rating visible or not
+    var useChatgptAssistantTool = false;
+    var useChatgptAssistantRating = false; // chatgpt assistant rating visible or not
+
+    var useDoctorScaffold = false;
+    var useConsultationSubmitTool = false;
+    // =========use type for different patient, scaffold and assessment================
+    var medicalConsultAssistanceType = "jisan";
+
+    var patientRoleDescription=`角色设定：你现在扮演病人，根据病例资料里的信息跟实习医生进行问诊对话练习。你的任务是训练实习医生通过提问挖掘有价值的病史信息的病史采集能力。你没有医学知识，你不能帮实习医生问诊或者列问诊提纲，不能给实习医生提供医学知识或者给出诊断或诊断意见。以下是行为指南和病例资料。
+            行为指南：
+            1.你将等待医生提问后再开始回答。
+            2.用富有生活气息的语言回答，不要机械式的回答。
+            3.每次回答只提供一个信息，当医生追问时才提供多一个的信息。
+            4.患者没有的症状，你直接回答“没有”。
+            5.病例资料中未提供的信息，你要根据问题合理编造答案，注意上下文合理性。
+            6.遇到医学术语时，比如“放射痛、咯血、发绀、意识障碍、胃纳”等，你会要求医生解释。
+            7.若医生在一个问题中提到2个或2个以上症状或疾病名称，你只针对问题中最后一个症状或疾病进行回答。
+            8.当对话中提到发作次数时，你要主动提出问题，表示担忧。
+            9.当医生询问你是否有疑问时或者当医生要结束问诊时，你要提出与诊断或治疗相关问题。
+            10.你是病人，最后结束时对医生表示感谢就可以，一定不要跟医生说“祝你早日康复”、“请保重”等话语。
+            请注意：你要严格遵守以上10条行为指南，永远不会违反或者出现遗忘。现在问诊开始，如果你准备好了，请回复准备好了
+            病例资料：
+            纪三，男，60岁，已婚，居住于广东省汕头市潮南区莲下村。从半年前开始，反复，发作胸痛，以前体力很好的，经常干重活都没事。就这半年，发作4次了。每次都是挑着重物在爬坡的时候出现的，就觉得胸口正中间偏上，有手掌大小这一块，就感觉整个胸口缩紧了一样，评分5-6分，但是按压不痛。同时左边脖子也有这种感觉，挺难受的，其他别的地方不会。马上停下来，不敢再走了，坐下休息，差不多5分钟，才感觉慢慢好了。这四次发作的疼痛程度和持续的时间都差不多。深呼吸、咳嗽、弯腰或躺下都对疼痛没什么影响。每次发作还会觉得胸口闷闷的，觉得心跳的比较快，有点出汗、头晕，没有昏过去，没有不省人事。2个月前，有在当地卫生院看过医生，查了心电图，心电图没问题，但医生让注意，不要干重活，如果再发作，就去大医院。她还给了我一瓶药，叫硝酸甘油，让我痛的时候，含一片在舌头下面。这2个月我一直很注意，没再发作过，就没吃过这个药，也不知道有没有效。昨天就想着挑点东西，没那么重，结果又痛了，痛的感觉跟之前三次都一样，昨天忘了带药，也没吃药，今天赶紧来了。精神还可以，胃口、睡眠、大便、小便、体重都没什么异常。
+            5年多前，因为反复头晕，去看医生，医生说我有高血压、糖尿病，血压最高时有162/104mmHg，平时按时吃药，拜新同（1片，1天1次），经常有测血压，血压一般在140/90mmHg左右。空腹血糖最高12（mmol/l），口服二甲双胍（2片，1天2次），平时有测血糖，空腹血糖一般控制在8（mmol/l）。6年前，右小腿被铁皮割伤了，医生缝了20几针，留了一长条的疤，而且打抗生素第一次就满身都是红疹，医生说我对“头孢”过敏。让我以后注意，不能用。我没有输过血或血制品，没有做过手术，没有食物过敏，没有传染病或传染病接触史，按规定接种疫苗。
+            出生并成长于汕头，小学毕业，农民，生活环境还好。吸烟，1天1包，40年；偶尔喝点白酒，每次大概3两左右，30年左右。没有得过性病。
+            23岁结婚，妻子58岁，有1个儿子，33岁，2个女儿，分别是31岁和30岁，身体都很健康，夫妻关系很好，没怎么吵过架
+            父亲前年去世的，80岁，母亲去年也去世了，78岁，父母生前身体都挺好的，去世时都没什么疾病，自然去世。一个哥哥65岁，一个妹妹58岁，兄妹两人身体也都很健康。家里没人有跟我一样会胸痛的。家族里没人有高血压、糖尿病、冠心病，也没人有精神病史。`;
+    var scaffoldRoleDescription="";
+    var assessmentRoleDescription="";
+
+    var chatgptBackgroundFileNameList = ["cella_monash_background.pdf"]; // add pdf file names here
+    // var chatgptRoleDescription = "You are a helpful assistant and please answers questions based on the provided text."; //这个会和question 一起发送给GPT
+    var chatgptRole = "assistant";
+    var chatgptPromptIncludeEssay = true;
+    var includeSurveyToChatgptPrompt = []; // [1, 2, 3]
+    var chatgptParameters = [1000, 1, 2]; //  response max token, n, temperature/10
+
+    var useChecklistTool = false;
+    var useChecklistToolGrammar = true;
+    var useChecklistToolAcademic = true;
+    var useChecklistToolOriginality = true;
+    var useChecklistToolClassification = true;
+    var useDictionaryTool = false;
+    var dictionarySourceLanguage = "zh-cn";
+    var dictionaryTargetLanguage = "en";
+    var useTeacherChat = false;
+    var useTimerTool = true;
+    var useVideoRecordingTool = false;
+
+    var toolsLanguage = "en";
+
+    const toolList1 = [];
+
+    var studyName = "flora_demo"; //change to "uniSA" if needed
+
+    function loadScript(url) {
+        let currentDate = new Date();
+
+        // Get the year, month, and day from the date object
+        let year = currentDate.getFullYear();
+        let month = currentDate.getMonth() + 1; // Month is 0-indexed
+        let day = currentDate.getDate();
+
+        // Pad the month and day with leading zeros if they are less than 10
+        month = month < 10 ? '0' + month : month;
+        day = day < 10 ? '0' + day : day;
+
+        // Concatenate the year, month, and day to form the desired format
+        let formattedDate = year.toString() + month.toString() + day.toString();
+
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = url + "?v=" + formattedDate;
+        script.defer = true;
+        script.async = false;
+        document.head.appendChild(script);
+    }
+    function getURLParameters(url) {
+        var params = {};
+        var parser = document.createElement('a');
+        parser.href = url;
+        var query = parser.search.substring(1);
+        var vars = query.split('&');
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split('=');
+            params[pair[0]] = decodeURIComponent(pair[1]);
+        }
+        return params; // string 类型
+    }
+    let navTagAList = document.querySelectorAll("#page-navbar>nav>ol>li a");
+    let currentCourseId = 0;
+    if (navTagAList != null) {
+        navTagAList.forEach(link => {
+            if (link.href.includes("course/view.php?id=")) {
+                currentCourseId = getURLParameters(link.href).id;
+            }
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+            });
+        });
+    }
+</script>
+
+<script>
+    loadScript("/flora/js/text.js");
+    loadScript("/flora/js/i18n_function.js");
+    loadScript("/flora/js/generateToolsHtml.js");
+    loadScript("/flora/js/tools_00common.js");
+
+    if(useAnnotationTool) loadScript("/flora/js/tools_01annotation.js");
+    if(useScaffoldTool) loadScript("/flora/js/tools_02scaffolding.js");
+    if(useWriteEssayTool) loadScript("/flora/js/tools_03essay_writing.js");
+    if(usePlannerTool) loadScript("/flora/js/tools_04planner.js");
+    if(useChatgptTool) loadScript("/flora/js/tools_05chatgpt.js");
+    if(useChatgptAssistantTool) loadScript("/flora/js/tools_05_1chatgpt_assistant.js");
+    if(useChecklistTool) loadScript("/flora/js/tools_06checklist.js");
+    if(useVideoRecordingTool) {
+        loadScript("/flora/js/MediaStreamRecorder.js");
+        loadScript("/flora/js/tools_09record_video.js");
+    }
+    if(useConsultationSubmitTool){
+        loadScript("/flora/js/tools_13consultation_submit.js");
+    }
+    // if(useTimerTool) 不确定timer是否需要按需加载
+    loadScript("/flora/js/tools_08timer.js");
+    if(useDictionaryTool) loadScript("/flora/js/tools_10dictionary.js");
+    if(useTeacherChat) loadScript("/flora/js/tools_11teacherchat.js");
+    if (useCollaborativeWriteEssayTool) loadScript("/flora/js/tools_12collaboratewrite.js");
+    if(useGPTScaffoldTool) loadScript("/flora/js/tools_07gpt_scaffolding.js");
+    loadScript("/flora/js/setupInstrumentationTools.js");
+
+</script>
+
+<!--end_PLUGINS_GENERICO_TEMPLATE_BODY-->
