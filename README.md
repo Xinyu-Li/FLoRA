@@ -25,6 +25,7 @@ If you have any questions or suggestions, please contact us at xinyu.li1@monash.
 &emsp;&emsp;journal={Journal of Learning Analytics},<br>
 &emsp;&emsp;year={2025}<br>
 }
+<br>
 @article{li2025flora,<br>
 &emsp;&emsp;title={FLoRA: An Advanced AI-powered Engine to Facilitate Hybrid Human-AI Regulated Learning},<br>
 &emsp;&emsp;author={Li, Xinyu and Li, Tongguang and Yan, Lixiang and Li, Yuheng and Zhao, Linxuan and Raković, Mladen and 
