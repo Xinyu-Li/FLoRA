@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+   <link th:href="@{${myUrl} + '/flora/css/bootstrap.min.css'}" rel="stylesheet"/>
+   <script th:src="@{${myUrl} + '/flora/js/jquery.min.js'}"></script>
+   <script th:src="@{${myUrl} + '/flora/js/bootstrap.bundle.min.js'}"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
+                <a th:href="@{${myUrl} + '/manage/list-all-students'}" class="d-flex align-items-center text-dark text-decoration-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="32" class="me-2" viewBox="0 0 118 94" role="img"><title>Bootstrap</title><path fill-rule="evenodd" clip-rule="evenodd" d="M24.509 0c-6.733 0-11.715 5.893-11.492 12.284.214 6.14-.064 14.092-2.066 20.577C8.943 39.365 5.547 43.485 0 44.014v5.972c5.547.529 8.943 4.649 10.951 11.153 2.002 6.485 2.28 14.437 2.066 20.577C12.794 88.106 17.776 94 24.51 94H93.5c6.733 0 11.714-5.893 11.491-12.284-.214-6.14.064-14.092 2.066-20.577 2.009-6.504 5.396-10.624 10.943-11.153v-5.972c-5.547-.529-8.934-4.649-10.943-11.153-2.002-6.484-2.28-14.437-2.066-20.577C105.214 5.894 100.233 0 93.5 0H24.508zM80 57.863C80 66.663 73.436 72 62.543 72H44a2 2 0 01-2-2V24a2 2 0 012-2h18.437c9.083 0 15.044 4.92 15.044 12.474 0 5.302-4.01 10.049-9.119 10.88v.277C75.317 46.394 80 51.21 80 57.863zM60.521 28.34H49.948v14.934h8.905c6.884 0 10.68-2.772 10.68-7.727 0-4.643-3.264-7.207-9.012-7.207zM49.948 49.2v16.458H60.91c7.167 0 10.964-2.876 10.964-8.281 0-5.406-3.903-8.178-11.425-8.178H49.948z" fill="currentColor"></path></svg>
+                    <span class="fs-4">FLoRA Management</span>
+                </a>
+
+                <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
+                    <a class="me-3 py-2 text-dark text-decoration-none" th:href="@{${myUrl} + '/manage/list-all-students'}">Home</a>
+                    <a class="me-3 py-2 text-dark text-decoration-none" th:href="@{${myUrl} + '/manage/config-tools'}">Config tools</a>
+                    <!--                    <a class="me-3 py-2 text-dark text-decoration-none" href="#">Support</a>-->
+                    <!--                    <a class="py-2 text-dark text-decoration-none" href="#">Pricing</a>-->
+                </nav>
+            </div>
+
+        </header>
+
+        <a class="btn btn-primary" th:href="@{${myUrl} + '/manage/all-excel-files/annotation'}" target="_blank">Export Annotation to Excel</a>
+        <a class="btn btn-primary" th:href="@{${myUrl} + '/manage/all-excel-files/deleted-annotation'}" target="_blank">Export Deleted Annotation to Excel</a>
+        <a class="btn btn-primary" th:href="@{${myUrl} + '/manage/all-excel-files/essay'}" target="_blank">Export Essay to Excel</a>
+        <a class="btn btn-primary" th:href="@{${myUrl} + '/manage/all-excel-files/planner'}" target="_blank">Export Planner to Excel</a>
+        <a class="btn btn-primary" th:href="@{${myUrl} + '/manage/all-excel-files/trace-data'}" target="_blank">Export Trace Data to Excel</a>
+
+        <hr/>
+        <label for="course-id-select">
+            Select a course
+        </label>
+        <select id="course-id-select">
+            <option th:each="item : ${mdlCourseVOList}" th:value="${item.id}" th:text="${item.fullname}"></option>
+        </select>
+        <br /><br />
+        <label for="srl-model-select">
+            Select a SRL model
+        </label>
+        <select id="srl-model-select">
+            <option value="maria">Bannert model</option>
+            <option value="copes">COPES model</option>
+        </select>
+        <button class="btn btn-warning" id="generate-process-all-in-course-btn">
+            <span class="spinner-border spinner-border-sm d-none" id="generate-process-all-in-course-spinner" role="status" aria-hidden="true"></span>
+            Generate Process Label For All Students In This Course</button>
+        <hr/>
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>userId</th>
+              <th>username</th>
+              <th>firstname</th>
+              <th>lastname</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="item, status : ${mdlUserVOList}">
+              <td th:text="${status.count}"></td>
+              <td th:text="${item.id}"></td>
+              <td th:text="${item.username}"></td>
+              <td th:text="${item.firstname}"></td>
+              <td th:text="${item.lastname}"></td>
+              <td><button class="btn btn-danger delete-log-btn" th:data-userid="${item.id}">Clear Log Data</button>
+                  <button class="btn btn-warning generate-process-btn" th:data-userid="${item.id}">Generate Process Label</button>
+<!--              <a class="btn btn-warning get-essay-btn" target="_blank" th:href="@{${myUrl} + '/manage/get-student-essay-page/' + ${item.userId}}">ShowEssay</a>-->
+              </td>
+            </tr>
+          </tbody>
+        </table>
+    </div>
+
+<script th:inline="javascript">
+    $(document).ready(function() {
+        /*<![CDATA[*/
+        var myUrl = /*[[${myUrl}]]*/ {};
+        console.log(myUrl);
+        /*]]>*/
+
+        $(".delete-log-btn").on("click", function() {
+            if (confirm("Do you want to delete this student data?")) {
+                let userId = $(this)[0].dataset.userid;
+                $.get(myUrl + "/manage/clear-user-log-data/" + userId, function(data, status) {
+                    alert(data.msg);
+                    window.location.reload();
+                });
+            }
+        });
+
+        $(".generate-process-btn").on("click", function () {
+            if (confirm("Do you want to Generate Process label of this student data?")) {
+                let userId = $(this)[0].dataset.userid;
+                let currentCourseId = $("#course-id-select").val();
+                let srlModel = $("#srl-model-select").val();
+                $.get(myUrl + "/manage/manual-generate-process-label/" + userId + "/" + currentCourseId + "/" + srlModel, function(data, status) {
+                    alert(data.msg);
+                    window.location.reload();
+                });
+            }
+        });
+
+        $("#generate-process-all-in-course-btn").on("click", function() {
+            let currentCourseId = $("#course-id-select").val();
+            let srlModel = $("#srl-model-select").val();
+            $("#generate-process-all-in-course-spinner").removeClass("d-none");
+            $.get(myUrl + "/manage/manual-generate-all-process-for-course/" + currentCourseId + "/" + srlModel, function(data, status) {
+                setTimeout(function() {
+                    console.log("waiting for processing");
+                }, 60000);
+                alert("generate finish");
+                $("#generate-process-all-in-course-spinner").addClass("d-none");
+            });
+        });
+
+        var url = new URL(window.location.href);
+        var courseId = url.searchParams.get('courseId');
+
+        // Set the default option for the select element with ID "course-id-select"
+        if (courseId) {
+            $('#course-id-select').val(courseId);
+        }
+
+        $("#course-id-select").on("change", function () {
+            let currentCourseId = $("#course-id-select").val();
+
+            let url = new URL(window.location.href);
+            url.searchParams.set('courseId', currentCourseId);
+            window.location.href = url.toString();
+        });
+
+    });
+</script>
+</body>
+</html>

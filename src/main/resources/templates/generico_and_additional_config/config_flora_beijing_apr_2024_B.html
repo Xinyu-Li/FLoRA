@@ -1,0 +1,251 @@
+<!--start_PLUGINS_GENERICO_TEMPLATE_BODY-->
+
+<script src="/flora/js/jquery.min.js"></script>
+<link href="/flora/css/bootstrap.min.css" rel="stylesheet"/>
+<script src="/flora/js/bootstrap.bundle.min.js"></script>
+<!--    <script src="/flora/js/jquery-ui.min.js" id="myJqueryUI" ></script>-->
+<script src="/flora/js/quill.min.js"></script>
+<script src="/flora/js/flipdown.min.js"></script>
+<script>
+    var currentRange = null;
+    var whetherDoHighlight = false;
+    var saveHighlight = null;
+    var saveHighlightText = '';
+
+
+    var totalMinutes = 120;
+    var unlimitedTime = false; //如果使用unlimited time 则让timer 变成增长，不再是count down
+    var hintMinutesBeforeEnd = 5; // 提示学生，当任务快结束时候
+
+
+    let eventWebsocket = null;
+    let teacherChatWebsocket = null;
+
+    var apiBaseUrl = "http://localhost:8080";
+    var websocketApiBaseUrl = "ws://localhost:8080";
+    var mainEditor = null;
+    var editors = {}; //多个不同的侧边栏editor
+
+
+    // 是否展示工具
+    var useAnnotationTool = true;
+    var useScaffoldTool = false;
+    var useGPTScaffoldTool = true;
+
+    var srlModel = "maria";    // copes
+    var gptScaffoldRole = "assistant";
+    // var gptScaffoldRoleDescription = "You are a helpful assistant, please give suggestions based on the given text.";
+    var gptScaffoldPromptIncludeEssay = true;
+    var gptScaffoldPromptTemplate = `
+
+我们有一名学生接受了一项论文写作任务。
+
+以下是该写作任务的任务要求：
+本次学习的目标是撰写一篇关于未来教育愿景的论文。请描述你对2035年学校学习模式的设想，字数要求在200到400字之间。 请参考学习环境中提供的关于未来教育三个重要主题的资料： 人工智能及其在教育中的应用 什么是差异化教学以及它如何在课堂中实施 什么是支架教学法以及它如何帮助学生优化学习过程 本次学习的目的是将这些主题融合进一个关于2035年学校学习的愿景论文中。 学习会议结束时，你应该能够： 解释人工智能、支架教学和差异化教学的概念 讨论它们如何影响学习过程 将它们应用于教育背景中 将这些概念综合起来，构建对教育未来的设想 为了了解论文的评分标准，请务必阅读评分标准（非常重要！！）。 你需要阅读材料，学习这些概念，并在120分钟内完成论文写作。请注意，这是一个具有挑战性的任务，需要你高效地工作。我们建议你在阅读材料和写作时，专注于这三个重要概念、它们之间的相互关系，以及它们如何共同构建对教育未来的设想。
+
+以下是该写作任务的打分标准
+这是评分标准，用于对论文进行打分，满分为30分。 有四个全局标准： 字数：论文应包含200至400字；达标（2分），未达标（0分） 基础写作技能：论文应是一份成熟的草稿，没有基础性的写作错误，如文本缺失、使用占位符、排版混乱、大量拼写和语法错误；达标（2分），部分达标（1分），未达标（0分） 学术写作技能：论文的写作应符合学术写作的规范，比如逻辑结构清晰、条理流畅、正确使用连接词、动词时态和语态正确，风格符合学术写作要求；达标（4分），部分达标（1-3分），未达标（0分） 原创性：你的写作应基于你自己的观点和言辞，而非简单从资料中复制粘贴；达标（2分），部分达标（1分），未达标（0分） 此外，内容将根据以下标准进行评估： 教育中人工智能的角色：反映了所提供文本的信息，学生能够将其应用于学习，并以此构建2035年教育的创新愿景 支架教学法以优化学习：反映了所提供文本的信息，学生能够将其应用于学习，并以此构建2035年教育的创新愿景 课堂中的差异化实践：反映了所提供文本的信息，学生能够将其应用于学习，并以此构建2035年教育的创新愿景 三个主题的整合：整合反映了所提供文本的信息，学生能够将其应用于学习，并以此构建2035年教育的创新愿景 对教育未来的愿景：对未来教育的设想具有创造性，并超越了所提供文本的内容，讨论了新颖的创意。
+
+
+以下是对该学生当前学习进程的评估：
+;;;SRL_PROCESS_PROMPT;;;
+
+因此，请依据有效反馈原则（原则涵盖以下三点）来提供学习建议（生成的文本总字数必须在80字以内，绝对不能超出80字），确保反馈以学习者为核心，为学生提供段落形式(不要使用项目符号和编号列表)的中文学习建议。：
+
+1. 结合学生在完成任务过程中的强项和弱点。
+2. 所给建议要能有助于学生实现任务学习目标，注重接下来学习的影响。这些建议应基于上述对学生到目前为止的学习进程的评估而提出。
+3. 建议要能鼓励学生自主学习进程，不要提供针对内容的直接指导（例如不要直接建议学生应当重点阅读或写下的内容）。同时关注他们的社交、情绪和动力需求，鼓励他们对评价性反馈持开放态度。
+
+`;
+    var gptScaffoldBackgroundFileNameList = ["flora_beijing_lab_background_text.pdf"];
+    var gptScaffoldParameters = [300, 1, 2]; //  response max token, n, temperature/10
+
+
+    var testISDIMUCourseId = 70; // todo 改课程id
+    var hasTakePreviousStudyTestNameCourseId = 70; // todo 改课程id
+    var pretestNameCourseId = 70; // todo 改课程id
+
+    var preTestName = "知识测验（任务前做）（必做）"; // todo 改名字
+
+    var testISDIMUName = "学习策略能力问卷（任务前做）（必做）";
+
+    var hasTakePreviousStudyTestName = "Activity 1: about yourself";
+
+
+    var pretestGradesPrompt = [{"threshold": 0, "prompt": "该学生在人工智能和教育领域有很高知识水平。"},
+        {"threshold": 5, "prompt": "该学生在人工智能和教育领域有较低知识水平。"},
+        {"threshold": 10, "prompt": "该学生在人工智能和教育领域有中等知识水平。"}];
+    var isdimuScorePrompt = [{"threshold": 0, "prompt": "该学生对可用于促进学习的各种策略或技巧有较高的理解水平。"},
+        {"threshold": 16, "prompt": "该学生对可用于促进学习的各种策略或技巧有较低的理解水平。"},
+        {"threshold": 32, "prompt": "这个学生看起来对可用于促进学习的各种策略或技巧有一些了解。"}];
+    var classifySentenceBackgroundFileNameList = ["cella_monash_main_task2_medicine.docx"]; // cella_monash_main_task2_medicine.docx, TODO 使其可以支持docx 和pdf
+    var gptScaffoldNeedCheckSRLProcessPrompt = [
+        {
+            triggerMinute: 5, // 5
+            beginMinute: 0, // 0
+            endMinute: 5, // 5
+            rules: [
+                {
+                    "srlProcess": "MCO1",
+                    "notExistPrompt": "截止到5分钟时（总限时120分钟），该学生没能够在充分了解任务要求及打分标准的情况下去引导阅读过程。这可以通过先浏览任务要求以及打分细则页面然后选择相关阅读页面开始有效地选择性阅读”。",
+                    "existPrompt": "",
+                    "threshold": 0,
+                    "appearOverThresholdPrompt": "",
+                    "appearLessThanEqualThresholdPrompt": ""
+                }
+            ]
+        },
+        {
+            triggerMinute: 56, // 56
+            beginMinute: 5, // 5
+            endMinute: 56, // 56
+            rules: [
+                {
+                    "srlProcess": "HCEO1",
+                    "notExistPrompt": "截止到56分钟时（总限时120分钟），该学生没能够有效地通过回顾已读内容来引导高质量的写作。这可以通过复习之前读过的页面从而引导写作内容",
+                    "existPrompt": "",
+                    "threshold": 0,
+                    "appearOverThresholdPrompt": "",
+                    "appearLessThanEqualThresholdPrompt": ""
+                }
+            ]
+        },
+        {
+            triggerMinute: 93, // 93
+            beginMinute: 56, // 56
+            endMinute: 93, // 93
+            rules: [
+                {
+                    "srlProcess": "MCE2",
+                    "notExistPrompt": "截止到93分钟时（总限时120分钟），该学生没能够对写作内容进行有效的评估和反思。这可以通过在写作过程中及时回顾任务要求页面及打分标准页面去评估自己所写下的内容”。",
+                    "existPrompt": "",
+                    "threshold": 0,
+                    "appearOverThresholdPrompt": "",
+                    "appearLessThanEqualThresholdPrompt": ""
+                }
+            ]
+        }
+    ];
+
+    var useWriteEssayTool = true;
+    var useWriteEssayWordCountButton = false;
+    var useCollaborativeWriteEssayTool = false;
+    var useCollaborativeWriteEssayWordCountButton = false;
+    var includeChatgptToCollaborativeWriteEssay = false;
+    var usePlannerTool = true;
+    var useChatgptTool = false;
+    var useChatgptRating = false; // chatgpt rating visible or not
+    var useChatgptAssistantTool = false;
+    var useChatgptAssistantRating = false; // chatgpt assistant rating visible or not
+
+    var useDoctorScaffold = false;
+
+    var useConsultationSubmitTool = false;
+    // =========use type for different patient, scaffold and assessment================
+    var medicalConsultAssistanceType = "";
+    var patientRoleDescription="";
+    var scaffoldRoleDescription="";
+    var assessmentRoleDescription="";
+
+    // var chatgptPrompt = "You are a helpful assistant. Please answer all the questions.";
+    var chatgptBackgroundFileNameList = ["cella_monash_background.pdf", "cella_monash_main_task2_medicine.pdf"]; // add pdf file names here
+    // var chatgptRoleDescription = "You are a helpful assistant and please answers questions based on the provided text."; //这个会和question 一起发送给GPT
+    var chatgptRole = "assistant";
+    var chatgptPromptIncludeEssay = true;
+    var chatgptParameters = [1000, 1, 2]; //  response max token, n, temperature/10
+
+    var useChecklistTool = false;
+    var useChecklistToolGrammar = false;
+    var useChecklistToolAcademic = false;
+    var useChecklistToolOriginality = false;
+    var useChecklistToolClassification = false;
+    var useDictionaryTool = true;
+    var dictionarySourceLanguage = "zh-cn";
+    var dictionaryTargetLanguage = "en";
+    var useTeacherChat = false;
+    var useTimerTool = true;
+    var useVideoRecordingTool = false;
+
+    var toolsLanguage = "zh";
+
+    const toolList1 = [];
+
+    var studyName = "flora_beijing_apr_2024"; //change to "uniSA" if needed
+
+    function loadScript(url) {
+        let currentDate = new Date();
+
+        // Get the year, month, and day from the date object
+        let year = currentDate.getFullYear();
+        let month = currentDate.getMonth() + 1; // Month is 0-indexed
+        let day = currentDate.getDate();
+
+        // Pad the month and day with leading zeros if they are less than 10
+        month = month < 10 ? '0' + month : month;
+        day = day < 10 ? '0' + day : day;
+
+        // Concatenate the year, month, and day to form the desired format
+        let formattedDate = year.toString() + month.toString() + day.toString();
+
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = url + "?v=" + formattedDate;
+        script.defer = true;
+        script.async = false;
+        document.head.appendChild(script);
+    }
+    function getURLParameters(url) {
+        var params = {};
+        var parser = document.createElement('a');
+        parser.href = url;
+        var query = parser.search.substring(1);
+        var vars = query.split('&');
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split('=');
+            params[pair[0]] = decodeURIComponent(pair[1]);
+        }
+        return params; // string 类型
+    }
+    let navTagAList = document.querySelectorAll("#page-navbar>nav>ol>li a");
+    let currentCourseId = 0;
+    if (navTagAList != null) {
+        navTagAList.forEach(link => {
+            if (link.href.includes("course/view.php?id=")) {
+                currentCourseId = getURLParameters(link.href).id;
+            }
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+            });
+        });
+    }
+</script>
+
+
+<script>
+    loadScript("/flora/js/text.js");
+    loadScript("/flora/js/i18n_function.js");
+    loadScript("/flora/js/generateToolsHtml.js");
+    loadScript("/flora/js/tools_00common.js");
+
+    if(useAnnotationTool) loadScript("/flora/js/tools_01annotation.js");
+    if(useScaffoldTool) loadScript("/flora/js/tools_02scaffolding.js");
+    if(useWriteEssayTool) loadScript("/flora/js/tools_03essay_writing.js");
+    if(usePlannerTool) loadScript("/flora/js/tools_04planner.js");
+    if(useChatgptTool) loadScript("/flora/js/tools_05chatgpt.js");
+    if(useChatgptAssistantTool) loadScript("/flora/js/tools_05_1chatgpt_assistant.js");
+    if(useChecklistTool) loadScript("/flora/js/tools_06checklist.js");
+    if(useVideoRecordingTool) {
+        loadScript("/flora/js/MediaStreamRecorder.js");
+        loadScript("/flora/js/tools_09record_video.js");
+    }
+    // if(useTimerTool) 不确定timer是否需要按需加载
+    loadScript("/flora/js/tools_08timer.js");
+    if(useDictionaryTool) loadScript("/flora/js/tools_10dictionary.js");
+    if(useTeacherChat) loadScript("/flora/js/tools_11teacherchat.js");
+    if (useCollaborativeWriteEssayTool) loadScript("/flora/js/tools_12collaboratewrite.js");
+    if(useGPTScaffoldTool) loadScript("/flora/js/tools_07gpt_scaffolding.js");
+    loadScript("/flora/js/setupInstrumentationTools.js");
+
+</script>
+
+<!--end_PLUGINS_GENERICO_TEMPLATE_BODY-->

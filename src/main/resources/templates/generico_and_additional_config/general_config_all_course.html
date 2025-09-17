@@ -1,0 +1,264 @@
+<!--start_ADDITIONAL_HTML_HEAD-->
+<link href="/flora/css/jquery-ui.min.css" rel="stylesheet"/>
+<link href="/flora/css/flipdown.min.css" rel="stylesheet" />
+<link href="/flora/css/quill.snow.min.css" rel="stylesheet"/>
+<link href="/flora/css/instrumentationTools.css" rel="stylesheet" />
+<link href="/flora/css/my-timer.css" rel="stylesheet" />
+<!--end_ADDITIONAL_HTML_HEAD-->
+
+
+<!--start_ADDITIONAL_HTML_BODY-->
+
+<!-- The Modal -->
+<div id="myModal" class="my-modal">
+
+    <!-- Modal content -->
+    <div class="my-modal-content">
+        <div class="my-modal-header">
+            <h2 id="myModalTaskStartHeader">Start Main Essay Activity</h2>
+        </div>
+        <div class="my-modal-body">
+            <p id="myModalTaskStartBody">
+                This task has a time limit of 120 minutes. Note that only <strong>1 attempt</strong> is allowed. Are you sure you want enter the task?
+            </p>
+        </div>
+        <div style="text-align: center;">
+            <button type="button" class="my-modal-button" id="continueMainTaskBtn">Yes - Continue</button>
+            <button type="button" class="my-modal-button" id="backToHomepageBtn">No - Go to Homepage</button>
+        </div>
+    </div>
+</div>
+
+<div id="myTaskFinishModal" class="my-modal">
+
+    <!-- Modal content -->
+    <div class="my-modal-content">
+        <div class="my-modal-header">
+            <h2 id="myModalTaskEndHeader">Time is up</h2>
+        </div>
+        <div class="my-modal-body">
+            <p id="myModalTaskEndBody"></p>
+        </div>
+        <div style="text-align: center;">
+            <button type="button" class="my-modal-button" id="taskFinishBackToHomepageBtn">Back to Homepage</button>
+            <a id="downloadEssayLink" href="#">Download Essay</a>
+        </div>
+    </div>
+
+</div>
+<!--end_ADDITIONAL_HTML_BODY-->
+
+
+<!--start_ADDITIONAL_HTML_FOOTER-->
+<script>
+
+    function getURLParametersGeneral(url) {
+        var params = {};
+        var parser = document.createElement('a');
+        parser.href = url;
+        var query = parser.search.substring(1);
+        var vars = query.split('&');
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split('=');
+            params[pair[0]] = decodeURIComponent(pair[1]);
+        }
+        return params; // string 类型
+    }
+    function getCurrentCourseId() {
+        // console.log("in getCurrentCourseId");
+        //console.log(currentCourseId);
+        // console.log("-------------");
+        if (typeof currentCourseId !== "undefined") {
+            return currentCourseId;
+        } else {
+            let navTagAList = document.querySelectorAll("#page-navbar>nav>ol>li a");
+            let courseId = 0;
+            if (navTagAList != null) {
+                navTagAList.forEach(link => {
+                    if (link.href.includes("course/view.php?id=")) {
+                        courseId = getURLParametersGeneral(link.href).id;
+                    }
+                    // link.onclick = "return false";
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                    });
+                });
+            }
+            return courseId;
+        }
+    }
+    function signupConfig() { //only used in Beijing study
+        let email = document.getElementById("id_email");
+        let email2 = document.getElementById("id_email2");
+        let lastname = document.getElementById("id_lastname");
+
+        let email2Element = document.getElementById("fitem_id_email2");
+        let lastnameElement = document.getElementById("fitem_id_lastname");
+        let cityElement = document.getElementById("fitem_id_city");
+        let country = document.getElementById("fitem_id_country");
+
+        email2Element.className+= " d-none";
+        lastnameElement.className+= " d-none";
+        cityElement.className+= " d-none";
+        country.className+= " d-none";
+
+        email.onblur = function () {
+            email2.value = email.value;
+        }
+        const random = Math.floor(Math.random() * 3);
+        const groupList = ["cn", "pl", "ge"];
+
+        lastname.value = groupList[random];
+        //用户名变成学号
+        let usernameLabel = document.querySelector("#fitem_id_username>div>label");
+        usernameLabel.innerText = "学号";
+    }
+    function removePageLink() { // 用于disable小标题链接，避免导航回到course page list
+        let elementPreviewFeedbackBtnList = document.querySelectorAll("div.navitem");
+        if (elementPreviewFeedbackBtnList != null) {
+            for (let i = 0; i < elementPreviewFeedbackBtnList.length; i++) {
+                if (elementPreviewFeedbackBtnList[i].innerText === "Preview questions") {
+                    elementPreviewFeedbackBtnList[i].className += " d-none";
+                }
+            }
+        }
+
+        let navTagAList = document.querySelectorAll("#page-navbar>nav>ol>li>a");
+        if (navTagAList != null) {
+            // console.log(navTagA.href);
+            // navTagA.href = "#";
+            // navTagA.onclick = "return false;";
+            for (let i = 0; i < navTagAList.length; i++) {
+                let newSpan = document.createElement('span');
+                newSpan.textContent = navTagAList[i].innerText;
+                navTagAList[i].replaceWith(newSpan);
+            }
+        }
+
+        let elementsTagAList= document.getElementsByClassName("courseindex-link text-truncate");
+        if (elementsTagAList != null) {
+            for (let i = 0; i < elementsTagAList.length; i++) {
+                //console.log(elementsTagAList[i].dataset.for);
+                if (elementsTagAList[i].dataset.for === "section_title") {
+                    elementsTagAList[i].href = "#";
+                }
+            }
+        }
+    }
+
+    /*使用此代码使页面link 无效*/
+    window.onload = function(){
+        //let baseUrl = "http://localhost:8088";
+
+        // let courseId = 4; //local: 2, cloud: 4
+        // let instructionPageId = 7; //local: 2, cloud 7
+
+        // let courseIdList = [4];   // course Id 与下面两个list 需要match
+        // 两个中的值的数量必须一致
+        // let coursePageStartList = [8]; //存储所有course 的第一个page id
+        // let coursePageEndList = [25];   // 存储所有course的最后一个page id
+
+        // 从java中设置
+//start_BASE_URL
+//         let baseUrl = 'https://study.floralearn.cn';
+        //从java 中设置 //存储所有courseid, 第一个和最后一个page id
+//start_SERVER_ALL_COURSE_ID_AND_PAGE_START_END_ID
+//         let courseIdAndStartPageIdAndEndPageIdList = [['2', [1,2,3,4,5,6]],['4', [8,9]]];
+//         let courseIdAndModalContentList = [['1', ['this is ','hello','123']],['2', ['111this is ','333hello','555123']],['3', ['222this is ','333hello','666123']]];
+        let courseIdAndModalContentMap = new Map();
+        courseIdAndModalContentList.forEach(value => {
+            courseIdAndModalContentMap.set(value[0], value[1]);
+        });
+        let courseIdAndStartPageIdAndEndPageIdMap = new Map();
+        courseIdAndStartPageIdAndEndPageIdList.forEach(value => {
+            courseIdAndStartPageIdAndEndPageIdMap.set(value[0], value[1])
+        });
+
+        let elementHomeBtn = document.querySelector("li[data-key='home']"); //查找到第一个元素
+        if (elementHomeBtn != null) {elementHomeBtn.className+= " d-none";}
+        // console.log(elementHomeBtn);
+
+        // localStorage.myUserEnterPageTimestamp = new Date().getTime();
+        // console.log("window onload finish");
+
+        // Get the modal
+        let myModal = document.getElementById("myModal");
+        let myModalTaskStartHeader = document.getElementById("myModalTaskStartHeader");
+        let myModalTaskStartBody = document.getElementById("myModalTaskStartBody");
+        let continueMainTaskBtn = document.getElementById("continueMainTaskBtn");
+        let backToHomepageBtn = document.getElementById('backToHomepageBtn'); //showing at the beginning
+
+        let myModalTaskEndHeader = document.getElementById("myModalTaskEndHeader");
+        let myModalTaskEndBody = document.getElementById("myModalTaskEndBody");
+        let taskFinishBackToHomepageBtn = document.getElementById("taskFinishBackToHomepageBtn");
+
+        //add download link to modal
+        let downloadEssayLink = document.getElementById('downloadEssayLink');
+        let userIdContainer = document.querySelector('#nav-notification-popover-container');
+        if (userIdContainer !== null && downloadEssayLink !== null) {
+            let userId = userIdContainer.dataset.userid;
+            downloadEssayLink.href = 'download-student-essay/' + userId + '/' + getCurrentCourseId();
+        }
+
+        // console.log("additional html" + window.location.href);
+
+        if (window.location.href.startsWith(baseUrl + "/moodle/course/view.php?id=")) {
+            let tempCurrentCourseId = getURLParametersGeneral(window.location.href).id;  // string 类型
+            if (courseIdAndStartPageIdAndEndPageIdMap.has(tempCurrentCourseId)) {
+
+                if (courseIdAndModalContentMap.has(tempCurrentCourseId)) {
+                    let allModalContentArray = courseIdAndModalContentMap.get(tempCurrentCourseId);
+                    myModalTaskStartHeader.textContent = allModalContentArray[0];
+                    myModalTaskStartBody.innerHTML = allModalContentArray[1];
+                    continueMainTaskBtn.textContent = allModalContentArray[2];
+                    backToHomepageBtn.textContent = allModalContentArray[3];
+                    myModalTaskEndHeader.textContent = allModalContentArray[4];
+                    myModalTaskEndBody.textContent = allModalContentArray[5];
+                    taskFinishBackToHomepageBtn.textContent = allModalContentArray[6];
+                    if (allModalContentArray[7] === "false") {
+                        downloadEssayLink.style.visibility = "hidden";
+                    }
+                    downloadEssayLink.textContent = allModalContentArray[8];
+                }
+
+
+                // console.log(myModal.style.display);
+                myModal.style.display = "block";
+
+                backToHomepageBtn.onclick = function () {
+                    window.location.href = baseUrl + "/moodle/my/courses.php";
+                }
+                continueMainTaskBtn.onclick = function () {
+                    window.location.href = baseUrl + "/moodle/mod/page/view.php?id=" + courseIdAndStartPageIdAndEndPageIdMap.get(tempCurrentCourseId)[0]; //跳转到general instruction page
+                }
+            }
+        }
+
+        // 消除页面course link，防止对tools 的影响
+        if (window.location.href.startsWith(baseUrl + "/moodle/mod/page/view.php?id=")) {
+            let pageId = getURLParametersGeneral(window.location.href).id; // string 类型
+
+            for (let value of courseIdAndStartPageIdAndEndPageIdMap.values()) {
+                // 该course 是 main task 需要消除link, training  中也需要消除
+                if (value.includes(parseInt(pageId))) {
+                    removePageLink();
+                    break;
+                }
+            }
+        }
+
+        taskFinishBackToHomepageBtn.onclick = function () {
+            localStorage.clear();
+            window.location.href = baseUrl + "/moodle/my/courses.php";
+        }
+
+        if (window.location.href === baseUrl + "/moodle/login/signup.php") {
+            signupConfig();
+        }
+
+        document.querySelector("#page-footer").children[0].classList.add("d-none"); //隐藏右下角的help button
+    };
+
+
+</script>
+<!--start_ADDITIONAL_HTML_FOOTER-->

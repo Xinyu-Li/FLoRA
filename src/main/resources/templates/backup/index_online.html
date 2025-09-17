@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+<!--start_ADDITIONAL_HTML_HEAD-->
+    <link href="/flora/css/jquery-ui.min.css" rel="stylesheet"/>
+<!--    <link href="/flora/css/flipclock.css" rel="stylesheet">-->
+    <link href="/flora/css/flipdown.min.css" rel="stylesheet" />
+    <link href="/flora/css/quill.snow.min.css" rel="stylesheet"/>
+    <link href="/flora/css/instrumentationTools.css" rel="stylesheet" />
+    <link href="/flora/css/my-timer.css" rel="stylesheet" />
+<!--end_ADDITIONAL_HTML_HEAD-->
+
+<!--start_PLUGINS_GENERICO_TEMPLATE_BODY-->
+    <link href="/flora/css/bootstrap.min.css" rel="stylesheet"/>
+    <script src="/flora/js/jquery.min.js"></script>
+    <script src="/flora/js/bootstrap.bundle.min.js"></script>
+<!--    <script src="/flora/js/jquery-ui.min.js" id="myJqueryUI" ></script>-->
+    <script src="/flora/js/quill.min.js"></script>
+<!--    <script src="/flora/js/flipclock.js"></script>-->
+    <script src="/flora/js/flipdown.min.js"></script>
+    <script>
+        var currentRange = null;
+        var whetherDoHighlight = false;
+        var saveHighlight = null;
+        var saveHighlightText = '';
+
+        var totalMinutes = 120;
+        var unlimitedTime = false; //如果使用unlimited time 则让timer 变成增长，不再是count down
+        var useTimerTool = true;  //是否展示工具
+        var useVideoRecordingTool = false;
+
+        var toolsLanguage = "en";
+
+        const toolList1 = [];
+
+        var studyName = ""; //change to "uniSA" if needed
+
+        var hintMinutesBeforeEnd = 10;
+
+        var annotationTakeNoteLabel = "Takenote";
+        var annotationDefaultLabel = ["important", "useful", "concept", "confusing"]; // maximum length设置为10， 自定义标签不能超过9个，第一个note 是必须有的
+        var annotationDefaultLabelColor = ["#99CCFF", "#CCFFCC", "#FFCCE5", "#66FFFF"];
+        var useAnnotationTool = true;
+
+        var useScaffoldTool = false;
+        var scaffoldShowingTime = [1, 3, 5, 7, 9]; // time point
+        var scaffoldForceDisplayTime = [2, 4, 6, 8, 10];
+        var scaffoldPromptMessage = ["It is important to understand what the task is about.",
+        "It is important to read information about the topics.",
+        "It is important to read relevant information and review your reading.",
+        "It is important to write a good essay.",
+        "It is important to write relevant information and check your writing."];
+        var scaffoldContent = [
+            ["(a) Use menu to get an overview and skim text", "(b) Check the essay rubric", "(c) Check the learning goals and instructions"],
+            ["(a) Note down important information", "(b) Select what to read", "(c) Check the time left"],
+            ["(a) Review annotations to check learning so far", "(b) Review the learning goals and instructions", "(c) Check essay to determine what to read next"],
+            ["(a) Check the remaining time", "(b) Check the essay rubric", "(c) Draft essay by transferring learning to main points"],
+            ["(a) Check the essay rubric", "(b) Edit your essay", "(c) Check the learning goals and instructions"]];
+
+        var useWriteEssayTool = true;
+        var useWriteEssayWordCountButton = false;
+        var useCollaborativeWriteEssayTool = false;
+        var useCollaborativeWriteEssayWordCountButton = false;
+        var includeChatgptToCollaborativeWriteEssay = false;
+        // var useWriteEssayGrammarly = true;
+
+
+
+        var usePlannerTool = true;
+        var plannerOverallStrategy = ["Read First, then Write", "Read and Write Simultaneously", "Write Intensively, Read Selectively"];
+        var plannerStep2Task = [
+            ["Read first module - AI", "Read second module - Differentiation", "Read third module - Scaffolding", "Write essay"],
+            ["Read/writing about first module - AI", "Read/writing about second module - Differentiation", "Read/writing about third module - Scaffolding"],
+            ["Conceive the structure of the essay", "Write the first draft", "Read additional information in relation to the essay", "Review, refine and enhance the essay"]];
+        var plannerStep2Instruction = [
+            "How much time do you plan to spend on reading and writing respectively?",
+            "How much time do you plan to spend on each topic?",
+            "How much time do you plan to spend on different stages of writing?"];
+
+        var defaultStep3ReadingStrategy = ["Read the material page by page", "Quick browsing and then detailed reading", "Use the highlight tool to mark key content", "Write down my understanding in notes while reading", "Question-guided reading with focus on certain content", "Read selectively and skip irrelevant content"];
+        var defaultStep3ReadingInstruction = "What reading skills do you plan to use (multiple choice)?";
+        var defaultStep3WritingStrategy = ["First draft an essay structure and then fill in with details", "Use my notes and highlighting when writing the essay", "Review instructions and rubrics to get writing in line", "Copy Paste key sentences and then rewrite them fluently", "Use the writing framework and patterns I have learned to write"];
+        var defaultStep3WritingInstruction = "What writing skills do you plan to use (multiple choice)?";
+
+        var customiseStep2Instruction = "Please describe in detail the learning strategy you plan to adopt and how you will allocate your time. You may also include the reasons for the strategy and time allocation.";
+
+        // var classificationModel = 2;
+        // var useClassificationTool = false;
+
+        var useChecklistTool = false;
+        var useChatgptTool = true;
+        var includeSurveyToChatgptPrompt = []; // [1, 2, 3]
+        var useTeacherChat = false;
+
+        var useDictionaryTool = false;
+        var dictionarySourceLanguage = "zh-cn";
+        var dictionaryTargetLanguage = "en";
+        let websocket=null;
+
+        var apiBaseUrl = "http://localhost:8080";
+        var websocketApiBaseUrl = "ws://localhost:8080";
+        var mainEditor = null;
+        var editors = {}; //多个不同的侧边栏editor
+    </script>
+
+    <script>
+        //清除 trace data，正式环境删除掉, // TODO 需要测试一下 此处和generico 哪个先执行，可能需要移到Generico里面
+        // controller defined in TestController
+        // function clearTraceData() {
+        //     localStorage.clear();
+        //     $.get(apiBaseUrl + "/clear-trace-data/111");
+        //
+        // }
+        // clearTraceData();
+    </script>
+
+<!--    <script src="https://unpkg.com/@grammarly/editor-sdk?clientId=client_TvrMmwaZBiN84W64nfgcPf"></script>-->
+    <script src="/flora/js/text.js" defer></script>
+    <script src="/flora/js/generateToolsHtml.js" defer></script>
+
+    <script src="/flora/js/tools_00common.js" defer></script>
+    <!-- timer tool if true 加载这两个， false 不加载 -->
+
+    <script src="/flora/js/tools_08timer.js" defer></script>
+
+    <!-- video record tool if true 加载这两个， false 不加载 -->
+<!--    <script src="https://cdn.webrtc-experiment.com/MediaStreamRecorder.js" defer> </script>-->
+<!--start_VIDEO_RECORDING-->
+<!--    <script src="/flora/js/MediaStreamRecorder.js" defer></script>-->
+<!--    <script src="/flora/js/tools_09record_video.js" defer></script>-->
+<!--end_VIDEO_RECORDING-->
+
+    <script src="/flora/js/tools_01annotation.js" defer></script>
+    <script src="/flora/js/tools_02scaffolding.js" defer></script>
+    <script src="/flora/js/tools_03essay_writing.js" defer></script>
+    <script src="/flora/js/tools_04planner.js" defer></script>
+    <script src="/flora/js/tools_05chatgpt.js" defer></script>
+    <script src="/flora/js/tools_06checklist.js" defer></script>
+    <script src="/flora/js/tools_10dictionary.js" defer></script>
+    <script src="/flora/js/tools_11teacherchat.js" defer></script>
+    <script src="/flora/js/tools_07gpt_scaffolding.js" defer></script>
+    <script src="/flora/js/setupInstrumentationTools.js" defer></script>
+<!--end_PLUGINS_GENERICO_TEMPLATE_BODY-->
+</head>
+<body style="min-height:700px;">
+
+    <div class="row">
+        <h1>This is a test page</h1>
+
+        <div class="col-md-2" id="theme_boost-drawers-courseindex" style="height:500px; background-color: #d7ff68;"></div>
+        <div class="col-md-10" id="page-content">
+            <div class="container">
+                <p>In this <i>hello <strong>analysis</strong></i> we are paying attention to the evidence or the language techniques that are used to support the story in the article. Can you identify the use of efferent or aesthetic techniques that were introduced in our reading or this week on critical literacy? We are analysing two media texts related to the topic of Aboriginal deaths in police custody. This was recently raised as a national concern with the death of George Floyd in the US, in relation to the high number of African American deaths in police custody. The Black Lives Matter movement has become a global phenomenon and in Australia we witnessed national concern over the high number of Aboriginal deaths in custody with protests happening across the country.
+                    we are paying attention to the evidence or the language techniques that are used to support the story in the article. Can you identify the use of efferent or aesthetic techniques that were introduced in our reading or this week on critical literacy? We are analysing two media texts related to the topic of Aboriginal deaths in police custody. This was recently raised as a national concern with the death of George Floyd in the US, in relation to the high number of African American deaths in police custody. The Black Lives Matter movement has become a global phenomenon and in Australia we witnessed national concern over the high number of Aboriginal deaths in custody with protests happening across the country.
+                </p>
+                <button class="btn btn-primary">hello</button>
+            </div>
+        </div>
+        <footer id="page-footer">
+            <div data-region="footer-container-popover">qweqweqwe</div>
+            <div class="footer-content-popover container" data-region="footer-content-popover">
+                <div class="footer-section p-3 border-bottom">
+                    <div><a href="https://docs.moodle.org/400/en/my/index"><i class="icon fa fa-book fa-fw iconhelp icon-pre" aria-hidden="true"></i>Help and documentation</a></div>
+
+                    <div><a target="_blank" href="https://moodle.com/help/?utm_source=CTA-banner&amp;utm_medium=platform&amp;utm_campaign=name~Moodle4+cat~lms+mp~no"><i class="icon fa fa-life-ring fa-fw fa fa-life-ring" aria-hidden="true"></i>Services and support<i class="icon fa fa-external-link fa-fw ml-1" title="Opens in new window" role="img" aria-label="Opens in new window"></i></a></div>
+
+                    <div><a href="https://cella-monash.floraproject.org/moodle/user/contactsitesupport.php"><i class="icon fa fa-envelope-o fa-fw " aria-hidden="true"></i>Contact site support</a></div>
+                </div>
+                <div class="footer-section p-3 border-bottom">
+                    <div class="logininfo">
+                        <div class="logininfo">You are logged in as <a href="https://cella-monash.floraproject.org/moodle/user/profile.php?id=2" title="View profile">Admin AD</a> (<a href="https://cella-monash.floraproject.org/moodle/login/logout.php?sesskey=A0tFezqO2v">Log out</a>)</div>
+                    </div>
+                    <div class="tool_usertours-resettourcontainer">
+                    </div>
+
+                    <div class="tool_dataprivacy"><a href="https://cella-monash.floraproject.org/moodle/admin/tool/dataprivacy/summary.php">Data retention summary</a></div><a href="https://download.moodle.org/mobile?version=2022041904.05&amp;lang=en&amp;iosappid=633359593&amp;androidappid=com.moodle.moodlemobile">Get the mobile app</a>
+
+                </div>
+                <div class="footer-section p-3">
+                    <div>Powered by <a href="https://moodle.com">Moodle</a></div>
+                    <div>
+                        Version 4.0.4+ (Build: 20221007)
+                    </div>
+                </div>
+                <div id="nav-notification-popover-container" data-userid="111"></div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

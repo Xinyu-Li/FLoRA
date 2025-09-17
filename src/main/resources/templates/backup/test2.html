@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title></title>
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet" />
+  <link href="https://cdn.quilljs.com/1.3.6/quill.core.css" rel="stylesheet"/>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+  <script src="https://unpkg.com/@grammarly/editor-sdk?clientId=client_TvrMmwaZBiN84W64nfgcPf"></script>
+  <style>
+
+  </style>
+  
+</head>
+<body>
+  <span style="background: #ffff7b;">coordinates:</span><span id="coordinates"></span>
+  <br/>
+  browser size: <span id="browser"></span>
+  <br/>
+  screen size: <span id="screen"></span>
+
+  <div id="mydiv" style="width:300px; height:400px;background-color: grey;">
+    hello div
+  </div>
+  <div id="mydiv2" style="width:300px; height:400px;background-color: yellow;">fadsfadsfadsf</div>
+  <button id="btn">click</button>
+  <button>ccc</button>
+  <input id="myinput"/>
+
+  <hr />
+  <div style="width:800px; height:600px;">
+<h3 class="mb-2">Essay Writing <span class="ms-5" style="font-size: 12pt;" id="counterwriteEssayEditorMain">0 words</span></h3>
+  <!-- Create the toolbar container -->
+  <div id="writeEssayToolbarMain">
+      <!-- <select class="ql-size">
+          <option value="10px">Small</option>
+          <option selected>Normal</option>
+          <option value="18px">Large</option>
+          <option value="32px">Huge</option>
+      </select> -->
+      <select class="ql-header"></select>
+      <select class="ql-font"></select>
+      <button class="ql-bold"></button>
+      <button class="ql-italic"></button>
+      <button class="ql-underline"></button>
+      <button class="ql-link"></button>
+
+      <button class="ql-script" value="sub"></button>
+      <button class="ql-script" value="super"></button>
+
+
+      <select class="ql-color">
+<!--         <option value="#000000"></option>
+        <option value="#e60000"></option>
+        <option value="#ff9900"></option>
+        <option value="#ffff00"></option>
+        <option value="#008a00"></option> -->
+        <!-- <option value="#"></option>
+        <option value="#"></option>
+        <option value="#"></option>
+        <option value="#"></option>
+
+        <option value="#"></option>
+        <option value="#"></option>
+        <option value="#"></option>
+        <option value="#"></option>
+        <option value="#"></option>
+
+        <option value="#"></option>
+        <option value="#"></option>
+        <option value="#"></option>
+        <option value="#"></option>
+        <option value="#"></option>
+
+        <option value="#"></option>
+        <option value="#"></option>
+        <option value="#"></option>
+        <option value="#"></option>
+        <option value="#"></option>
+
+        <option value="#"></option>
+        <option value="#"></option>
+        <option value="#"></option>
+        <option value="#"></option>
+        <option value="#"></option>
+
+        <option value="#"></option>
+        <option value="#"></option>
+        <option value="#"></option>
+        <option value="#"></option>
+        <option value="#"></option> -->
+
+
+
+        <!-- ["#000000", "#e60000", "#ff9900", "#ffff00", "#008a00", 
+        "#0066cc", "#9933ff", "#ffffff", "#facccc", "#ffebcc", 
+        "#ffffcc", "#cce8cc", "#cce0f5", "#ebd6ff", "#bbbbbb", 
+        "#f06666", "#ffc266", "#ffff66", "#66b966", "#66a3e0", 
+        "#c285ff", "#888888", "#a10000", "#b26b00", "#b2b200", 
+        "#006100", "#0047b2", "#6b24b2", "#444444", "#5c0000", 
+        "#663d00", "#666600", "#003700", "#002966", "#3d1466", 
+        'custom-color'] -->
+      </select>
+      <select class="ql-background">
+          
+      </select>
+      <button class="ql-image"></button>
+      <button class="ql-list" value="ordered" ></button>
+      <button class="ql-list" value="bullet"></button>
+      <select class="ql-align">
+      </select>
+      <button class="ql-direction" value="rtl"></button>
+      <button class="ql-indent" value="-1"></button>
+      <button class="ql-indent" value="+1"></button>
+      <button class="ql-formula"></button>
+      <button class="ql-clean"></button>
+  </div>
+  <grammarly-editor-plugin>
+  <div id="writeEssayEditorMain" style="height:280px;"></div>
+  </grammarly-editor-plugin>
+  
+</div>
+
+<a id="testa" href="http://wwsad" onclick="false;">hello</a>
+<a href="#">test2</a>
+<ul>
+  <li><a href="#111">111</a></li>
+  <li><a href="#222">222</a></li>
+  <li><a href="#333">333</a></li>
+</ul>
+
+<table style="width: 100%;">
+  <tr style="width:100%;height:50px;">
+    <td style="background-color: red; width: 1.667%;"></td>
+    <td style="background-color: yellow; width: 1.667%;"></td>
+    <td style="background-color: black; width: 1.667%;"></td>
+    <td style="background-color: blue; width: 1.667%;"></td>
+    <td style="background-color: grey; width: 1.667%;"></td>
+    <td style="background-color: green; width: 1.667%;"></td>
+    <td style="background-color: skyblue; width: 1.667%;"></td>
+    <td style="background-color: cyan; width: 1.667%;"></td>
+    <td style="background-color: purple; width: 1.667%;"></td>
+    <td style="background-color: lightcoral; width: 1.667%;"></td>
+    <td style="background-color: red; width: 1.667%;"></td>
+    <td style="background-color: yellow; width: 1.667%;"></td>
+    <td style="background-color: black; width: 1.667%;"></td>
+    <td style="background-color: blue; width: 1.667%;"></td>
+    <td style="background-color: grey; width: 1.667%;"></td>
+    <td style="background-color: green; width: 1.667%;"></td>
+    <td style="background-color: skyblue; width: 1.667%;"></td>
+    <td style="background-color: cyan; width: 1.667%;"></td>
+    <td style="background-color: purple; width: 1.667%;"></td>
+    <td style="background-color: lightcoral; width: 1.667%;"></td>
+    <td style="background-color: red; width: 1.667%;"></td>
+    <td style="background-color: yellow; width: 1.667%;"></td>
+    <td style="background-color: black; width: 1.667%;"></td>
+    <td style="background-color: blue; width: 1.667%;"></td>
+    <td style="background-color: grey; width: 1.667%;"></td>
+    <td style="background-color: green; width: 1.667%;"></td>
+    <td style="background-color: skyblue; width: 1.667%;"></td>
+    <td style="background-color: cyan; width: 1.667%;"></td>
+    <td style="background-color: purple; width: 1.667%;"></td>
+    <td style="background-color: lightcoral; width: 1.667%;"></td>
+    <td style="background-color: red; width: 1.667%;"></td>
+    <td style="background-color: yellow; width: 1.667%;"></td>
+    <td style="background-color: black; width: 1.667%;"></td>
+    <td style="background-color: blue; width: 1.667%;"></td>
+    <td style="background-color: grey; width: 1.667%;"></td>
+    <td style="background-color: green; width: 1.667%;"></td>
+    <td style="background-color: skyblue; width: 1.667%;"></td>
+    <td style="background-color: cyan; width: 1.667%;"></td>
+    <td style="background-color: purple; width: 1.667%;"></td>
+    <td style="background-color: lightcoral; width: 1.667%;"></td>
+    <td style="background-color: red; width: 1.667%;"></td>
+    <td style="background-color: yellow; width: 1.667%;"></td>
+    <td style="background-color: black; width: 1.667%;"></td>
+    <td style="background-color: blue; width: 1.667%;"></td>
+    <td style="background-color: grey; width: 1.667%;"></td>
+    <td style="background-color: green; width: 1.667%;"></td>
+    <td style="background-color: skyblue; width: 1.667%;"></td>
+    <td style="background-color: cyan; width: 1.667%;"></td>
+    <td style="background-color: purple; width: 1.667%;"></td>
+    <td style="background-color: lightcoral; width: 1.667%;"></td>
+    <td style="background-color: red; width: 1.667%;"></td>
+    <td style="background-color: yellow; width: 1.667%;"></td>
+    <td style="background-color: black; width: 1.667%;"></td>
+    <td style="background-color: blue; width: 1.667%;"></td>
+    <td style="background-color: grey; width: 1.667%;"></td>
+    <td style="background-color: green; width: 1.667%;"></td>
+    <td style="background-color: skyblue; width: 1.667%;"></td>
+    <td style="background-color: cyan; width: 1.667%;"></td>
+    <td style="background-color: purple; width: 1.667%;"></td>
+    <td style="background-color: lightcoral; width: 1.667%;"></td>
+  </tr>
+  
+
+   
+</table>
+
+
+<script type="text/javascript">
+  // let mousemoveData = [];
+  //   let mousewheelData = [];
+  //   let mousePosition = "";
+  //   $(document).ready(function() {
+      
+  //     console.log($("body"));
+  //     console.log(window.location.href);
+  //     $("body").on("click", function(e) {
+  //       console.log("click");
+  //       console.log(e);
+  //       console.log(e.timeStamp);
+  //       // console.log($("#coordinates"));
+  //       $("#coordinates").text(e.clientX + "," + e.clientY);
+  //       $("#coordinates").text(e.screenX + "," + e.screenY);
+  //       $("#browser").text(window.innerWidth + "," + window.innerHeight);
+  //       $("#screen").text(window.screen.width + "," + window.screen.height);
+  //       console.log(window.getSelection().toString());
+  //     }).on("keyup", function(e) {
+        
+  //       // console.log();
+  //     }).on("mousemove", function(e) {
+  //       // $("#coordinates").text(e.clientX + "," + e.clientY);
+  //       // $("#coordinates").text(e.screenX + "," + e.screenY);
+  //       // $("#browser").text(window.innerWidth + "," + window.innerHeight);
+  //       // $("#screen").text(window.screen.width + "," + window.screen.height);
+  //       // console.log(new Date().getTime());
+  //       // setInterval(function() {
+  //       //   mousemoveData.push(e.target.nodeName + "#" + (e.target.id == null || e.target.id == "" ? "NO_ID" : e.target.id) + ":::" + e.screenX + ":::" + e.screenY + ":::" + e.clientX + ":::" + e.clientY + ":::" + new Date().getTime());
+  //       //   console.log(e.target.nodeName + "#" + (e.target.id == null || e.target.id == "" ? "NO_ID" : e.target.id) + ":::" + e.screenX + ":::" + e.screenY + ":::" + e.clientX + ":::" + e.clientY + ":::" + new Date().getTime());
+  //       // }, 1000);
+  //       mousePosition = e.target.nodeName + "#" + (e.target.id == null || e.target.id == "" ? "NO_ID" : e.target.id) + ":::" + e.screenX + ":::" + e.screenY + ":::" + e.clientX + ":::" + e.clientY + ":::" + new Date().getTime();
+  //     })
+  //     .on("focus", "#myinput", function() {
+  //       console.log("myinput focus");
+  //     })
+  //     .on("blur", "#myinput", function() {
+  //       console.log("myinput blur");
+  //     })
+  //     .on("keyup", "#myinput", function(e) {
+  //       console.log("myinput keyup: " + e.key + "---" + e.code);
+
+  //     }).on("mouseup", function() {
+  //       console.log("body mouseup");
+  //     });
+
+  //     $("#mydiv").on("click", function(e) {
+  //       if (e.stopPropagation) e.stopPropagation();
+  //       console.log("div click");
+        
+  //     }).on("mouseup", function(){
+  //       console.log("mydiv mouse up");
+  //     });
+
+  //     $("#mydiv2").on("click", function(e) {
+  //       console.log("div2 click");
+  //       // if (e.stopPropagation) e.stopPropagation();
+  //     });
+
+  //     setInterval(function() {
+  //       if (mousePosition !== "") {
+  //           mousemoveData.push(mousePosition);
+  //           mousePosition = "";
+  //       }
+        
+  //     }, 1000);
+
+  //   });
+  //   window.onmousewheel = function(e) {
+  //     console.log(e.deltaY); //deltaY大于0为下滚,deltaY小于0为上滚
+  //     console.log(e.clientX);
+  //     console.log(e.clientY);
+  //     console.log(e.target.nodeName + "#" + (e.target.id == null || e.target.id == "" ? "NO_ID" : e.target.id));
+
+  //     mousewheelData.push(e.target.nodeName + "#" + (e.target.id == null || e.target.id == "" ? "NO_ID" : e.target.id) + ":::" + e.deltaY + ":::" + e.screenX + ":::" + e.screenY + ":::" + e.clientX + ":::" + e.clientY + ":::" + new Date().getTime());
+  //   };
+  //   $("#btn").on("click", function(e) {
+
+  //     console.log("btn click");
+  //     console.log(e);
+  //     console.log("btn click time:" + e.timeStamp);
+  //   });
+
+  //   setInterval(function() {
+  //     console.log(mousemoveData);
+  //     console.log(mousemoveData.length == 0);
+  //     if (mousemoveData.length != 0 || mousewheelData.length != 0) {
+  //       $.post("/myapi/trace-extra", {
+  //           userId: 11111,
+  //           saveTime: new Date().getTime(),
+  //           url: window.location.href.replace(/#.*/, ""),
+  //           username: "username",
+  //           firstname: "firstname",
+
+  //           lastname: "lastname",
+  //           source: "EXTRA",
+  //           mousemoveData: mousemoveData,
+  //           mousewheelData: mousewheelData,
+
+  //           windowInnerWidth: window.innerWidth,
+  //           windowInnerHeight: window.innerHeight,
+  //           screenWidth: window.screen.width,
+  //           screenHeight: window.screen.height,
+            
+  //       });
+  //       mousemoveData = [];
+  //       mousewheelData = [];
+
+  //     }
+  //   }, 5000); //离开页面时候也需要执行
+
+//     var BackgroundClass = Quill.import('attributors/class/background');
+// var ColorClass = Quill.import('attributors/class/color');
+// // var SizeStyle = Quill.import('attributors/style/size');
+// const ColorStyle = Quill.import('attributors/style/color');
+// Quill.register(ColorStyle, true);
+// Quill.register(BackgroundClass, true);
+// Quill.register(ColorClass, true);
+// Quill.register(SizeStyle, true);
+var Delta = Quill.import("delta");
+
+
+var toolboxVisible = false;
+
+
+var mainEditor = null;
+
+function setupEssayWritingMain() {
+    Quill.register('modules/counter', function(quill, options) {
+        let container = document.querySelector(options.container);
+        quill.on('text-change', function() {
+            let text = quill.getText().trim();
+            if (options.unit === 'word') {
+                if (text == null || text.length === 0) {
+                    container.innerText = '0 words';
+                } else {
+                    container.innerText = text.split(/\s+/).length + ' words';
+                }
+            } else {
+                container.innerText = text.length + ' characters';
+            }
+        });
+    });
+
+    mainEditor = new Quill('#writeEssayEditorMain', {
+        modules: {
+            toolbar: '#writeEssayToolbarMain',
+            counter: {
+                container: '#counterwriteEssayEditorMain',
+                unit: 'word'
+            }
+        },
+        placeholder: 'Write essay here...',
+        theme: 'snow',
+        bounds: document.body
+    });
+    console.log("essay editorId: writeEssayEditorMain");
+    // customize the color tool handler
+    function showColorPicker(value) {
+      if (value === 'color-picker') {
+        var picker = document.getElementById('color-picker');
+        if (!picker) {
+          picker = document.createElement('input');
+          picker.id = 'color-picker';
+          picker.type = 'color';
+          picker.style.display = 'none';
+          picker.value = '#FF0000';
+          document.body.appendChild(picker);
+
+          picker.addEventListener('change', function() {
+            quill.format('color', picker.value);
+          }, false);
+        }
+        picker.click();
+      } else {
+        mainEditor.format('color', value);
+      }
+    }
+
+    var toolbar = mainEditor.getModule('toolbar');
+    toolbar.addHandler('color', showColorPicker);
+
+    mainEditor.on("selection-change", function(range, oldRange, source) {
+      console.log("source");
+      console.log(source);
+        if (range) {
+            if (range.length == 0) {
+                console.log('User cursor is on', range.index);
+            } else {
+                var text = mainEditor.getText(range.index, range.length);
+                console.log('User has highlighted', text);
+            }
+        } else {
+            console.log('Cursor not in the editor');
+        }
+    });
+
+    // Store accumulated changes
+    let change = new Delta();
+    mainEditor.on('text-change', function(delta) {
+        change = change.compose(delta);
+        console.log(delta);
+        console.log("---------");
+        console.log(change);
+        console.log("---------");
+        console.log(JSON.stringify(mainEditor.getContents()));
+    });
+
+ 
+    $("#writeEssayToolbarMain").on("click", function(e) {
+      console.log("writeEssayToolbarMain");
+      console.log(e);
+      console.log(e.target.nodeName);
+        console.log(e.target.id == null);
+    });
+
+    $("#writeEssayEditorMain").on("keyup", function(e) {
+        console.log(e);
+        console.log(e.target.nodeName);
+        console.log(e.target.id == null);
+
+        console.log(e.key + "---" + e.code);
+    });
+
+    var testStr = '{"ops":[{"attributes":{"background":"yellow"},"insert":"What is AI"},{"insert":"\\nArtificial intelligence is the ability of computers to perform tasks where will use their intelligence, AI cans identify objects make predictions. Artificial intelligence always consists of two components algorithm and data, algorithm is a sequence of instructions that is programmed to lead to a certain action or a result, by analysing more data the algorithm can make better recommendations. \\nHow AI applies to daily life \\n"},{"attributes":{"background":"#ffff7b"},"insert":"AI in voice assistants like Alexa or Siri on a smartphone or self-driving cars and use it to find the shortest path between two locations while avoiding roadworks in an App, the recommendations in a streaming service such as Netflix, Spotify, YouTube, etc they are based on an algorithm they look at what you like they predict your interest and make some recommendations"},{"insert":"\\nHow AI based technologies can change education\\n"},{"attributes":{"background":"#ffcce5"},"insert":"New digital technologies can also"},{"attributes":{"background":"green"},"insert":" support new ways of teaching"},{"attributes":{"background":"#ffcce5"},"insert":" that focus on learners as active participants. Artificial intelligence, virtual reality, and augmented reality are examples of digitalization. There are some websites and apps that adapt to your skill level so that you can solve tasks that are neither too easy nor too challenging, "},{"insert":"AI can also be used to support working in groups "},{"attributes":{"background":"#ccffcc"},"insert":"AI technologies can assist students in setting goals and making plans to achieve the goals together. For teachers "},{"insert":"a"},{"attributes":{"background":"yellow"},"insert":"n AI system to recognize who, or which group needs help and the kind of help needed."},{"insert":"\\n"}]}';
+
+    console.log(testStr);
+
+    mainEditor.setContents(JSON.parse(testStr));
+
+}
+
+setupEssayWritingMain();
+  </script>
+</body>
+</html>

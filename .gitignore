@@ -1,0 +1,65 @@
+HELP.md
+target
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+/web/myUpload
+/web/user
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### Mac file
+.DS_Store
+
+### data
+/rubric_core_data
+
+### log data
+logs
+
+
+web/data-and-tools/all-data.csv.json
+web/data-and-tools/merge_two_json.js
+web/tools-bar-react
+
+/web/admin-web/node_modules
+
+src/main/resources/.DS_Store
+
+
+/documents/
+/sql/flora_annotation_15_jan_2024 - 副本.sql
+/sql/flora_annotation_data.sql
+/sql/trace_data.sql
+
+/logs/*.log
+/node_modules/
+/data/
+
+.mvn

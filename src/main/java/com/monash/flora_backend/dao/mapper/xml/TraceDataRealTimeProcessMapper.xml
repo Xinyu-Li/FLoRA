@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.monash.flora_backend.dao.mapper.TraceDataRealTimeProcessMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.monash.flora_backend.dao.entity.TraceDataRealTimeProcess">
+        <id column="id" property="id" />
+        <result column="user_id" property="userId" />
+        <result column="save_time" property="saveTime" />
+        <result column="username" property="username" />
+        <result column="url" property="url" />
+        <result column="firstname" property="firstname" />
+        <result column="lastname" property="lastname" />
+        <result column="source" property="source" />
+        <result column="page_event" property="pageEvent" />
+        <result column="target_object" property="targetObject" />
+        <result column="instant_event" property="instantEvent" />
+        <result column="sub_action_label" property="subActionLabel" />
+        <result column="action_label" property="actionLabel" />
+        <result column="detailed_action_label" property="detailedActionLabel" />
+        <result column="model_type" property="modelType" />
+        <result column="process_label" property="processLabel" />
+        <result column="screen_x" property="screenX" />
+        <result column="screen_y" property="screenY" />
+        <result column="client_x" property="clientX" />
+        <result column="client_y" property="clientY" />
+        <result column="window_inner_width" property="windowInnerWidth" />
+        <result column="window_inner_height" property="windowInnerHeight" />
+        <result column="screen_width" property="screenWidth" />
+        <result column="screen_height" property="screenHeight" />
+        <result column="event_value" property="eventValue" />
+        <result column="course_id" property="courseId" />
+    </resultMap>
+</mapper>

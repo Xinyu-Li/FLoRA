@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.monash.flora_backend.dao.mapper.MdlQuestionnaireResponseMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.monash.flora_backend.dao.entity.MdlQuestionnaireResponse">
+        <id column="id" property="id" />
+        <result column="questionnaireid" property="questionnaireid" />
+        <result column="submitted" property="submitted" />
+        <result column="complete" property="complete" />
+        <result column="grade" property="grade" />
+        <result column="userid" property="userid" />
+    </resultMap>
+</mapper>

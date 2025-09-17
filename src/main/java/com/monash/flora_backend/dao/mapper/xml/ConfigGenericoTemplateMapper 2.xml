@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.monash.flora_backend.dao.mapper.ConfigGenericoTemplateMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.monash.flora_backend.dao.entity.ConfigGenericoTemplate">
+        <id column="id" property="id" />
+        <result column="generico_template_name" property="genericoTemplateName" />
+        <result column="generico_template_key" property="genericoTemplateKey" />
+        <result column="generico_template_index" property="genericoTemplateIndex" />
+        <result column="total_minutes" property="totalMinutes" />
+        <result column="unlimited_time" property="unlimitedTime" />
+        <result column="hint_minutes_before_end" property="hintMinutesBeforeEnd" />
+        <result column="annotation_take_note_label" property="annotationTakeNoteLabel" />
+        <result column="annotation_default_label" property="annotationDefaultLabel" />
+        <result column="annotation_default_label_color" property="annotationDefaultLabelColor" />
+        <result column="use_annotation_tool" property="useAnnotationTool" />
+        <result column="use_scaffold_tool" property="useScaffoldTool" />
+        <result column="use_gpt_scaffold_tool" property="useGptScaffoldTool" />
+        <result column="srl_model" property="srlModel" />
+        <result column="gpt_scaffold_role" property="gptScaffoldRole" />
+        <result column="gpt_scaffold_role_description" property="gptScaffoldRoleDescription" />
+        <result column="gpt_scaffold_prompt_include_essay" property="gptScaffoldPromptIncludeEssay" />
+        <result column="gpt_scaffold_prompt_template" property="gptScaffoldPromptTemplate" />
+        <result column="gpt_scaffold_background_filename_list" property="gptScaffoldBackgroundFilenameList" />
+        <result column="gpt_scaffold_parameters" property="gptScaffoldParameters" />
+        <result column="gpt_scaffold_need_check_save_planner_select_index_prompt" property="gptScaffoldNeedCheckSavePlannerSelectIndexPrompt" />
+        <result column="test_isdimu_name" property="testIsdimuName" />
+        <result column="pre_test_name" property="preTestName" />
+        <result column="has_take_previous_study_test_name" property="hasTakePreviousStudyTestName" />
+        <result column="test_isdimu_course_id" property="testIsdimuCourseId" />
+        <result column="has_take_previous_study_test_name_course_id" property="hasTakePreviousStudyTestNameCourseId" />
+        <result column="pre_test_name_course_id" property="preTestNameCourseId" />
+        <result column="use_write_essay_tool" property="useWriteEssayTool" />
+        <result column="use_write_essay_word_count_button" property="useWriteEssayWordCountButton" />
+        <result column="use_collaborative_write_essay_tool" property="useCollaborativeWriteEssayTool" />
+        <result column="use_collaborative_write_essay_word_count_button" property="useCollaborativeWriteEssayWordCountButton" />
+        <result column="include_chatgpt_to_collaborative_write_essay" property="includeChatgptToCollaborativeWriteEssay" />
+        <result column="use_planner_tool" property="usePlannerTool" />
+        <result column="use_chatgpt_tool" property="useChatgptTool" />
+        <result column="chatgpt_background_file_name_list" property="chatgptBackgroundFileNameList" />
+        <result column="chatgpt_role_description" property="chatgptRoleDescription" />
+        <result column="chatgpt_role" property="chatgptRole" />
+        <result column="chatgpt_prompt_include_essay" property="chatgptPromptIncludeEssay" />
+        <result column="chatgpt_parameters" property="chatgptParameters" />
+        <result column="use_checklist_tool" property="useChecklistTool" />
+        <result column="use_checklist_tool_grammar" property="useChecklistToolGrammar" />
+        <result column="use_checklist_tool_academic" property="useChecklistToolAcademic" />
+        <result column="use_checklist_tool_originality" property="useChecklistToolOriginality" />
+        <result column="use_checklist_tool_classification" property="useChecklistToolClassification" />
+        <result column="use_dictionary_tool" property="useDictionaryTool" />
+        <result column="dictionary_source_language" property="dictionarySourceLanguage" />
+        <result column="dictionary_target_language" property="dictionaryTargetLanguage" />
+        <result column="use_teacher_chat" property="useTeacherChat" />
+        <result column="use_timer_tool" property="useTimerTool" />
+        <result column="use_video_recording_tool" property="useVideoRecordingTool" />
+        <result column="tools_language" property="toolsLanguage" />
+        <result column="planner_select_strategy_hint" property="plannerSelectStrategyHint" />
+        <result column="planner_allocate_time_hint" property="plannerAllocateTimeHint" />
+        <result column="planner_select_skills_hint" property="plannerSelectSkillsHint" />
+        <result column="planner_save_plan_hint" property="plannerSavePlanHint" />
+        <result column="planner_reading_strategy" property="plannerReadingStrategy" />
+        <result column="planner_reading_instruction" property="plannerReadingInstruction" />
+        <result column="planner_writing_strategy" property="plannerWritingStrategy" />
+        <result column="planner_writing_instruction" property="plannerWritingInstruction" />
+        <result column="planner_customise_plan_instruction" property="plannerCustomisePlanInstruction" />
+        <result column="user_take_previous_study_prompt" property="userTakePreviousStudyPrompt" />
+        <result column="classify_sentence_background_file_name_list" property="classifySentenceBackgroundFileNameList" />
+    </resultMap>
+</mapper>

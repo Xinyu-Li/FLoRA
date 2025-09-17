@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.monash.flora_backend.dao.mapper.UserChatgptLogMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.monash.flora_backend.dao.entity.UserChatgptLog">
+        <id column="id" property="id" />
+
+
+
+        <result column="user_id" property="userId" />
+        <result column="course_id" property="courseId" />
+        <result column="thread_id" property="threadId" />
+        <result column="chatgpt_role" property="chatgptRole" />
+        <result column="chatgpt_role_description" property="chatgptRoleDescription" />
+        <result column="question_id" property="questionId" />
+
+        <result column="user_questions" property="userQuestions" />
+        <result column="user_ask_time" property="userAskTime"/>
+        <result column="chatgpt_answer" property="chatgptAnswer" />
+        <result column="chatgpt_response_time" property="chatgptResponseTime" />
+        <result column="essay" property="essay" />
+
+        <result column="response_rating_star" property="responseRatingStar" />
+        <result column="response_rating_thumb" property="responseRatingThumb" />
+        <result column="response_generated_times" property="responseGeneratedTimes" />
+
+        <result column="chatgpt_whole_response" property="chatgptWholeResponse" />
+        <result column="chatgpt_whole_prompt" property="chatgptWholePrompt" />
+        <result column="type" property="type" />
+    </resultMap>
+</mapper>

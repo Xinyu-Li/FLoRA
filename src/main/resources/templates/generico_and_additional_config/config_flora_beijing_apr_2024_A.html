@@ -1,0 +1,236 @@
+<!--start_PLUGINS_GENERICO_TEMPLATE_BODY-->
+
+<script src="/flora/js/jquery.min.js"></script>
+<link href="/flora/css/bootstrap.min.css" rel="stylesheet"/>
+<script src="/flora/js/bootstrap.bundle.min.js"></script>
+<!--    <script src="/flora/js/jquery-ui.min.js" id="myJqueryUI" ></script>-->
+<script src="/flora/js/quill.min.js"></script>
+<script src="/flora/js/flipdown.min.js"></script>
+<script>
+    var currentRange = null;
+    var whetherDoHighlight = false;
+    var saveHighlight = null;
+    var saveHighlightText = '';
+
+
+    var totalMinutes = 120;
+    var unlimitedTime = false; //如果使用unlimited time 则让timer 变成增长，不再是count down
+    var hintMinutesBeforeEnd = 5; // 提示学生，当任务快结束时候
+
+
+    let eventWebsocket = null;
+    let teacherChatWebsocket = null;
+
+    var apiBaseUrl = "http://localhost:8080";
+    var websocketApiBaseUrl = "ws://localhost:8080";
+    var mainEditor = null;
+    var editors = {}; //多个不同的侧边栏editor
+
+
+    // 是否展示工具
+    var useAnnotationTool = true;
+    var useScaffoldTool = false;
+    var useGPTScaffoldTool = false;
+
+    var srlModel = "maria";    // copes
+    var gptScaffoldRole = "assistant";
+    // var gptScaffoldRoleDescription = "You are a helpful assistant, please give suggestions based on the given text.";
+    var gptScaffoldPromptIncludeEssay = true;
+    var gptScaffoldPromptTemplate = "";
+    var gptScaffoldBackgroundFileNameList = ["flora_beijing_lab_background_text.pdf"];
+    var gptScaffoldParameters = [300, 1, 2]; //  response max token, n, temperature/10
+
+
+    var testISDIMUCourseId = 69; // todo 改课程id
+    // var hasTakePreviousStudyTestNameCourseId = 69; // todo 改课程id
+    var pretestNameCourseId = 69; // todo 改课程id
+
+    var preTestName = "知识测验（任务前做）（必做）"; // todo 改名字
+
+    var testISDIMUName = "学习策略能力问卷（任务前做）（必做）";
+
+    // var hasTakePreviousStudyTestName = "Activity 1: about yourself";
+
+
+    var pretestGradesPrompt = [{"threshold": 0, "prompt": "该学生在人工智能和医疗领域人工智能方面有很高知识水平。"},
+        {"threshold": 5, "prompt": "该学生在人工智能和医疗领域人工智能方面有较低知识水平。"},
+        {"threshold": 10, "prompt": "该学生在人工智能和医疗领域人工智能方面有中等知识水平。"}];
+    var isdimuScorePrompt = [{"threshold": 0, "prompt": "该学生对可用于促进学习的各种策略或技巧有较高的理解水平。"},
+        {"threshold": 16, "prompt": "该学生对可用于促进学习的各种策略或技巧有较低的理解水平。"},
+        {"threshold": 32, "prompt": "这个学生看起来对可用于促进学习的各种策略或技巧有一些了解。"}];
+    var classifySentenceBackgroundFileNameList = ["cella_monash_main_task2_medicine.docx"]; // cella_monash_main_task2_medicine.docx, TODO 使其可以支持docx 和pdf
+    var gptScaffoldNeedCheckSRLProcessPrompt = [
+        {
+            triggerMinute: 5,
+            beginMinute: 0,
+            endMinute: 5,
+            rules: [
+                {
+                    "srlProcess": "MCO1",
+                    "notExistPrompt": "我们有一名学生目前正在做这个学习任务。截止到目前为止，该学生没能够有效了解本读写任务以及打分细则去引导阅读（这些可以通过回顾查看打分标准和任务要求的页面来实现）。",
+                    "existPrompt": "",
+                    "threshold": 0,
+                    "appearOverThresholdPrompt": "",
+                    "appearLessThanEqualThresholdPrompt": ""
+                }
+            ]
+        },
+        {
+            triggerMinute: 56,
+            beginMinute: 5,
+            endMinute: 56,
+            rules: [
+                {
+                    "srlProcess": "HCEO1",
+                    "notExistPrompt": "我们有一名学生目前正在做这个学习任务。截止到目前为止，该学生没能够及时开始高质量写作（这可以通过边回顾阅读内容边进行写作来实现）。",
+                    "existPrompt": "",
+                    "threshold": 0,
+                    "appearOverThresholdPrompt": "",
+                    "appearLessThanEqualThresholdPrompt": ""
+                }
+            ]
+        },
+        {
+            triggerMinute: 93,
+            beginMinute: 56,
+            endMinute: 93,
+            rules: [
+                {
+                    "srlProcess": "MCE2",
+                    "notExistPrompt": "我们有一名学生目前正在做这个学习任务。截止到目前为止，该学生没能够有效监控自己的写作进程（这可以通过回顾任务要求及打分标准从而检查写作内容来实现）。",
+                    "existPrompt": "",
+                    "threshold": 0,
+                    "appearOverThresholdPrompt": "",
+                    "appearLessThanEqualThresholdPrompt": ""
+                }
+            ]
+        }
+    ];
+
+    var useWriteEssayTool = true;
+<!--    var useWriteEssayWordCountButton = false;-->
+<!--    var useCollaborativeWriteEssayTool = false;-->
+<!--    var useCollaborativeWriteEssayWordCountButton = false;-->
+<!--    var includeChatgptToCollaborativeWriteEssay = false;-->
+
+var useWriteEssayWordCountButton = true;
+    var useCollaborativeWriteEssayTool = true;
+    var useCollaborativeWriteEssayWordCountButton = true;
+    var includeChatgptToCollaborativeWriteEssay = true;
+
+    var usePlannerTool = true;
+    var useChatgptTool = false;
+    var useChatgptRating = false; // chatgpt rating visible or not
+    var useChatgptAssistantTool = false;
+    var useChatgptAssistantRating = false; // chatgpt assistant rating visible or not
+
+    var useDoctorScaffold = false;
+    var useConsultationSubmitTool = false;
+    // =========use type for different patient, scaffold and assessment================
+    var medicalConsultAssistanceType = "";
+
+    var patientRoleDescription="";
+    var scaffoldRoleDescription="";
+    var assessmentRoleDescription="";
+    // var chatgptPrompt = "You are a helpful assistant. Please answer all the questions.";
+    var chatgptBackgroundFileNameList = ["cella_monash_background.pdf", "cella_monash_main_task2_medicine.pdf"]; // add pdf file names here
+    // var chatgptRoleDescription = "You are a helpful assistant and please answers questions based on the provided text."; //这个会和question 一起发送给GPT
+    var chatgptRole = "assistant";
+    var chatgptPromptIncludeEssay = true;
+    var chatgptParameters = [1000, 1, 2]; //  response max token, n, temperature/10
+
+    var useChecklistTool = false;
+    var useChecklistToolGrammar = false;
+    var useChecklistToolAcademic = false;
+    var useChecklistToolOriginality = false;
+    var useChecklistToolClassification = false;
+    var useDictionaryTool = true;
+    var dictionarySourceLanguage = "zh-cn";
+    var dictionaryTargetLanguage = "en";
+    var useTeacherChat = false;
+    var useTimerTool = true;
+    var useVideoRecordingTool = false;
+
+    var toolsLanguage = "zh";
+
+    const toolList1 = [];
+
+    var studyName = "flora_beijing_apr_2024"; //change to "uniSA" if needed
+
+    function loadScript(url) {
+        let currentDate = new Date();
+
+        // Get the year, month, and day from the date object
+        let year = currentDate.getFullYear();
+        let month = currentDate.getMonth() + 1; // Month is 0-indexed
+        let day = currentDate.getDate();
+
+        // Pad the month and day with leading zeros if they are less than 10
+        month = month < 10 ? '0' + month : month;
+        day = day < 10 ? '0' + day : day;
+
+        // Concatenate the year, month, and day to form the desired format
+        let formattedDate = year.toString() + month.toString() + day.toString();
+
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = url + "?v=" + formattedDate;
+        script.defer = true;
+        script.async = false;
+        document.head.appendChild(script);
+    }
+    function getURLParameters(url) {
+        var params = {};
+        var parser = document.createElement('a');
+        parser.href = url;
+        var query = parser.search.substring(1);
+        var vars = query.split('&');
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split('=');
+            params[pair[0]] = decodeURIComponent(pair[1]);
+        }
+        return params; // string 类型
+    }
+    let navTagAList = document.querySelectorAll("#page-navbar>nav>ol>li a");
+    let currentCourseId = 0;
+    if (navTagAList != null) {
+        navTagAList.forEach(link => {
+            if (link.href.includes("course/view.php?id=")) {
+                currentCourseId = getURLParameters(link.href).id;
+            }
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+            });
+        });
+    }
+</script>
+
+
+<script>
+    loadScript("/flora/js/text.js");
+    loadScript("/flora/js/i18n_function.js");
+    loadScript("/flora/js/generateToolsHtml.js");
+    loadScript("/flora/js/tools_00common.js");
+
+    if(useAnnotationTool) loadScript("/flora/js/tools_01annotation.js");
+    if(useScaffoldTool) loadScript("/flora/js/tools_02scaffolding.js");
+    if(useWriteEssayTool) loadScript("/flora/js/tools_03essay_writing.js");
+    if(usePlannerTool) loadScript("/flora/js/tools_04planner.js");
+    if(useChatgptTool) loadScript("/flora/js/tools_05chatgpt.js");
+    if(useChatgptAssistantTool) loadScript("/flora/js/tools_05_1chatgpt_assistant.js");
+    if(useChecklistTool) loadScript("/flora/js/tools_06checklist.js");
+    if(useVideoRecordingTool) {
+        loadScript("/flora/js/MediaStreamRecorder.js");
+        loadScript("/flora/js/tools_09record_video.js");
+    }
+    // if(useTimerTool) 不确定timer是否需要按需加载
+    loadScript("/flora/js/tools_08timer.js");
+    if(useDictionaryTool) loadScript("/flora/js/tools_10dictionary.js");
+    if(useTeacherChat) loadScript("/flora/js/tools_11teacherchat.js");
+    if (useCollaborativeWriteEssayTool) loadScript("/flora/js/tools_12collaboratewrite.js");
+    if(useGPTScaffoldTool) loadScript("/flora/js/tools_07gpt_scaffolding.js");
+    loadScript("/flora/js/setupInstrumentationTools.js");
+
+</script>
+
+<!--end_PLUGINS_GENERICO_TEMPLATE_BODY-->

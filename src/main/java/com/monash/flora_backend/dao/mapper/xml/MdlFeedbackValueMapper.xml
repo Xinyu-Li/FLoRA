@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.monash.flora_backend.dao.mapper.MdlFeedbackValueMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.monash.flora_backend.dao.entity.MdlFeedbackValue">
+        <id column="id" property="id" />
+        <result column="course_id" property="courseId" />
+        <result column="item" property="item" />
+        <result column="completed" property="completed" />
+        <result column="tmp_completed" property="tmpCompleted" />
+        <result column="value" property="value" />
+    </resultMap>
+</mapper>

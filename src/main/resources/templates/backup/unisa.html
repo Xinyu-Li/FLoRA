@@ -1,0 +1,465 @@
+//for UniSA study
+function getURLParameters(url) {
+var params = {};
+var parser = new URL(url);
+var query = parser.search.substring(1);
+var vars = query.split('&');
+for (var i = 0; i < vars.length; i++) {
+var pair = vars[i].split('=');
+params[pair[0]] = decodeURIComponent(pair[1]);
+}
+return params;
+}
+function findArticleQuestions(pageId) {
+let articleString = "";
+switch (pageId) {
+case "68":
+articleString = '               <h6>Business article 1 - Ben & Jerry’s</h6>' +
+'                   <p>Ciszek, E & Logan, N 2018, ‘Challenging the dialogic promise: how Ben & Jerry’s support for Black Lives Matter fosters dissensus on social media’, Journal of Public Relations Research, vol. 30, no. 3, pp. 115 – 127.</p>' +
+'               <h6>Research methods/methodology: </h6>' +
+'               <ul>Sample size: ? (how many posts were analysed) ' +
+    '                   <li>Is this an acceptable number? </li>' +
+    '                   <li>Do we find out how this specific number was identified? </li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Research Method: </h6>' +
+'               <ul>A case study approach was used, focusing on Ben & Jerry’s support on social media for Black Lives Matter: ' +
+    '                   <li>What are the key strengths and weaknesses of a case study approach?</li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Significance and Contribution to the field</h6>' +
+'               <ul>does it contribute new knowledge inside academia? What is its broader societal impact? Does it hope to inform policy/legislation/practices of the field it addresses?' +
+    '                   <li>The article seeks to make a contribution by challenging a prominent theory in their field of research. Can you identify which one? Why is this important? </li>' +
+    '                   <li>Does the article make any recommendations? Could this have been strengthened?  </li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Ethical Implications:</h6> ' +
+'                   <p>Can you identify any bias – in the way that the researchers have structured their research questions, chosen their research participants, included or omitted viewpoints or research or collected their data, or their project was funded? Were the researchers transparent about the research collection phase? Did they employ any unethical practices in how they collected their data?</p>' +
+'               <hr>' +
+'               <h6>Argument and Evidence</h6>' +
+'               <ul>' +
+    '                   <li>Does the article answer the research questions on page 119? Are the aims of the research achieved? </li>' +
+    '                   <li>Only one business is selected as the case study, focusing on one Facebook post only. Does this constitute strong evidence? What are the implications for the generalisability of the findings? </li>' +
+    '                   <li>Does the article review other relevant and recent literature on the issue? </li>' +
+    '               </ul>';
+break;
+case "69":
+articleString = '               <h6>Business article - What’s the harm in being unethical?</h6>' +
+'                   <p>De Bock, T Vermeier, I & Van Kenhove, P 2013, “What’s the harm in being unethical? These strangers are rich anyway?” Exploring underlying factors of double standards’, Journal of Business Ethics, vol. 112, pp. 225-240. </p>' +
+'               <h6>Research methods/methodology: </h6>' +
+'               <ul>' +
+    '                   <li>Sample size:  Study 1 = Study 2 = </li>' +
+    '                   <li>Who are they? </li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Research methods/methodology: </h6>' +
+'               <ul>' +
+    '                   <li>Is there an even gender ratio in the sample group?</li>' +
+    '                   <li>Is the consideration of 5 scenarios enough to assess ethics of consumers?</li>' +
+    '                   <li>What do the authors claim about the bias that may be evident (see page 238)?</li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Significance and Contribution to the field</h6>' +
+'               <ul>does it contribute new knowledge inside academia? What is its broader societal impact? Does it hope to inform policy/legislation/practices of the field it addresses?' +
+    '                   <li>Does it contribute new knowledge to the field of business ethics? Is there much research specifically on consumer ethics as opposed to marketing ethics?</li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Ethical Implications:</h6> ' +
+'                   <p>Can you identify any bias – in the way that the researchers have structured their research questions, chosen their research participants, included or omitted viewpoints or research or collected their data, or their project was funded? Were the researchers transparent about the research collection phase? Did they employ any unethical practices in how they collected their data?</p>' +
+'               <hr>' +
+'               <h6>Argument and Evidence</h6>' +
+'               <ul>' +
+    '                   <li>Does it state the limitations? Do these undermine the validity of the research? </li>' +
+    '                   <li>Does this article fulfil the aims of revealing whether there is a double standard in the relationship between consumers and businesses?</li>' +
+    '               </ul>';
+break;
+case "70":
+articleString = '               <h6>Education article 1</h6>' +
+'                   <p>Hartley, L, Baker, S, Fleay, C & Burke, R 2019, ‘”My study is the purpose of continuing my life”: the experience of accessing university for people seeking asylum in Australia’, Australian Universities Review, vol. 61, no. 2, pp. 4 – 13.</p>' +
+'               <h6>Research methods/methodology: </h6>' +
+'               <ul>Sample size? ' +
+    '                   <li>Is this an acceptable number for a qualitative research project? </li>' +
+    '                   <li>What do we find out about their demographic factors such as age, gender, ethnicity? </li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Research methods/methodology: </h6>' +
+'               <ul>A mixed methods approach was used.' +
+    '                   <li>Which methods were used? </li>' +
+    '                   <li>What do we learn about the recruitment of participants? </li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Significance and Contribution to the field</h6>' +
+'               <ul>does it contribute new knowledge inside academia? What is its broader societal impact? Does it hope to inform policy/legislation/practices of the field it addresses?' +
+    '                   <li>Does the article explore an area that has not been studied before? Why is this important?</li>' +
+    '                   <li>Are there broader implications for this research – such as recommendations? If so, who are these recommendations targeting? </li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Ethical Implications:</h6> ' +
+'                   <p>Can you identify any bias – in the way that the researchers have structured their research questions, chosen their research participants, included or omitted viewpoints or research or collected their data, or their project was funded? Were the researchers transparent about the research collection phase? Did they employ any unethical practices in how they collected their data?</p>' +
+'               <hr>' +
+'               <h6>Argument and Evidence</h6>' +
+'               <ul>' +
+    '                   <li>Does the article fulfil its aims of exploring the challenges experienced by people seeking asylum in accessing higher education?</li>' +
+    '                   <li>Does the mixed methods approach provide strong evidence? Why or why not?</li>' +
+    '                   <li>Does the article review other relevant and recent literature on the issue? Does the article explain relevant government policies?</li>' +
+    '               </ul>';
+break;
+case "71":
+articleString = '               <h6>Education article  - Experiential knowledge</h6>' +
+'                   <p>Smith, L 2011 ‘Experiential ‘hot’ knowledge and its influences on low-SES students’ capacities to aspire to higher education’, Critical Studies in Education, Vol. 52, No.2, pp. 165-177. </p>' +
+'               <h6>Research methods/methodology: </h6>' +
+'               <ul>What is the sample size?' +
+    '                   <li>Sample size? </li>' +
+    '                   <li>Is this an acceptable number given that the article is based on her Honours project? </li>' +
+    '                   <li>Who are they? </li>' +
+    '                   <li>Do we know what ethnic group the participants belong to? </li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Significance and Contribution to the field</h6>' +
+'               <ul>does it contribute new knowledge inside academia? What is its broader societal impact? Does it hope to inform policy/legislation/practices of the field it addresses?' +
+    '                   <li>Does she make it clear that this is an area that is under-researched or has potential for either future research or broader social implications for education policy?</li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Ethical Implications:</h6> ' +
+'                   <p>Can you identify any bias – in the way that the researchers have structured their research questions, chosen their research participants, included or omitted viewpoints or research or collected their data, or their project was funded? Were the researchers transparent about the research collection phase? Did they employ any unethical practices in how they collected their data?</p>' +
+'               <hr>' +
+'               <h6>Argument and Evidence</h6>' +
+'               <ul>' +
+    '                   <li>Does she have a strong literature review section that locates her research within the broader field of research?</li>' +
+    '                   <li>Does she have a strong outline of theory adopted to analyse and explain data?</li>' +
+    '                   <li>Does she fulfil the aims of showing how various forms of ‘hot’ knowledge influence aspirations to attend university for students from low-socioeconomic areas?</li>' +
+    '                   <li>Does it state the limitations of the research?</li>' +
+    '               </ul>';
+break;
+case "72":
+articleString = '               <h6>Engineering article – Trust In Driverless Cars</h6>' +
+'                   <p>Kaur, K & Rampersad, G 2018, ‘Trust in driverless cars: Investigating key factors influencing the adoption of driverless cars’, Journal of Engineering and Technology Management, vol. 48, pp. 87 – 96. </p>' +
+'               <h6>Research methods/methodology: </h6>' +
+'               <ul>Sample size: ? ' +
+    '                   <li>Is this an acceptable number for a quantitative project? </li>' +
+    '                   <li>What do we find out about the demographic factors of the participants? Is this a representative sample? </li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Research method: </h6>' +
+'               <ul>A questionnaire was developed for this study.' +
+    '                   <li>What are the main strengths and weaknesses of a questionnaire?</li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Significance and Contribution to the field</h6>' +
+'               <ul>does it contribute new knowledge inside academia? What is its broader societal impact? Does it hope to inform policy/legislation/practices of the field it addresses?' +
+    '                   <li>What is the context or rationale for this research? In what ways does this article cover a topic that has been under-researched? </li>' +
+    '                   <li>Does the article make any recommendations? Does the article have implications for other areas?   </li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Ethical Implications:</h6> ' +
+'                   <p>Can you identify any bias – in the way that the researchers have structured their research questions, chosen their research participants, included or omitted viewpoints or research or collected their data, or their project was funded? Were the researchers transparent about the research collection phase? Did they employ any unethical practices in how they collected their data?</p>' +
+'               <hr>' +
+'               <h6>Argument and Evidence</h6>' +
+'               <ul>' +
+    '                   <li>Does the article achieve the aims of the research achieved? Does the data gained from the questionnaires support the five hypotheses?</li>' +
+    '                   <li>A case study approach is used, focusing on the Tonsley campus. Does this constitute strong evidence? What can you say about the sample size? What are the implications for the generalisability of the findings? </li>' +
+    '                   <li>Does the article review other relevant and recent literature on the issue? </li>' +
+    '               </ul>';
+break;
+case "73":
+articleString = '               <h6>Engineering article – Nuclear Power</h6>' +
+'                   <p>Stieglitz, R & Docksai, R 2009 ‘Why the world may turn to nuclear power’, The Futurist, November-December 2009, pp. 16-22. </p>' +
+'               <h6>Research methods/methodology: </h6>' +
+'               <ul>' +
+    '                   <li>Have they conducted new empirical research? </li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Significance and Contribution to the field</h6>' +
+'               <ul>does it contribute new knowledge inside academia? What is its broader societal impact? Does it hope to inform policy/legislation/practices of the field it addresses?' +
+    '                   <li>Are the authors clear about the contribution of new knowledge they are making to the field? </li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Ethical Implications:</h6> ' +
+'                   <p>Can you identify any bias – in the way that the researchers have structured their research questions, chosen their research participants, included or omitted viewpoints or research or collected their data, or their project was funded? Were the researchers transparent about the research collection phase? Did they employ any unethical practices in how they collected their data?</p>' +
+'               <hr>' +
+'               <h6>Argument and Evidence</h6>' +
+'               <ul>' +
+    '                   <li>Authors make a case for nuclear power based on a number of arguments - what is the evidence they have used to make their case? </li>' +
+    '                   <li>Pay close attention to the key themes (used the heading as a guide) that indicate the arguments and look for the evidence here. For example, in the section titled ‘Increasing demand for electricity’, they reference data from the Energy Information Administration projects. Who are they? Can we locate a hidden agenda? </li>' +
+    '                   <li>Are you convinced by the credibility of these arguments (refer to page 22 for a reference list). Does this meet academic conventions? </li>' +
+    '                   <li>Have they included refuting research to demonstrate critical thinking and non-bias? For example, have they provided anything in opposition to their argument about the ‘safety’ of nuclear power disasters, such as the Three Mile Island disaster? </li>' +
+    '               </ul>';
+break;
+case "74":
+articleString = '               <h6>Health Science - COVID</h6>' +
+'                   <p>Stanton, R, To, QG, Khalesi, S, Williams, SL, Alley, SJ, Thwaite, TL, … Vandelanotte, C 2020, ‘Depression, anxiety and stress during COVID-19: associations with changes in physical activity, sleep, tobacco and alcohol use in Australian adults’, International Journal of Environmental Research and Public Health, vol. 17, pp. 1 – 13.</p>' +
+'               <h6>Research methods/methodology: </h6>' +
+'               <ul>Sample size: ? ' +
+    '                   <li>Who are they? What do we know about the demographic factors of the participants? Is there a gender balance? Do we find out about their ethnicity?  </li>' +
+    '                   <li>Why is this important? </li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Research method: </h6>' +
+'               <ul>A survey was used. ' +
+    '                   <li>What are the key strengths and weaknesses of a survey?  </li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Significance and Contribution to the field</h6>' +
+'               <ul>does it contribute new knowledge inside academia? What is its broader societal impact? Does it hope to inform policy/legislation/practices of the field it addresses?' +
+    '                   <li>Does the article explore an area that has not been studied before? Why is this important? </li>' +
+    '                   <li>Are there broader implications for this research – such as recommendations? If so, who are these recommendations targeting? </li>' +
+    '               </ul>' +
+
+'               <hr>' +
+'               <h6>Ethical Implications:</h6> ' +
+'                   <p>Can you identify any bias – in the way that the researchers have structured their research questions, chosen their research participants, included or omitted viewpoints or research or collected their data, or their project was funded? Were the researchers transparent about the research collection phase? Did they employ any unethical practices in how they collected their data?</p>' +
+'               <hr>' +
+'               <h6>Argument and Evidence</h6>' +
+'               <ul>' +
+    '                   <li>Does the article fulfil its aims of showing the associations between depression, anxiety and stress and changes in health behaviours, including physical activity, sleep, smoking and alcohol use in the context of COVID-19 restrictions?</li>' +
+    '                   <li>Do the survey results constitute strong evidence? Why or why not?</li>' +
+    '                   <li>Does the article review other relevant and recent literature on the issue?</li>' +
+    '               </ul>';
+break;
+case "75":
+articleString = '               <h6>Health Science article 2</h6>' +
+'                   <p>Chapple, A Ziebland, S McPherson A, Herxheimer, A 2006, ‘What people close to death say about euthenasia and assisted suicide: a qualitative study’, Law, Ethics and Medicine, Vol. 32, pp. 706-710. </p>' +
+'               <h6>Research methods/methodology: </h6>' +
+'               <ul>Sample size: ? ' +
+    '                   <li>Who are they? Aimed for maximum variation in age from various social backgrounds. Outlines recruitment of participants.  Was this achieved (see page 710)? </li>' +
+    '                   <li>Why is this important? </li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Research method: </h6>' +
+'               <ul>Qualitative research that involved narrative style interviews – led by the participant more so than the interviewer. ' +
+    '                   <li>Why is this important? </li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Significance and Contribution to the field</h6>' +
+'               <ul>does it contribute new knowledge inside academia? What is its broader societal impact? Does it hope to inform policy/legislation/practices of the field it addresses?' +
+    '                   <li>Significance of research is clearly defined as this is the only study that interviews people who are dying about their views on assisted suicide.</li>' +
+    '                   <li>Are there broader implications for this research – such as informing policy or legislation in the UK?</li>' +
+    '               </ul>' +
+
+'               <hr>' +
+'               <h6>Ethical Implications:</h6> ' +
+'                   <p>Can you identify any bias – in the way that the researchers have structured their research questions, chosen their research participants, included or omitted viewpoints or research or collected their data, or their project was funded? Were the researchers transparent about the research collection phase? Did they employ any unethical practices in how they collected their data? </p>' +
+'                   <p>When it comes to analysing the ethical implications, think about whether it relates to the how the research was conducted (data collection?), or funding (argument and evidence); and then align this critique under this heading as a ‘weakness’</p>' +
+'                   <p>In this article, can we be critical of the method of the interviewee taking them ‘off the record’ for a tea-break and then continuing to probe the participants? </p>' +
+'                   <p>Can you find out information about the Gatsby Foundation who funded the research? In terms of ‘world-view’, do you think there could be any funding bias from the Foundation based on the ‘mission of the Foundation? (pro or anti-Euthanasia?) </p>' +
+'               <hr>' +
+'               <h6>Argument and Evidence</h6>' +
+'               <ul>' +
+    '                   <li>Does the article fulfil its aims of showing the perspectives of patients on euthanasia? </li>' +
+    '                   <li>Does the article review other relevant and recent literature on the issue?</li>' +
+    '               </ul>';
+break;
+case "76":
+articleString = '               <h6>IT article – Twitter in Emergency Response</h6>' +
+'                   <p>Abedin, B & Babar, A 2018, ‘Institutional vs. Non-institutional use of social media during emergency response: a case of Twitter in 2014 Australian Bush Fire’, Information Systems Frontiers, vol. 20, no. 4, pp. 729–740.</p>' +
+'               <h6>Research methods/methodology: </h6>' +
+'               <ul>Sample size: ? (how many tweets were analysed)' +
+    '                   <li>Is this an acceptable number for a quantitative research project? </li>' +
+    '                   <li>What do we find out about the institutional players?</li>' +
+    '                   <li>What do we find out about the non-institutional players? </li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Research method: </h6>' +
+'               <ul>An analysis of tweets was conducted. ' +
+    '                   <li>What are the key strengths and weaknesses of this type of analysis?</li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Significance and Contribution to the field</h6>' +
+'               <ul>does it contribute new knowledge inside academia? What is its broader societal impact? Does it hope to inform policy/legislation/practices of the field it addresses?' +
+    '                   <li>Does the article explore an area that has not been studied before? Why is this important? </li>' +
+    '                   <li>Are there broader implications for this research – such as recommendations? If so, who are these recommendations targeting? Do the authors identify a need for further research?</li>' +
+    '               </ul>' +
+
+'               <hr>' +
+'               <h6>Ethical Implications:</h6> ' +
+'                   <p>Can you identify any bias – in the way that the researchers have structured their research questions, chosen their research participants, included or omitted viewpoints or research or collected their data, or their project was funded? Were the researchers transparent about the research collection phase? Did they employ any unethical practices in how they collected their data? </p>' +
+'               <hr>' +
+'               <h6>Argument and Evidence</h6>' +
+'               <ul>' +
+    '                   <li>Does the article fulfil its aims of exploring the differences in use of Twitter by emergency response organisations and digital volunteers?</li>' +
+    '                   <li>Does the case study approach (analysis of tweets for one disaster) provide strong evidence? What can you say about generalisability? </li>' +
+    '                   <li>Does the article review other relevant and recent literature on the issue? </li>' +
+    '               </ul>';
+break;
+case "77":
+articleString = '               <h6>IT article - The social media affinity scale</h6>' +
+'                   <p>Gerlich, R Browning, L &Westermann, L 2010, ‘The social media affinity scale: implications for education’, Contemporary Issues in Education Research, Vol. 3, No. 11, pp. 35-41. </p>' +
+'               <h6>Research methods/methodology: </h6>' +
+'               <ul>' +
+    '                   <li>What is the sample size?</li>' +
+    '                   <li>Who are they? Does it mention ethnic group? Is there a diversity of participants? (see page 38)</li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Significance and Contribution to the field</h6>' +
+'               <ul>does it contribute new knowledge inside academia? What is its broader societal impact? Does it hope to inform policy/legislation/practices of the field it addresses?' +
+    '                   <li>Have they made a strong case for the significance of their research?</li>' +
+    '                   <li>Are there broader implications raised for social media usage within universities? </li>' +
+    '               </ul>' +
+
+'               <hr>' +
+'               <h6>Ethical Implications:</h6> ' +
+'                   <p>Can you identify any bias – in the way that the researchers have structured their research questions, chosen their research participants, included or omitted viewpoints or research or collected their data, or their project was funded? Were the researchers transparent about the research collection phase? Did they employ any unethical practices in how they collected their data? </p>' +
+'               <hr>' +
+'               <h6>Argument and Evidence</h6>' +
+'               <ul>' +
+    '                   <li>Is there a strong literature review section where they explain the field and need for this research? How many references are included? What is the date of the literature they have referenced in this section? </li>' +
+    '                   <li>Are there multiple arguments being made that presents a slightly confusing picture for the aims of the research? </li>' +
+    '                   <li>-Gender?</li>' +
+    '                   <li>-Uses of social media?</li>' +
+    '                   <li>-Uses of social media for educational purposes?</li>' +
+    '                   <li>-Uses of social media by college staff?</li>' +
+    '               </ul>';
+break;
+case "78":
+articleString = '               <h6>Social Science article – Beyonce</h6>' +
+'                   <p>Gammage, M 2017, ‘Pop Culture Without Culture: Examining the Public Backlash to Beyoncé’s Super Bowl 50 Performance’ Journal of Black Studies, vol. 48 iss. 8, pp 715–731.</p>' +
+'               <h6>Research methods/methodology: </h6>' +
+'               <ul>The author discusses current and historical examples. ' +
+    '                   <li>Does the article have a methods section?</li>' +
+    '                   <li>Do we find out how these examples were selected? </li>' +
+    '                   <li>Do we find out what kind of analysis was used?  </li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Significance and Contribution to the field</h6>' +
+'               <p>does it contribute new knowledge inside academia? What is its broader societal impact? Does it hope to inform policy/legislation/practices of the field it addresses?' +
+    '               </p>' +
+
+'               <hr>' +
+'               <h6>Ethical Implications:</h6> ' +
+'                   <p>Can you identify any bias – in the way that the researchers have structured their research questions, chosen their research participants, included or omitted viewpoints or research or collected their data, or their project was funded? Were the researchers transparent about the research collection phase? Did they employ any unethical practices in how they collected their data? </p>' +
+'               <hr>' +
+'               <h6>Argument and Evidence</h6>' +
+'               <ul>' +
+    '                   <li>Does the article fulfil its aims of demonstrating that the negative response to Beyonce’s 2016 Super Bowl performance are much more widespread, with both historical and current examples? Does it demonstrate that Black artists and athletes are required to appear ‘race-neutral’?</li>' +
+    '                   <li>Key historical and current examples are provided. Does the article explain whether the examples are representative of the experience of most Black artists and athletes? Are counterexamples provided?</li>' +
+    '                   <li>Does the article review other relevant and recent literature on the issue? </li>' +
+    '               </ul>';
+break;
+case "79":
+articleString = '               <h6>Social Science article – Single parents return to work</h6>' +
+'                   <p>Cook, K 2012 ‘Single parents’ subjective wellbeing over the welfare to work transition’, Social Policy and Society, Vol. 11, No. 2, pp. 143-155. </p>' +
+'               <h6>Research methods/methodology: </h6>' +
+'               <ul>' +
+    '                   <li>Sample size: </li>' +
+    '                   <li>Who are they? Does it mention socio-economic status or ethnic group? </li>' +
+    '               </ul>' +
+'               <hr>' +
+'               <h6>Significance and Contribution to the field</h6>' +
+'               <ul>does it contribute new knowledge inside academia? What is its broader societal impact? Does it hope to inform policy/legislation/practices of the field it addresses?' +
+    '                   <li>Does it make a strong case for the contribution it makes – the gap in knowledge (see pages 144-145)?</li>' +
+    '                   <li>Does it state the limitations? Do these weaken the credibility of the research? </li>' +
+    '               </ul>' +
+
+'               <hr>' +
+'               <h6>Ethical Implications:</h6> ' +
+'                   <p>Can you identify any bias – in the way that the researchers have structured their research questions, chosen their research participants, included or omitted viewpoints or research or collected their data, or their project was funded? Were the researchers transparent about the research collection phase? Did they employ any unethical practices in how they collected their data? </p>' +
+'               <hr>' +
+'               <h6>Argument and Evidence</h6>' +
+'               <ul>' +
+    '                   <li>Does the article fulfill the aims of revealing whether work for the dole increases subjective well-being?</li>' +
+    '                   <li>Does the article locate the issue within the literature and broader solial policy agenda? Does it link this specifically to the policymaking at the time?</li>' +
+    '               </ul>';
+break;
+
+}
+return articleString;
+}
+
+let essayWritingToolHtmlUniSA = '    <!-- 写作 侧边栏 for UniSA -->' +
+'    <div id="collapseWriteEssay" class="my-horizontal-collapse-tools write-essay">' +
+    '       <div class="row" style="height:100%; min-height: 200px;">' +
+        '       <div class="col-md-7 p-0" style="height:100%;">' +
+            '        <div class="card card-body" style="height:100%;">' +
+                '            <h3 class="mb-2">Essay Writing <span class="ms-5" style="font-size: 12pt;" id="counterwriteEssayEditorMain">0 words</span> <button type="button" class="btn btn-close" style="position:absolute; right:20px;" aria-label="Close" id="close-essay-btn"></button></h3>' +
+                '            <!-- Create the toolbar container -->' +
+                '            <div id="writeEssayToolbarMain">' +
+                    '                <select class="ql-header"></select>' +
+                    '                <button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button><button class="ql-link"></button><button class="ql-script" value="sub"></button><button class="ql-script" value="super"></button>' +
+                    // '                <select class="ql-color"></select><select class="ql-background"></select>' +
+                    // '                <button class="ql-image"></button>' +
+                    '                <button class="ql-list" value="ordered" ></button><button class="ql-list" value="bullet"></button>' +
+                    '                <select class="ql-align"></select><button class="ql-direction" value="rtl"></button><button class="ql-indent" value="-1"></button><button class="ql-indent" value="+1"></button>' +
+                    '            </div>' +
+                '            <!-- Create the editor container -->' +
+                '            <grammarly-editor-plugin class="h-100" style="overflow:auto;"><div id="writeEssayEditorMain" style="overflow: hidden"></div></grammarly-editor-plugin>' +
+
+                '            <div><button class="mt-2 btn btn-secondary" id="writeEssayEditorMainSaveBtn">Save Essay</button>' +
+                    '            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a id="downloadEssayLink" href="#">Download</a></div>' +
+                '        </div>' +
+            '       </div>' +
+        '       <div class="col-md-5 p-0" style="height:100%;">' +
+            '           <div class="card card-body" style="height:100%;">' +
+                '               <h3>Reading Log Template</h3>' +
+                '               <div class="border text-wrap overflow-auto">' +
+                    '               <ul>' +
+                        '               <li>Author’s name</li>' +
+                        '               <li>Date of publication</li>' +
+                        '               <li>Title of article/chapter</li>' +
+                        '               <li>Title of book or journal</li>' +
+                        '               <li>Volume number</li>' +
+                        '               <li>Edition</li>' +
+                        '               <li>Keywords: <ul><li>Copy keywords from the article or develop your own based on the research topic</li></ul></li>' +
+                        '               <li>Author’s name</li>' +
+                        '               <li>Description of topic</li>' +
+                        '               </ul>' +
+                    '               <hr>' +
+                    '               <h6>Perspective presented <br>Does the author condemn or commend the issue?</h6> ' +
+                    '                   <p>* Remember to link this back to the topic/question provided. The stance of the author is to….support (or not) legalising euthanasia; nuclear power; tertiary education for all people; different ethical standards for consumers or businesses; digital divided is gendered; work for the dole works etc.</p>' +
+                    '               <hr>' +
+                    '               <h6>Argument(s)  <br>Discuss contributing reasons and evidence the author offers</h6> ' +
+                    '                   <p>* Remember this is the research findings (what did the participants say in response to the research questions) or what is claimed in the literature review? </p>' +
+                    '               <hr>' +
+                    '               <h6>Quotes (maximum 2)</h6> ' +
+                    '                   <p>* Remember this is where you identify a statement made by the author that reflects their stance </p>' +
+                    '               <hr>' +
+                    '               <h6>Methods used (if applicable)<br>Is it qualitative or quantitative?<br>What is the sample size?<br>How is the data analysed?</h6> ' +
+                    '                   <p>What research methods have been utilised in the research project that is being reported in the peer review article? </p>' +
+                    '                   <p>Did the researcher use Quantitative or Qualitative, or both? Expand on whether they used a questionnaire, conducted interviews?</p>' +
+                    '                   <p>How many participants were included in the research?</p>' +
+                    '                   <p>Were there any research participants? If so, can you describe the diversity of the research participants? Ethnicity, gender, age, socio-economic status? </p>' +
+                    '               <hr>' +
+                    '               <h6>Strengths and weaknesses to justify the argument<br>Contribution to the field?<br>Argument and evidence?<br>Methodology?<br>Writing style?</h6>' +
+                    '               <hr>' +
+                    '               <h6>These are the critical thinking questions from the weeks 9-11 workbooks from the study guide that we have been working through each week. Please use these as a guide for your critical analysis, but do not feel limited to only including an answer to these if you find other strengths or weaknesses in relation to the 4 areas. Here is our suggestion for how to approach this task: </h6>' +
+                    '                   <ol>' +
+                        '                       <li>Firstly, delete all of the questions that do not relate to you own (1) article (to save confusion) </li>' +
+                        '                       <li>Once you have developed your response(s) to the question(s), delete the actual question and think about whether your response would be categorised as a ‘strength’ or a ‘weakness’. Place this label as a heading so it is clear (if you are not sure about this, refer to the example). </li>' +
+                        '                       <li>When it comes to analysing the ethical implications, think about whether it relates to the how the research was conducted (data collection?), or funding (argument and evidence); and then align this critique under this heading as a ‘weakness’. </li>' +
+                        '                   </ol>' +
+                    '               <hr>' +
+                    '               <h6>Research Methods: How can you offer a critique of these research methods? Below you will find some prompting questions. </h6>' +
+                    '               <hr>' +
+
+                    findArticleQuestions(getURLParameters(window.location.href).id + "") +
+
+
+
+                    '               <hr>' +
+                    '               <h6>Writing Style and Structure: </h6>' +
+                    '                   <h6>Does the writing style suit the intended audience? (eg; expert/non-expert, academic/non-academic)</h6>' +
+                    '                   <p>Has the author adopted the appropriate formal register required of academic work? Think about the different registers we explored in the academic writing week – have they avoided contractions? Slang, conversational and colloquial English? Have they met the required academic conventions and used the discipline specific language appropriate?</p>' +
+                    '                   <h6>What is the organising principle of the text? Could it be better organised?</h6>' +
+                    '                   <p>Here we want to assess whether they have structured the ideas appropriately and according to conventions as well as flow. Most academic texts are arranged in the following order: Abstract, introduction, literature review, aims and research design, research methods, findings or discussion and conclusion, bibliography. Each component of the article has a specific purpose and requirement, so you can assess that these have been written accordingly (for example, you shouldn’t have to wait until the research aims or method to learn what the central argument is?).</p>' +
+                    '               <hr>' +
+                    '               <h6>Personal Reflection Questions:</h6>' +
+                    '               <ul>' +
+                        '                   <li>Do you agree or disagree with the ideas and why?</li>' +
+                        '                   <li>How do the ideas relate to your life experiences or practical knowledge?</li>' +
+                        '                   <li>What questions do the argument/ideas raise for you?</li>' +
+                        '               </ul>' +
+
+
+                    // '               <p>Author’s name</p>' +
+                    // '               <p>Date of publication</p>' +
+                    // '               <p>Title of article/chapter</p>' +
+                    // '               <p>Title of book or journal</p>' +
+                    // '               <p>Volume number</p>' +
+                    // '               <p>Edition</p>' +
+                    // '               <p>Keywords: * Copy keywords from the article or develop your own based on the research topic </p>' +
+                    // '               <p>Author’s name</p>' +
+                    // '               <p>Description of topic</p>' +
+                    '               </div>' +
+                '           </div>' +
+            '       </div>' +
+        '       </div>' +
+    '    </div>';
