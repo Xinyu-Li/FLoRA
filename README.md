@@ -16,7 +16,7 @@ https://www.floraengine.org/home
 
 ## Contact
 If you have any questions or suggestions, please contact us at xinyu.li1@monash.edu
-
+Please cite our work if you use our open source code.
 
 @article{li2025floraengine,<br>
 &emsp;&emsp;title={The FLoRA Engine: Using Analytics to Measure and Facilitate Learners' own Regulation Activities},<br>
