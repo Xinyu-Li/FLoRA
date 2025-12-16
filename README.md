@@ -31,12 +31,10 @@ If you have any questions or suggestions, please contact us at xinyu.li1@monash.
 &emsp;&emsp;title={FLoRA: An Advanced AI-powered Engine to Facilitate Hybrid Human-AI Regulated Learning},<br>
 &emsp;&emsp;author={Li, Xinyu and Li, Tongguang and Yan, Lixiang and Li, Yuheng and Zhao, Linxuan and Raković, Mladen and 
 &emsp;&emsp;Molenaar, Inge and Ga\v{s}evi\'{c}, Dragan and Fan, Yizhou},<br>
-&emsp;&emsp;year = 2026,<br>
-  &emsp;&emsp;month = apr,<br>
   &emsp;&emsp;journal = {Computers \& Education},<br>
   &emsp;&emsp;volume = {243},<br>
   &emsp;&emsp;pages = {105527},<br>
   &emsp;&emsp;issn = {0360-1315},<br>
   &emsp;&emsp;doi = {10.1016/j.compedu.2025.105527},<br>
-&emsp;&emsp;year={2025}<br>
+&emsp;&emsp;year={2026}<br>
 }
