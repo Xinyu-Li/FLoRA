@@ -18,9 +18,20 @@ public class MdlQuizVO {
 
     private String quizName;
     private Long courseId;
+    private Long quizId;
+    private Integer attemptRound;
     private Long userId;
     private Double grade;
     private Long questionusageid;
     private String questionSummary;
     private String responseSummary;
+    private Long questionattemptid;
+    private String state;
+    private String typeName; // 标识 是answer
+    private String selectedValue;
+    private Long questionattemptstepid;
+    private Long questionSlot;
+    private String questionName;
+//    private Long answerId;
+//    private String answerText;
 }

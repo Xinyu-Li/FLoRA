@@ -1,6 +1,12 @@
 package com.monash.flora_backend;
 
+import com.monash.flora_backend.config.cache.IGlobalCache;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 public class RedisTest extends FLoRaBackendApplicationTests{
@@ -32,4 +38,13 @@ public class RedisTest extends FLoRaBackendApplicationTests{
 ////            iAsyncTaskService.saveKeyValueDataToRedis("planner-save" + i, traceDataVO);
 ////        }
 //    }
+    @Autowired
+    private IGlobalCache iGlobalCache;
+    @Test
+    public void testRedis() {
+        List<String> list = new ArrayList<>();
+        list.add("123");
+
+        iGlobalCache.lSetAll("testRedis", list, 300);
+    }
 }

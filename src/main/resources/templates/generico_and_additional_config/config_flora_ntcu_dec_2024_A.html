@@ -184,6 +184,7 @@ Lastly, the feedback MUST not exceed 100 words.`;
     ];
 
     var useWriteEssayTool = true;
+    var useEssayProductAnalysisTool = false;
     var useWriteEssayWordCountButton = true;
     var useCollaborativeWriteEssayTool = false;
     var useCollaborativeWriteEssayWordCountButton = true;
@@ -882,7 +883,7 @@ Lastly, the feedback MUST not exceed 100 words.`;
     var useTimerTool = true;
     var useVideoRecordingTool = false;
 
-    var toolsLanguage = "zh";
+    var toolsLanguage = "zh_tw";
 
     var accessOtherCourseIdList = [];
 
@@ -928,13 +929,20 @@ Lastly, the feedback MUST not exceed 100 words.`;
         }
         return params; // string 类型
     }
-    let navTagA = document.querySelector("#page-navbar>nav>ol>li>a"); //this element saves the courseId in Moodle webpage
-    var currentCourseId = 95; // test toefl to set 1
-    if (navTagA != null) {
-        // console.log(navTagA.href);
-        currentCourseId = getURLParameters(navTagA.href).id;
-        // navTagA.href = "#";
-        navTagA.onclick = "return false;";
+    // let navTagA = document.querySelector("#page-navbar>nav>ol>li>a"); //this element saves the courseId in Moodle webpage
+    const ol = document.querySelector("#page-navbar>nav>ol.breadcrumb");
+    var currentCourseId = 101; // test toefl to set 1
+    if (ol) {
+        const liList = ol.querySelectorAll('li');
+        if (liList.length >= 2) {
+            const secondLastLi = liList[liList.length - 2];
+            const a = secondLastLi.querySelector('a');
+            if (a) {
+                // console.log(a.href); // 这里就是你想要的 url
+                currentCourseId = getURLParameters(a.href).id;
+                a.onclick = "return false;";
+            }
+        }
     }
 </script>
 
@@ -989,6 +997,7 @@ Lastly, the feedback MUST not exceed 100 words.`;
     if (useCollaborativeWriteEssayTool) loadScript("/flora/js/tools_12collaboratewrite.js");
     if(useZoteroNotesTool) loadScript("/flora/js/tools_16zoteronotes.js");
     if(useProcessVisualTool) loadScript("/flora/js/tools_17process_visual.js");
+    if (useEssayProductAnalysisTool) loadScript("/flora/js/tools_17essay_product_visual.js");
     if(useGPTScaffoldTool) loadScript("/flora/js/tools_07gpt_scaffolding.js");
     if(useMathEditorTool) loadScript("/flora/js/tools_16matheditor.js");
     loadScript("/flora/js/setupInstrumentationTools.js");

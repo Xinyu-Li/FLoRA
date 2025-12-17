@@ -155,13 +155,20 @@ Do not provide all the scaffolds at once. Produce only the metacognitive scaffol
         }
         return params; // string 类型
     }
-    let navTagA = document.querySelector("#page-navbar>nav>ol>li>a");
-    var currentCourseId = 0;
-    if (navTagA != null) {
-        console.log(navTagA.href);
-        currentCourseId = getURLParameters(navTagA.href).id;
-        // navTagA.href = "#";
-        navTagA.onclick = "return false;";
+    // let navTagA = document.querySelector("#page-navbar>nav>ol>li>a"); //this element saves the courseId in Moodle webpage
+    const ol = document.querySelector("#page-navbar>nav>ol.breadcrumb");
+    var currentCourseId = 101; // test toefl to set 1
+    if (ol) {
+        const liList = ol.querySelectorAll('li');
+        if (liList.length >= 2) {
+            const secondLastLi = liList[liList.length - 2];
+            const a = secondLastLi.querySelector('a');
+            if (a) {
+                // console.log(a.href); // 这里就是你想要的 url
+                currentCourseId = getURLParameters(a.href).id;
+                a.onclick = "return false;";
+            }
+        }
     }
 </script>
 <script>

@@ -31,7 +31,7 @@ function loadMultiSeparateAgentsChatHistory(agentName, agentDisplayName, agentAv
 
             console.log("chat_history", chat_history);
 
-            let agent_chat_history = chat_history.filter(chat => chat.type === agentName); // TODO 和前面重复 等数据库表结构改之后同步改
+            let agent_chat_history = chat_history.filter(chat => chat.assistantName === agentName); // TODO 和前面重复 等数据库表结构改之后同步改
 
 
             // mayorChatHistoryLength = agent_chat_history.length;
@@ -80,14 +80,7 @@ function askMultiSeparateAgentsQuestion(agent) {
         const processingMessage = createProcessingMessage();
         $(multiSeparateAgentsTextarea).append(processingMessage);
         $(multiSeparateAgentsTextarea).scrollTop(multiSeparateAgentsTextarea.scrollHeight);
-        let essayContent = "";
-
-        if (typeof mainEditor === 'undefined' || mainEditor === null){
-            essayContent = "";
-        }
-        else {
-            essayContent = mainEditor.getText();
-        }
+        let essayContent = mainEditor?.getText() ?? "";
 
         let solution = ""
         if (localStorage.getItem(userId+ "-" + currentCourseId + "-" + "SustainableSolution") !== ""){
@@ -198,7 +191,7 @@ function myCallbackMultiAgentsMultiWindows(contains, element) {
     multiSeparateAgentsPageEvent = "NO_PAGE_EVENT";
 }
 
-function renderMultiAgentsMultiWindowTool(agent) {
+function renderMultiAgentsMultiWindowTool(agent, specialHtml) {
     let multiSeparateAgentsGeneralHtml = `<!-- Tool Template -->
         <div class="my-horizontal-collapse-tools chatgpt-multi-separate-agents" id="multi-separate-agents-collapse-${agent.agentName}">
            <div class="card card-body" style="height:100%;">
@@ -213,6 +206,7 @@ function renderMultiAgentsMultiWindowTool(agent) {
 <!--                   <input type="text" class="form-control" id="multi-separate-agents-panel-input-${agent.agentName}" placeholder="${chatgptPanelInputPlaceholder}" aria-label="Input group example" aria-describedby="btn-group-addon-multi-separate-agents-general">-->
                    <textarea type="text" rows="5" class="form-control" id="multi-separate-agents-panel-input-${agent.agentName}" placeholder="${chatgptPanelInputPlaceholder}" aria-label="Input group example" aria-describedby="btn-group-addon-multi-separate-agents-general"></textarea>
                    <button type="button" class="btn btn-outline-primary" id="multi-separate-agents-send-question-btn-${agent.agentName}">${chatgptSendBtnText}</button>
+                   ${specialHtml}
                </div>
            </div>
         </div>`;

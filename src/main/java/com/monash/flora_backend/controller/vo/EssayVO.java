@@ -11,5 +11,5 @@ public class EssayVO {
     private String essayContent;
     private String essayContentJson;
     private String courseId;
-
+    private String timePointDesc;
 }

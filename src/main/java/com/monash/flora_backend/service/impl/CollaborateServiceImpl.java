@@ -73,11 +73,18 @@ public class CollaborateServiceImpl implements ICollaborateService {
             log.info("CaffeineCacheService.containsAuthor is true, sessionID is" + sessionID);
             long currentUnixtimestamp = System.currentTimeMillis()/1000;
             Map sessionInfo_response = client.getSessionInfo(sessionID);
-            if (sessionInfo_response!=null){
+
+            if (sessionInfo_response == null || !sessionInfo_response.containsKey("validUntil")) {
+                log.warn("Session info is missing or invalid. Creating a new session...");
+                sessionID = client.createSession(groupID, authorID, 120).get("sessionID").toString();
+                CaffeineCacheService.putAuthor(authorID, sessionID);
+            }
+            else{
                 long validUntil = ((Number) sessionInfo_response.get("validUntil")).longValue();
                 if (validUntil < currentUnixtimestamp){
+                    log.warn("Session expired. Creating a new session...");
                     client.deleteSession(sessionID);
-                    sessionID = client.createSession(groupID, authorID, 2).get("sessionID").toString();
+                    sessionID = client.createSession(groupID, authorID, 120).get("sessionID").toString();
                     CaffeineCacheService.putAuthor(authorID, sessionID);
                     log.info("sessionID in cookies is invalid, create a new one: " + sessionID);
                 }
@@ -85,15 +92,9 @@ public class CollaborateServiceImpl implements ICollaborateService {
                     log.info("sessionID in cookies is valid: " + sessionID);
                 }
             }
-            else{
-                sessionID = client.createSession(groupID, authorID, 2).get("sessionID").toString();
-                CaffeineCacheService.putAuthor(authorID, sessionID);
-                log.info("sessionID in cookies is invalid, create a new one: " + sessionID);
-            }
-
         }
         else {
-            sessionID = client.createSession(groupID, authorID, 2).get("sessionID").toString();
+            sessionID = client.createSession(groupID, authorID, 120).get("sessionID").toString();
             CaffeineCacheService.putAuthor(authorID, sessionID);
             log.info("CaffeineCacheService.containsAuthor is false, get a new sessionID" + sessionID);
         }

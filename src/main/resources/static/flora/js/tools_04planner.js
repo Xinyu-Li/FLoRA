@@ -67,17 +67,25 @@ let createCustomisePlanDiv = document.querySelector("#create-customise-plan-div"
 let displayPlanDiv = document.querySelector("#display-plan-div");
 let displayPlanMessageDiv = document.querySelector("#display-plan-message-div")
 
-let defaultStep21Task = plannerAllStrategy[0].plannerStep2Task.map(item => item.title);
-let defaultStep21TaskInstruction = plannerAllStrategy[0].plannerStrategyInstruction;
-let defaultStep21Time = plannerAllStrategy[0].plannerStep2Task.map(item => item.time);
+let defaultStep21Task = plannerAllStrategy.length > 0 ? plannerAllStrategy[0].plannerStep2Task.map(item => item.title) : null;
+let defaultStep21TaskInstruction = plannerAllStrategy.length > 0 ? plannerAllStrategy[0].plannerStrategyInstruction : null;
+let defaultStep21Time = plannerAllStrategy.length > 0 ? plannerAllStrategy[0].plannerStep2Task.map(item => item.time) : null;
 
-let defaultStep22Task = plannerAllStrategy[1].plannerStep2Task.map(item => item.title);
-let defaultStep22TaskInstruction = plannerAllStrategy[1].plannerStrategyInstruction;
-let defaultStep22Time = plannerAllStrategy[1].plannerStep2Task.map(item => item.time);
+let defaultStep22Task = plannerAllStrategy.length > 1 ? plannerAllStrategy[1].plannerStep2Task.map(item => item.title) : null;
+let defaultStep22TaskInstruction = plannerAllStrategy.length > 1 ? plannerAllStrategy[1].plannerStrategyInstruction : null;
+let defaultStep22Time = plannerAllStrategy.length > 1 ? plannerAllStrategy[1].plannerStep2Task.map(item => item.time) : null;
 
-let defaultStep23Task = plannerAllStrategy[2].plannerStep2Task.map(item => item.title);
-let defaultStep23TaskInstruction = plannerAllStrategy[2].plannerStrategyInstruction;
-let defaultStep23Time = plannerAllStrategy[2].plannerStep2Task.map(item => item.time);
+let defaultStep23Task = plannerAllStrategy.length > 2 ? plannerAllStrategy[2].plannerStep2Task.map(item => item.title) : null;
+let defaultStep23TaskInstruction = plannerAllStrategy.length > 2 ? plannerAllStrategy[2].plannerStrategyInstruction : null;
+let defaultStep23Time = plannerAllStrategy.length > 2 ? plannerAllStrategy[2].plannerStep2Task.map(item => item.time) : null;
+
+let defaultStep24Task = plannerAllStrategy.length > 3 ? plannerAllStrategy[3].plannerStep2Task.map(item => item.title) : null;
+let defaultStep24TaskInstruction = plannerAllStrategy.length > 3 ? plannerAllStrategy[3].plannerStrategyInstruction : null;
+let defaultStep24Time = plannerAllStrategy.length > 3 ? plannerAllStrategy[3].plannerStep2Task.map(item => item.time) : null;
+
+let defaultStep25Task = plannerAllStrategy.length > 4 ? plannerAllStrategy[4].plannerStep2Task.map(item => item.title) : null;
+let defaultStep25TaskInstruction = plannerAllStrategy.length > 4 ? plannerAllStrategy[4].plannerStrategyInstruction : null;
+let defaultStep25Time = plannerAllStrategy.length > 4 ? plannerAllStrategy[4].plannerStep2Task.map(item => item.time) : null;
 
 let defaultStep3ReadingStrategySelection = [];
 let defaultStep3WritingStrategySelection = [];
@@ -123,7 +131,7 @@ function generateStep2Html(step2Task, step2Time, step2Instruction, showNextBtn) 
             '               <label for="create-plan-task' + i + '-input" class="form-label">2.' + (i+1) + " " + step2Task[i] + ':</label>' +
             '               <div class="input-group">' +
             '                   <input type="number" step="1" min="0" max="' + totalMinutes + '" value="' + step2Time[i] + '" placeholder="Input a number between 1-' + totalMinutes + '" class="form-control create-plan-input" id="create-plan-task' + i + '-input"/>' +
-            '                   <span class="input-group-text">minutes</span>' +
+            '                   <span class="input-group-text">' + plannerTimeUnitMinute + '</span>' +
             '               </div>' +
             '           </div>';
     }
@@ -155,7 +163,7 @@ function generateDisplayPlanHtml(step1Strategy, step2Task, step2Time, step3Strat
     tempItemStr += '<h6 class="mt-2" >' + plannerDisplayTimeAllocationLabel + '</h6>';
     tempItemStr += '<ol class="list-group list-group-numbered">';
     for (let i = 0; i < step2Task.length; i++) {
-        tempItemStr += '  <li class="list-group-item" style="padding:0.5rem 1.6rem">' + step2Task[i] + '<span class="float-end">' + step2Time[i] + ' minutes</span>' + '</li>';
+        tempItemStr += '  <li class="list-group-item" style="padding:0.5rem 1.6rem">' + step2Task[i] + '<span class="float-end">' + step2Time[i] + ' ' + plannerTimeUnitMinute + '</span>' + '</li>';
     }
     tempItemStr += '</ol>';
     if (readingBeforeWriting) {
@@ -193,9 +201,9 @@ function generateCustomiseStrategyItemHtml(strategyName, minute) {
     return `
         <div class="customise-strategy-item">
             <div class="input-group">
-               <input type="text" class="form-control customise-strategy-name-input" placeholder="Strategy name" value="${strategyName}">
-               <input type="number" step="1" min="0" value="${minute}" max="' + totalMinutes + '" placeholder="Time: 1-' + totalMinutes + '" class="form-control customise-strategy-time-input"/>
-               <span class="input-group-text">minutes</span>
+               <input type="text" class="form-control customise-strategy-name-input" placeholder="..." value="${strategyName}">
+               <input type="number" step="1" min="0" value="${minute}" max="${totalMinutes}" placeholder="1-${totalMinutes}" class="form-control customise-strategy-time-input"/>
+               <span class="input-group-text">${plannerTimeUnitMinute}</span>
                <button class="btn btn-danger delete-customise-strategy-btn" style="">X</button>
             </div>
         <hr/></div>`;
@@ -203,11 +211,11 @@ function generateCustomiseStrategyItemHtml(strategyName, minute) {
 
 function generateCustomiseDisplayPlanHtml(customiseTask, customiseTime) {
     let tempItemStr = `<h4>${plannerDisplayPlanTitle}</h4>`;
-    tempItemStr += `<h5 class="mt-2">${plannerDisplayOverallStrategyLabel} <span class="text-primary">Customisation Plan</span></h5>`;
+    tempItemStr += `<h5 class="mt-2">${plannerDisplayOverallStrategyLabel} <span class="text-primary">${plannerCustomisePlanTitle}</span></h5>`;
     tempItemStr += `<h6 class="mt-2">${plannerDisplayTimeAllocationLabel}</h6>`;
     tempItemStr += `<ol class="list-group list-group-numbered">`;
     for (let i = 0; i < customiseTask.length; i++) {
-        tempItemStr += '  <li class="list-group-item" style="padding:0.5rem 1.6rem">' + customiseTask[i] + '<span class="float-end">' + customiseTime[i] + ' minutes</span>' + '</li>';
+        tempItemStr += '  <li class="list-group-item" style="padding:0.5rem 1.6rem">' + customiseTask[i] + '<span class="float-end">' + customiseTime[i] + ' ' + plannerTimeUnitMinute + '</span>' + '</li>';
     }
     tempItemStr += '</ol>';
     return tempItemStr;
@@ -245,6 +253,8 @@ function clearPlanner() {
     defaultStep21Time = [0, 0, 0, 0];
     defaultStep22Time = [0, 0, 0];
     defaultStep23Time = [0, 0, 0, 0];
+    defaultStep24Time = [0, 0, 0, 0];
+    defaultStep25Time = [0, 0, 0, 0];
 
     addMoreCustomiseStrategyBtn.classList.add("d-none");
     saveCancelPlanBtnsDiv.classList.add("d-none");
@@ -372,7 +382,7 @@ function setupPlanner2() {
 
                 if (learningStrategySelect.selectedIndex === 1 || learningStrategySelect.selectedIndex === 2) {
                     createPlanStep3Div.innerHTML = generateStep3Html(defaultStep3ReadingStrategy, defaultStep3ReadingStrategySelection, defaultStep3ReadingInstruction, 3, "");
-                } else if (learningStrategySelect.selectedIndex === 3) {
+                } else if (learningStrategySelect.selectedIndex === 3 || learningStrategySelect.selectedIndex === 4) {
                     createPlanStep3Div.innerHTML = generateStep3Html(defaultStep3WritingStrategy, defaultStep3WritingStrategySelection, defaultStep3WritingInstruction, 3, "");
                 }
                 this.classList.add("d-none");
@@ -404,7 +414,7 @@ function setupPlanner2() {
         if (learningStrategySelect.selectedIndex === 1 || learningStrategySelect.selectedIndex === 2) {
             step3 = "Reading";
             step4 = "Writing";
-        } else if (learningStrategySelect.selectedIndex === 3) {
+        } else if (learningStrategySelect.selectedIndex === 3 || learningStrategySelect.selectedIndex === 4) {
             step3 = "Writing";
             step4 = "Reading";
         }
@@ -477,7 +487,7 @@ function setupPlanner2() {
             let hasItemStep4Checked = false;
             let step3 = "";
             let step4 = "";
-            if (learningStrategySelect.selectedIndex !== 3) {
+            if (learningStrategySelect.selectedIndex === 1 || learningStrategySelect.selectedIndex === 2) {
                 step3 = "Reading";
                 step4 = "Writing";
             } else {
@@ -489,6 +499,8 @@ function setupPlanner2() {
             defaultStep21Time = [0, 0, 0, 0];
             defaultStep22Time = [0, 0, 0];
             defaultStep23Time = [0, 0, 0, 0];
+            defaultStep24Time = [0, 0, 0, 0];
+            defaultStep25Time = [0, 0, 0, 0];
 
             hasItemStep3Checked = getStep3Or4CheckResult(createPlanStep3Div, step3);
             hasItemStep4Checked = getStep3Or4CheckResult(createPlanStep4Div, step4);
@@ -497,7 +509,7 @@ function setupPlanner2() {
                 displayPlanDiv.innerHTML = generateDisplayPlanHtml(learningStrategySelect.options[learningStrategySelect.selectedIndex].innerText,
                     eval("defaultStep2" + learningStrategySelect.selectedIndex + "Task"), eval("defaultStep2" + learningStrategySelect.selectedIndex + "Time"),
                     eval("defaultStep3" + step3 + "Strategy"), eval("defaultStep3" + step3 + "StrategySelection"),
-                    eval("defaultStep3" + step4 + "Strategy"), eval("defaultStep3" + step4 + "StrategySelection"), learningStrategySelect.selectedIndex !== 3);
+                    eval("defaultStep3" + step4 + "Strategy"), eval("defaultStep3" + step4 + "StrategySelection"), (learningStrategySelect.selectedIndex === 1 || learningStrategySelect.selectedIndex === 2));
 
                 hideEditAreaShowEditBtn();
             } else {
@@ -512,6 +524,8 @@ function setupPlanner2() {
             defaultStep21Time : defaultStep21Time, //用户选择第1个 option
             defaultStep22Time : defaultStep22Time, //用户选择第2个 option
             defaultStep23Time : defaultStep23Time, //用户选择第3个 option
+            defaultStep24Time : defaultStep24Time, //用户选择第3个 option
+            defaultStep25Time : defaultStep25Time, //用户选择第3个 option
             defaultStep3ReadingStrategySelection : defaultStep3ReadingStrategySelection,
             defaultStep3WritingStrategySelection : defaultStep3WritingStrategySelection,
             customiseStep2Task : customiseStep2Task,
@@ -623,7 +637,7 @@ function restorePlannerView(plannerElementsJson, displayPlanDivInnerHtml) {
 
         if (plannerElements.selectionIndex === 1 || plannerElements.selectionIndex === 2) {
             createPlanStep3Div.innerHTML = generateStep3Html(defaultStep3ReadingStrategy, plannerElements.defaultStep3ReadingStrategySelection, defaultStep3ReadingInstruction, 3, "d-none");
-        } else if (plannerElements.selectionIndex === 3) {
+        } else if (plannerElements.selectionIndex === 3 || plannerElements.selectionIndex === 4) {
             createPlanStep3Div.innerHTML = generateStep3Html(defaultStep3WritingStrategy, plannerElements.defaultStep3WritingStrategySelection, defaultStep3WritingInstruction, 3, "d-none");
         }
 
@@ -632,7 +646,7 @@ function restorePlannerView(plannerElementsJson, displayPlanDivInnerHtml) {
         if (plannerElements.selectionIndex === 1 || plannerElements.selectionIndex === 2) {
             step3 = "Reading";
             step4 = "Writing";
-        } else if (plannerElements.selectionIndex === 3) {
+        } else if (plannerElements.selectionIndex === 3 || plannerElements.selectionIndex === 4) {
             step3 = "Writing";
             step4 = "Reading";
         }
@@ -677,7 +691,7 @@ function loadPlanner() {
 }
 
 
-
+showPlanner2Btn.addEventListener("mousedown", function (e) {e.stopPropagation();});
 showPlanner2Btn.onclick = function (e) {
     // console.log("----------------------------------------showPlanner2Btn clicked");
     stopEventPropagation(e);

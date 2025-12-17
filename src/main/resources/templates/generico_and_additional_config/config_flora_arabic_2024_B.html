@@ -180,6 +180,7 @@ o\tالوصف : لا توجد معلومات أو معلومات غير صحيح
     ];
 
     var useWriteEssayTool = true;
+    var useEssayProductAnalysisTool = false;
     var useWriteEssayWordCountButton = false;
     var useCollaborativeWriteEssayTool = false;
     var useCollaborativeWriteEssayWordCountButton = false;
@@ -316,6 +317,7 @@ o\tالوصف : لا توجد معلومات أو معلومات غير صحيح
     if (useCollaborativeWriteEssayTool) loadScript("/flora/js/tools_12collaboratewrite.js");
     if(useZoteroNotesTool) loadScript("/flora/js/tools_16zoteronotes.js");
     if(useProcessVisualTool) loadScript("/flora/js/tools_17process_visual.js");
+    if (useEssayProductAnalysisTool) loadScript("/flora/js/tools_17essay_product_visual.js");
     if(useGPTScaffoldTool) loadScript("/flora/js/tools_07gpt_scaffolding.js");
     if(useMathEditorTool) loadScript("/flora/js/tools_16matheditor.js");
     loadScript("/flora/js/setupInstrumentationTools.js");

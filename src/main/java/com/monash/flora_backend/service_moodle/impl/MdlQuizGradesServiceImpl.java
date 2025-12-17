@@ -2,7 +2,6 @@ package com.monash.flora_backend.service_moodle.impl;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.monash.flora_backend.controller.vo.MdlQuizVO;
 import com.monash.flora_backend.dao.entity.MdlQuizGrades;
 import com.monash.flora_backend.dao.mapper.MdlQuizGradesMapper;
 import com.monash.flora_backend.service_moodle.IMdlQuizGradesService;
@@ -25,8 +24,5 @@ public class MdlQuizGradesServiceImpl extends ServiceImpl<MdlQuizGradesMapper, M
 //    }
 
 
-    @Override
-    public MdlQuizVO findQuizGradeByUserIdAndCourseIdAndQuizName(String quizName, Long courseId, Long userId) {
-        return getBaseMapper().findQuizGradeByUserIdAndCourseIdAndQuizName(quizName, courseId, userId);
-    }
+
 }

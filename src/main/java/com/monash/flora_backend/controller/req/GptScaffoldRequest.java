@@ -16,16 +16,19 @@ import java.util.List;
  */
 @Data
 public class GptScaffoldRequest {
+    private String userQuestion;
     private Integer gptScaffoldNumber;
 //    private LinkedHashMap<String, LinkedHashMap<String, String>> srlProcessAndThresholdAndPromptMap;
 //    private List<NeedCheckSRLPromptVO> srlProcessAndThresholdAndPromptList;
     private GptScaffoldPromptVO gptScaffoldPromptVO;
     private String testISDIMUName;
+    private String testMAIName;
     private String preTestName;
     private String hasTakePreviousStudyTestName;
 
     private String preTestCourseId;
     private String testISDIMUCourseId;
+    private String testMAICourseId;
     private String hasTakePreviousStudyTestNameCourseId;
     private String essay;
 //    private LinkedHashMap<String, List<String>> subActionAndPromptMap;
@@ -45,14 +48,23 @@ public class GptScaffoldRequest {
 //    private Integer beginMinute;
 //    private Integer endMinute;
 
-    private List<String> classifySentenceBackgroundFileNameList;
+//    private List<String> classifySentenceBackgroundFileNameList;
 //    private LinkedHashMap<String, String> pretestGradesPromptMap;
     private List<ThresholdPromptVO> pretestGradesPrompt;
     private List<String> backgroundFileNameList;
 //    private LinkedHashMap<String, String> isdimuScorePromptMap;
     private List<ThresholdPromptVO> isdimuScorePrompt;
+    private List<ThresholdPromptVO> maiScoreKnowledgeCognitionPrompt;
+    private List<ThresholdPromptVO> maiScoreRegulationCognitionPrompt;
     private List<Integer> gptScaffoldParameters;
 
     private List<NeedCheckSRLPromptVO> srlProcessBackupPromptList;
     private List<GptScaffoldReturnMessageVO> gptScaffoldReturnMessages;
+
+    private Boolean hasDefaultScaffoldsPrompt;
+    private List<GptScaffoldReturnMessageVO> defaultScaffoldMessages;
+    private String toolsLanguage;
+    private boolean allowGptScaffoldsChat; //是否允许聊天
+    private String agentName;
+    private String agentRole;
 }

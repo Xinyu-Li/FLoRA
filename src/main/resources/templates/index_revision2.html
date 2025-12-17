@@ -141,6 +141,7 @@
         var srlModel = "maria";    // copes
         var gptScaffoldRole = "assistant";
         var usercolor4pad = "%23F5EEF8";
+        var etherpadApiUrl = "http://localhost/etherpad";
 
 
         // var gptScaffoldRoleDescription = "You are a helpful assistant, please give suggestions based on the given text.";
@@ -435,6 +436,86 @@ The feedback should not exceed 100 words.`;
         var medicalConsultAssistantTeacherType = "linmei_4o";
         var assistantTeacherLimitRound = 10;
         var useChatgptAssistantTeacherRating = false;
+        var CollaborateGPTRoleDescription = "You are an experienced assistant for essay writing. The graduate student is working on an essay writing task. You should not write or finish essays for students. Instead, you should help students by only answering their questions, regarding the essay task, e.g. if they are not sure of the meaning of a term or concept, organizing their arguments, citing properly. Maintain a supportive and encouraging tone throughout interactions, you should motivate students, especially when they encounter challenges in their writing process. Integrate advice on the essay structure, argument development, grammar mistakes and proofreading techniques. Keep your responses succinct.";
+
+
+        var multiAgent4CollaborativeChatConfig = [
+            {
+                "agentDisplayName":"Mediator",
+                "agentName":"mediator_discuss_01",// 根据课程不同需要修改 eg mediator_write_01
+                "agentRole":"mediator",
+                "model":"gpt-4o",
+                "agentDescription":"You are the mediator. Please answer all the questions.",
+
+                "agentAvatarSvg": "<svg t=\"1721961683121\" class=\"icon\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" p-id=\"5712\" width=\"35\" height=\"35\"><path d=\"M903.616 0C969.984 0 1024 54.016 1024 120.384V903.68A120.576 120.576 0 0 1 903.552 1024H120.384A120.512 120.512 0 0 1 0 903.616V120.32C0 54.016 54.016 0 120.384 0H903.68z m0 69.12H120.32a51.328 51.328 0 0 0-51.264 51.264V903.68c0 28.288 23.04 51.264 51.264 51.264H903.68c28.288 0 51.264-23.04 51.264-51.264V120.32a51.392 51.392 0 0 0-51.264-51.264zM501.952 288v58.56H268.928v115.904h218.944v58.56H268.928v126.528h242.944v58.496H200.384V288h301.568z m224.832 107.136c75.52 0 113.6 40.96 113.6 124.16v186.752h-66.752V525.12c0-49.728-22.848-74.368-68.48-74.368a61.12 61.12 0 0 0-43.328 17.6c-14.08 12.864-22.272 31.616-24.64 55.68v182.016H570.432v-302.72h66.752v35.2c9.408-11.264 19.84-20.672 31.232-27.52l8.64-4.736c15.424-7.616 32.512-11.392 49.728-11.136z\" fill=\"#f9d6ff\" p-id=\"5713\"></path></svg>",
+                "agentToolIconSvg": "",
+
+                "useAgent": false,
+                "promptIncludeEssay":true,
+                "backgroundFileNameList":[],
+                "chatgptParameters":[1000,1,2],
+            },
+            {
+                "agentDisplayName":"Structure",
+                "agentName":"expert_structure",
+                "agentRole":"expert",
+                "model":"gpt-4o",
+                "agentDescription":"You are the structure expert. Please answer all the questions.",
+
+                "agentAvatarSvg": "<svg t=\"1717136978189\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" p-id=\"6006\" width=\"30\" height=\"30\"><path d=\"M903.616 0C969.984 0 1024 54.016 1024 120.384V903.68A120.576 120.576 0 0 1 903.552 1024H120.384A120.512 120.512 0 0 1 0 903.616V120.32C0 54.016 54.016 0 120.384 0H903.68z m0 69.12H120.32a51.328 51.328 0 0 0-51.264 51.264V903.68c0 28.288 23.04 51.264 51.264 51.264H903.68c28.288 0 51.264-23.04 51.264-51.264V120.32a51.392 51.392 0 0 0-51.264-51.264zM501.952 288v58.56H268.928v115.904h218.944v58.56H268.928v126.528h242.944v58.496H200.384V288h301.568z m224.832 107.136c75.52 0 113.6 40.96 113.6 124.16v186.752h-66.752V525.12c0-49.728-22.848-74.368-68.48-74.368a61.12 61.12 0 0 0-43.328 17.6c-14.08 12.864-22.272 31.616-24.64 55.68v182.016H570.432v-302.72h66.752v35.2c9.408-11.264 19.84-20.672 31.232-27.52l8.64-4.736c15.424-7.616 32.512-11.392 49.728-11.136z\" fill=\"#efb336\" p-id=\"6007\"></path></svg>",
+                "agentToolIconSvg": "",
+
+                "useAgent": false,
+                "promptIncludeEssay":true,
+                "backgroundFileNameList":[],
+                "chatgptParameters":[1000,1,2],
+            },
+            {
+                "agentDisplayName":"Grammar",
+                "agentName":"expert_grammar",
+                "agentRole":"expert",
+                "model":"gpt-4o",
+                "agentDescription":"You are the grammar expert. Please answer all the questions.",
+
+                "agentAvatarSvg": "<svg t=\"1717136978189\" viewBox=\"0 0 1024 1024\"  xmlns=\"http://www.w3.org/2000/svg\" p-id=\"6006\" width=\"35\" height=\"35\"><path d=\"M903.616 0C969.984 0 1024 54.016 1024 120.384V903.68A120.576 120.576 0 0 1 903.552 1024H120.384A120.512 120.512 0 0 1 0 903.616V120.32C0 54.016 54.016 0 120.384 0H903.68z m0 69.12H120.32a51.328 51.328 0 0 0-51.264 51.264V903.68c0 28.288 23.04 51.264 51.264 51.264H903.68c28.288 0 51.264-23.04 51.264-51.264V120.32a51.392 51.392 0 0 0-51.264-51.264zM501.952 288v58.56H268.928v115.904h218.944v58.56H268.928v126.528h242.944v58.496H200.384V288h301.568z m224.832 107.136c75.52 0 113.6 40.96 113.6 124.16v186.752h-66.752V525.12c0-49.728-22.848-74.368-68.48-74.368a61.12 61.12 0 0 0-43.328 17.6c-14.08 12.864-22.272 31.616-24.64 55.68v182.016H570.432v-302.72h66.752v35.2c9.408-11.264 19.84-20.672 31.232-27.52l8.64-4.736c15.424-7.616 32.512-11.392 49.728-11.136z\" fill=\"#1296db\" p-id=\"6007\"></path></svg>",
+                "agentToolIconSvg": "",
+
+                "useAgent": true,
+                "promptIncludeEssay":true,
+                "backgroundFileNameList":[],
+                "chatgptParameters":[1000,1,2],
+            },
+            {
+                "agentDisplayName":"Language",
+                "agentName":"expert_language",
+                "agentRole":"expert",
+                "model":"gpt-4o",
+                "agentDescription":"You are the language expert. Please answer all the questions.",
+
+                "agentAvatarSvg": "<svg t=\"1717136978189\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" p-id=\"6006\" width=\"35\" height=\"35\"><path d=\"M903.616 0C969.984 0 1024 54.016 1024 120.384V903.68A120.576 120.576 0 0 1 903.552 1024H120.384A120.512 120.512 0 0 1 0 903.616V120.32C0 54.016 54.016 0 120.384 0H903.68z m0 69.12H120.32a51.328 51.328 0 0 0-51.264 51.264V903.68c0 28.288 23.04 51.264 51.264 51.264H903.68c28.288 0 51.264-23.04 51.264-51.264V120.32a51.392 51.392 0 0 0-51.264-51.264zM501.952 288v58.56H268.928v115.904h218.944v58.56H268.928v126.528h242.944v58.496H200.384V288h301.568z m224.832 107.136c75.52 0 113.6 40.96 113.6 124.16v186.752h-66.752V525.12c0-49.728-22.848-74.368-68.48-74.368a61.12 61.12 0 0 0-43.328 17.6c-14.08 12.864-22.272 31.616-24.64 55.68v182.016H570.432v-302.72h66.752v35.2c9.408-11.264 19.84-20.672 31.232-27.52l8.64-4.736c15.424-7.616 32.512-11.392 49.728-11.136z\" fill=\"#ed0671\" p-id=\"6007\"></path></svg>",
+                "agentToolIconSvg": "",
+
+                "useAgent": true,
+                "promptIncludeEssay":true,
+                "backgroundFileNameList":[],
+                "chatgptParameters":[1000,1,2],
+            },
+            {
+                "agentDisplayName":"Chatbot",
+                "agentName":"fit5145_agent",
+                "agentRole":"tutor",
+                "model":"gpt-4o",
+                "agentDescription":"You are an experienced tutor in a course named 'Foundations of Data Science'. The first assignment that students need to work on in this course is to first select a topic for a data science project proposal they would like to work on and then write the first two sections of the data science project proposal. You should not finish the two sections for students. Instead, you should help students by only answering their questions. The two sections are Project Description and Business Model. The section Project Description should provide a description about the data science project that you study/propose, what the objective of the project is, and what data science roles are involved in this project and what are their responsibilities. The section Business Model should provide analysis about the business/application areas the project sits in, what kind of benefits or values the project can create for the specific business area and who can benefit from, and what the challenges of the project are. The assignment will be assessed based on the following criteria: (1) clear description of the goals of the project; (2) appropriateness of topic; (3) clear description of the business benefits and challenges; (4) novelty/creativity; and (5) overall clarity of the initial report.",
+
+                "agentAvatarSvg": "<svg fill=\"#000000\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\"><title>chatgpt icon</title><path d=\"M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z\"/></svg>",
+                "agentToolIconSvg": "",
+
+                "useAgent": true,
+                "promptIncludeEssay":true,
+                "backgroundFileNameList":[],
+                "chatgptParameters":[1000,1,2],
+            }
+        ];
 
 
         var patientRoleDescription="角色设定：你现在扮演病人，根据病例资料里的信息跟实习医生进行问诊对话练习。你的任务是训练实习医生通过提问挖掘有价值的病史信息的病史采集能力。你没有医学知识，你不能帮实习医生问诊或者列问诊提纲，不能给实习医生提供医学知识或者给出诊断或诊断意见。以下是行为指南和病例资料。\n" +
@@ -622,13 +703,20 @@ The feedback should not exceed 100 words.`;
             }
             return params; // string 类型
         }
-        let navTagA = document.querySelector("#page-navbar>nav>ol>li>a");
-        var currentCourseId = 0;
-        if (navTagA != null) {
-            // console.log(navTagA.href);
-            currentCourseId = getURLParameters(navTagA.href).id;
-            // navTagA.href = "#";
-            navTagA.onclick = "return false;";
+        // let navTagA = document.querySelector("#page-navbar>nav>ol>li>a"); //this element saves the courseId in Moodle webpage
+        const ol = document.querySelector("#page-navbar>nav>ol.breadcrumb");
+        var currentCourseId = 101; // test toefl to set 1
+        if (ol) {
+            const liList = ol.querySelectorAll('li');
+            if (liList.length >= 2) {
+                const secondLastLi = liList[liList.length - 2];
+                const a = secondLastLi.querySelector('a');
+                if (a) {
+                    // console.log(a.href); // 这里就是你想要的 url
+                    currentCourseId = getURLParameters(a.href).id;
+                    a.onclick = "return false;";
+                }
+            }
         }
     </script>
 

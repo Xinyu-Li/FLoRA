@@ -19,10 +19,10 @@ const heartbeatIntervalMs = 50000; // 1 second
 let lastHeartbeatReceivedTime = Date.now();
 
 
-window.onload = function () {
+window.addEventListener('load', function () {
     if (!'WebSocket' in window) return;
     webSocketInit();
-};
+});
 
 function generateStudentQuestionHtml(studentQuestion, timestamp) {
     studentQuestion = studentQuestion.replace(/\n/g, '<br>');

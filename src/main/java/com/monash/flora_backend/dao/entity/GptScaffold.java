@@ -45,6 +45,34 @@ public class GptScaffold extends Model<GptScaffold> {
     private String gptWholePrompt;
     private String prompt;
 
+    private String threadId;
+    private String assistantName;
+    private String assistantId;
+
+    public String getThreadId() {
+        return threadId;
+    }
+
+    public void setThreadId(String threadId) {
+        this.threadId = threadId;
+    }
+
+    public String getAssistantName() {
+        return assistantName;
+    }
+
+    public void setAssistantName(String assistantName) {
+        this.assistantName = assistantName;
+    }
+
+    public String getAssistantId() {
+        return assistantId;
+    }
+
+    public void setAssistantId(String assistantId) {
+        this.assistantId = assistantId;
+    }
+
     public String getGptWholePrompt() {
         return gptWholePrompt;
     }

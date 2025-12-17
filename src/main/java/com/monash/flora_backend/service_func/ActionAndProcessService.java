@@ -22,8 +22,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -267,9 +268,9 @@ public class ActionAndProcessService {
         long timeSpecifiedMinutePoint = taskStartTime + breakpointTime * 60 * 1000;
         List<String> srlProcessAppearList = new ArrayList<>();
         List<TraceData> needUpdateList = new ArrayList<>();
-        if (breakpointTime <= beginMinute) {
-            srlProcessAppearList = findSrlProcess(traceDataList, processPatternBeforeSpecifiedMinList, modelType, needUpdateList, srlProcessPatternRegexMap);
-        } else if (beginMinute < breakpointTime && endMinute > breakpointTime) {
+        if (breakpointTime <= beginMinute) { // 15 <= beginMinute
+            srlProcessAppearList = findSrlProcess(traceDataList, processPatternAfterSpecifiedMinList, modelType, needUpdateList, srlProcessPatternRegexMap);
+        } else if (beginMinute < breakpointTime && endMinute > breakpointTime) { // beginMinute < 15 && endMinute > 15
             Map<Boolean, List<TraceData>> specifiedMinTimeGroupingMap = traceDataList.stream().collect(Collectors.groupingBy(x->Long.parseLong(x.getSaveTime()) <= timeSpecifiedMinutePoint));
             List<TraceData> beforeSpecifiedMinTraceDataList = specifiedMinTimeGroupingMap.get(true) == null ? new ArrayList<>() : specifiedMinTimeGroupingMap.get(true);
             List<TraceData> afterSpecifiedMinTraceDataList = specifiedMinTimeGroupingMap.get(false) == null ? new ArrayList<>() : specifiedMinTimeGroupingMap.get(false);
@@ -277,8 +278,8 @@ public class ActionAndProcessService {
             List<String> srlProcessAppearListAfterSpecifiedMin = findSrlProcess(afterSpecifiedMinTraceDataList, processPatternAfterSpecifiedMinList, modelType, needUpdateList, srlProcessPatternRegexMap);
             srlProcessAppearList.addAll(srlProcessAppearListBeforeSpecifiedMin);
             srlProcessAppearList.addAll(srlProcessAppearListAfterSpecifiedMin);
-        } else {
-            srlProcessAppearList = findSrlProcess(traceDataList, processPatternAfterSpecifiedMinList, modelType, needUpdateList, srlProcessPatternRegexMap);
+        } else { // endMinute <= breakpointTime
+            srlProcessAppearList = findSrlProcess(traceDataList, processPatternBeforeSpecifiedMinList, modelType, needUpdateList, srlProcessPatternRegexMap);
         }
         iTraceDataService.myUpdateBatch(needUpdateList);
         return srlProcessAppearList;
@@ -678,7 +679,7 @@ public class ActionAndProcessService {
      * @param srlProcessPatternRegexMap
      * @return
      */
-    private List<String> findSrlProcess(String allActionsStr, List<String> srlProcessPatternList, String modelType, List<TraceData> needUpdateList, Map<String, String> srlProcessPatternRegexMap) {
+    public List<String> findSrlProcess(String allActionsStr, List<String> srlProcessPatternList, String modelType, List<TraceData> needUpdateList, Map<String, String> srlProcessPatternRegexMap) {
         log.info("allActionsStr--------" + allActionsStr);
         if (StrUtil.isEmpty(allActionsStr)) {
             log.info("allActionsStr is empty-------------------");
@@ -705,6 +706,9 @@ public class ActionAndProcessService {
             Matcher matcher = regex.matcher(allActionsStr);
 
             while (matcher.find()) {
+//                if (srlProcess.equals("CSTR2")) {
+//                    System.out.println("srlProcess:" + srlProcess);
+//                }
                 String[] strings = matcher.group().split("=====");
                 for(String temp : strings) {
                     TraceData traceData = new TraceData();
@@ -712,9 +716,11 @@ public class ActionAndProcessService {
                     traceData.setProcessLabel(srlProcess);
                     matchTraceDataList.add(traceData);
                 }
+                //找到一次 就添加一次
+                srlProcessAppearList.add(srlProcess);
             }
             if (!matchTraceDataList.isEmpty()) {
-                srlProcessAppearList.add(srlProcess);
+
                 allActionsStr = allActionsStr.replaceAll(pattern, "*");  //每次检测到，都替换为*
                 needUpdateList.addAll(matchTraceDataList);
             }
@@ -722,10 +728,10 @@ public class ActionAndProcessService {
 
         allActionsStr = allActionsStr.replace("*", "");
 
-        if (StrUtil.isEmpty(allActionsStr)) {
-            log.info("allActionsStr length become to 0.....");
-            return new ArrayList<>();
-        }
+//        if (StrUtil.isEmpty(allActionsStr)) {
+//            log.info("allActionsStr length become to 0.....");
+//            return new ArrayList<>();
+//        }
         //标注 NOT_RECOGNIZED 的 process
         String[] strings = allActionsStr.split("=====");
 
@@ -786,22 +792,24 @@ public class ActionAndProcessService {
 
         allActionsStr = allActionsStr.replace("*", "");
 
-        if (StrUtil.isEmpty(allActionsStr)) {
-            log.info("allActionsStr length become to 0.....");
-            return new ArrayList<>();
-        }
-        //标注 NOT_RECOGNIZED 的 process
-        String[] strings = allActionsStr.split("=====");
+//        if (StrUtil.isEmpty(allActionsStr)) {
+//            log.info("allActionsStr length become to 0.....");
+//            return new ArrayList<>();
+//        }
+        if (!StrUtil.isEmpty(allActionsStr)) {
+            //标注 NOT_RECOGNIZED 的 process
+            String[] strings = allActionsStr.split("=====");
 
-        for(String temp : strings) {
-            if (StrUtil.isEmpty(temp)) {
-                continue;
-            }
-            TraceDataRealTimeProcess tempTraceData = new TraceDataRealTimeProcess();
-            tempTraceData.setId(Long.parseLong(temp.split("--")[0]));
-            tempTraceData.setProcessLabel("NOT_RECOGNIZED");
-            needUpdateList.add(tempTraceData);
+            for (String temp : strings) {
+                if (StrUtil.isEmpty(temp)) {
+                    continue;
+                }
+                TraceDataRealTimeProcess tempTraceData = new TraceDataRealTimeProcess();
+                tempTraceData.setId(Long.parseLong(temp.split("--")[0]));
+                tempTraceData.setProcessLabel("NOT_RECOGNIZED");
+                needUpdateList.add(tempTraceData);
 //            log.info("tempTraceData id:" + tempTraceData.getId());
+            }
         }
 
         log.info("-----srlProcessAppearList:" + srlProcessAppearList);
@@ -828,7 +836,7 @@ public class ActionAndProcessService {
      * @param srlProcessPatternRegexMap
      * @return
      */
-    private List<String> findSrlProcess(List<TraceData> traceDataList, List<String> srlProcessPatternList, String modelType, List<TraceData> needUpdateList, Map<String, String> srlProcessPatternRegexMap) {
+    public List<String> findSrlProcess(List<TraceData> traceDataList, List<String> srlProcessPatternList, String modelType, List<TraceData> needUpdateList, Map<String, String> srlProcessPatternRegexMap) {
 
         List<String> subActionList = new ArrayList<>();
         mergeSubActions(subActionList, traceDataList);
@@ -858,7 +866,8 @@ public class ActionAndProcessService {
 
 
     /**
-     * 直接label 所有 TODO 需要判断在何时执行此操作
+     * 直接label 所有
+     * 此处是精简过的log
      * @param userId
      * @param courseId
      * @param modelType
@@ -957,6 +966,7 @@ public class ActionAndProcessService {
             log.info("ESSAY_TASK_END-------------user:{}, course:{}", traceDataVO.getUserId(), traceDataVO.getCourseId());
             if (Objects.equals(traceDataVO.getModelType(), MyConstant.SRL_MODEL)) {
                 this.labelAllProcessLabelPatternsAsync(traceDataVO.getUserId(), traceDataVO.getCourseId(), MyConstant.SRL_MODEL);
+//                this.getRealTimeSimplifiedTraceDataLabelledAsync(traceDataVO.getUserId(), traceDataVO.getCourseId(), MyConstant.SRL_MODEL);
             }
 
 //            else if (Objects.equals(traceDataVO.getModelType(), "copes")) {
@@ -985,16 +995,21 @@ public class ActionAndProcessService {
      * @param courseId
      */
     @Async("asyncPoolTaskExecutor")
-    @Transactional
+//    @Transactional
     public void fixHasCloseButNoOpenLogIssue(int userId, int courseId) {
         System.out.println("processing " + userId + "-----courseid:" + courseId);
         List<TraceData> traceDataList = null;
+        Instant start = Instant.now();
         try {
             traceDataList = iTraceDataService.findAllByUserIdAndCourseIdOrderByTimeAsc((long) userId, String.valueOf(courseId));
         } catch (Exception e) {
             System.out.println("exception findAllByUserIdAndCourseIdOrderByTimeAsc ---------------------- processing " + userId + "-----courseid:" + courseId);
             traceDataList = new ArrayList<>();
         }
+
+        // 结束时间
+        Instant mid = Instant.now();
+
         List<TraceData> manuallyCreatedTraceDataList = new ArrayList<>();
 
         Map<String, List<TraceData>> specifiedMinTimeGroupingMap = traceDataList.stream().collect(Collectors.groupingBy(TraceData::getSource));
@@ -1009,11 +1024,19 @@ public class ActionAndProcessService {
         createTraceData(searchAnnotationTraceDataList, manuallyCreatedTraceDataList);
 
         try {
+            System.out.println("manuallyCreatedTraceDataList size:" + manuallyCreatedTraceDataList.size());
             iTraceDataService.saveBatch(manuallyCreatedTraceDataList);
         } catch (Exception e) {
             System.out.println("exception savebatch ---------------------- processing " + userId + "-----courseid:" + courseId);
         }
         System.out.println("finish ---------------------- processing " + userId + "-----courseid:" + courseId);
+
+        Duration durationEnd = Duration.between(mid, Instant.now());
+        // 计算运行时间
+        Duration durationMid = Duration.between(start, mid);
+
+        System.out.println("durationMid 运行时间（秒）: " + durationMid.toSeconds());
+        System.out.println("durationEnd 运行时间（秒）: " + durationEnd.toSeconds());
     }
 
     /**
@@ -1084,6 +1107,36 @@ public class ActionAndProcessService {
     }
 
 
+    @Async("asyncPoolTaskExecutor")
+    public void getRealTimeSimplifiedTraceDataLabelledAsync(Long userId, String courseId, String modelType) {
+        log.info("Async into getRealTimeSimplifiedTraceDataLabelled--------------userid:{}---courseid:{}--model type:{}", userId, courseId, modelType);
+        try {
+            getRealTimeSimplifiedTraceDataLabelled(userId, courseId, modelType);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        } finally {
+            String labelCurrentRealTimeProcessKey = "LABEL_CURRENT_REAL_TIME_PROCESS_" + userId + "-" + courseId;
+            iGlobalCache.del(labelCurrentRealTimeProcessKey);
+            System.out.println("Async task is done, lock was removed.");
+        }
+    }
+
+    public List<TraceDataRealTimeProcess> getAllRealTimeSimplifiedTraceData(Long userId, String courseId) {
+        String redisSimplifiedTraceKey = MyConstant.REDIS_SIMPLIFIED_TEMP_TRACE_DATA_LIST + userId + "-" + courseId;
+        List<TraceDataRealTimeProcess> currentTraceDataRealTimeProcessList;
+
+        if (iGlobalCache.hasKey(redisSimplifiedTraceKey)) {// 从TraceDataRealTimeProcess Redis  中获取该用户的所有数据
+            Set<String> simplifiedOrderedEvent = iGlobalCache.getOrderedEvent(redisSimplifiedTraceKey, 0, -1);
+            currentTraceDataRealTimeProcessList = new ArrayList<>();
+            for (String temp: simplifiedOrderedEvent) {
+                currentTraceDataRealTimeProcessList.add(JSONUtil.toBean(temp, TraceDataRealTimeProcess.class));
+            }
+        } else { // 从TraceDataRealTimeProcess 数据库 表中获取该用户的所有数据
+            currentTraceDataRealTimeProcessList = iTraceDataRealTimeProcessService.getAll(userId, courseId); // 查询不到 返回 空的list
+        }
+
+        return currentTraceDataRealTimeProcessList;
+    }
 
     /**
      * 所有 process label 都没label 过的情况,进行label 并返回
@@ -1093,13 +1146,11 @@ public class ActionAndProcessService {
      * @return
      */
     public List<TraceDataRealTimeProcess> getRealTimeSimplifiedTraceDataLabelled(Long userId, String courseId, String modelType) {
+        // redisSimplifiedTraceKey 中并未存储所有 simplified log, 只存储了最新的 log
         String redisSimplifiedTraceKey = MyConstant.REDIS_SIMPLIFIED_TEMP_TRACE_DATA_LIST + userId + "-" + courseId;
 //        Set<String> orderedEvent = iGlobalCache.getOrderedEvent(redisSimplifiedTraceKey, 0, -1);// 从redis 获取所有 simplified trace data， 此处是有序Set，通常由LinkedHashSet 实现
 
-        // 可以获取到按时序排列的原始数据
-        String redisTraceKey = MyConstant.REDIS_TEMP_TRACE_DATA_LIST + userId + "-" + courseId;
 
-        //
 //        TraceDataRealTimeProcess lastItemByUserIdCourseId = iTraceDataRealTimeProcessService.getLastItemByUserIdCourseId(userId, courseId); // 查询不到 返回 null
 
         // 1. 先尝试从 TraceDataRealTimeProcess Redis 中获取
@@ -1117,16 +1168,19 @@ public class ActionAndProcessService {
 
         // 2. 如果获取不到，则从 Redis Raw traceData 中获取所有
         Set<String> orderedEvent;
+        // 可以获取到按时序排列的原始数据
+        String redisTraceKey = MyConstant.REDIS_TEMP_TRACE_DATA_LIST + userId + "-" + courseId;
+
         if (currentTraceDataRealTimeProcessList.isEmpty()) {
             // 如果 TraceDataRealTimeProcess 表中没有数据，则从 Redis Raw trace 中获取所有
             orderedEvent = iGlobalCache.getOrderedEvent(redisTraceKey, 0, -1);
-        } else {
+        } else {//为了更新 新增加的数据
             // TraceDataRealTimeProcess 表中有数据，则根据timestamp 即 分数 获取 Redis Raw trace 中 新增 的 所有 TraceData
             orderedEvent = iGlobalCache.getElementsGreaterThanScore(redisTraceKey, Double.parseDouble(currentTraceDataRealTimeProcessList.get(currentTraceDataRealTimeProcessList.size() - 1).getSaveTime()) + 1);
         }
 
-        // 新增Trace 超过100条 才进行 重新label
-        if (orderedEvent.size() > 10) {
+        // 新增Trace 超过50条 才进行 重新label, 此处的Trace 包含 鼠标移动
+        if (orderedEvent.size() > 50) {
             List<TraceDataRealTimeProcess> rawTraceData = new ArrayList<>();
             List<TraceDataRealTimeProcess> newSimplifiedTraceDataList = new ArrayList<>();
             for (String temp: orderedEvent) {
@@ -1155,7 +1209,7 @@ public class ActionAndProcessService {
                 }
 
                 boolean checkResult = checkAddSimplifiedTrace(current, previous, next);
-                if (checkResult) {
+                if (checkResult) { // 执行过滤
                     newSimplifiedTraceDataList.add(rawTraceData.get(i));
                     currentTraceDataRealTimeProcessList.add(rawTraceData.get(i));
                 }
@@ -1166,6 +1220,7 @@ public class ActionAndProcessService {
 
             // 存入 Redis
             log.info("-------------------");
+            //更新redis 某个key 所有元素最快的方法是先删掉，再重新添加一次
             iGlobalCache.del(redisSimplifiedTraceKey);
             currentTraceDataRealTimeProcessList.forEach(temp -> iGlobalCache.addOrderedEvent(redisSimplifiedTraceKey, JSONUtil.toJsonStr(temp), Double.parseDouble(temp.getSaveTime()), MyConstant.REDIS_EXPIRE_SECONDS));
             log.info("-------------------");
@@ -1307,13 +1362,39 @@ public class ActionAndProcessService {
                     }
                     tempActionLabel = "CHECKLIST";
                     break;
+
+                case "CHATGPT_ASSISTANT_TEACHER":
+                    if ("OPEN".equals(currentTraceData.getInstantEvent())) {
+                        tempSubActionLabel = "OPEN_GPT_ASSISTANT_TEACHER";
+                    } else if ("CLOSE".equals(currentTraceData.getInstantEvent())) {
+                        tempSubActionLabel = "CLOSE_GPT_ASSISTANT_TEACHER";
+                    }
+                    tempActionLabel = "CHATGPT_ASSISTANT_TEACHER";
+                    break;
+                case "CHATGPT_ASSESSMENT":
+                    if ("OPEN".equals(currentTraceData.getInstantEvent())) {
+                        tempSubActionLabel = "OPEN_GPT_ASSESSMENT";
+                    } else if ("CLOSE".equals(currentTraceData.getInstantEvent())) {
+                        tempSubActionLabel = "CLOSE_GPT_ASSESSMENT";
+                    }
+                    tempActionLabel = "CHATGPT_ASSESSMENT";
+                    break;
+                case "CHATGPT_ASSISTANT":
+                    if ("OPEN".equals(currentTraceData.getInstantEvent())) {
+                        tempSubActionLabel = "OPEN_GPT_ASSISTANT";
+                    } else if ("CLOSE".equals(currentTraceData.getInstantEvent())) {
+                        tempSubActionLabel = "CLOSE_GPT_ASSISTANT";
+                    }
+                    tempActionLabel = "CHATGPT_ASSISTANT";
+                    break;
+
                 case "CHATGPT_MULTI_AGENTS_SINGLE_WINDOW":
                     if ("OPEN".equals(currentTraceData.getInstantEvent())) {
-                        tempSubActionLabel = "OPEN_CHATGPT_MULTI_AGENTS_SINGLE_WINDOW";
+                        tempSubActionLabel = "OPEN_CHATGPT_MULTI_AGENTS";
                     } else if ("CLOSE".equals(currentTraceData.getInstantEvent())) {
-                        tempSubActionLabel = "CLOSE_CHATGPT_MULTI_AGENTS_SINGLE_WINDOW";
+                        tempSubActionLabel = "CLOSE_CHATGPT_MULTI_AGENTS";
                     }
-                    tempActionLabel = "CHATGPT_MULTI_AGENTS_SINGLE_WINDOW";
+                    tempActionLabel = "CHATGPT_MULTI_AGENTS";
                     break;
                 case "CHATGPT_MULTI_AGENTS_MULTI_WINDOWS":
                     if ("OPEN".equals(currentTraceData.getInstantEvent())) {
@@ -1323,8 +1404,24 @@ public class ActionAndProcessService {
                     }
                     tempActionLabel = "CHATGPT_CHATGPT_MULTI_AGENTS_MULTI_WINDOWS";
                     break;
+                case "ESSAY_PRODUCT":
+                    if ("OPEN".equals(currentTraceData.getInstantEvent())) {
+                        tempSubActionLabel = "OPEN_ESSAY_PRODUCT";
+                    } else if ("CLOSE".equals(currentTraceData.getInstantEvent())) {
+                        tempSubActionLabel = "CLOSE_ESSAY_PRODUCT";
+                    }
+                    tempActionLabel = "ESSAY_PRODUCT";
+                    break;
+                case "PROCESS_VISUAL":
+                    if ("OPEN".equals(currentTraceData.getInstantEvent())) {
+                        tempSubActionLabel = "OPEN_PROCESS_VISUAL";
+                    } else if ("CLOSE".equals(currentTraceData.getInstantEvent())) {
+                        tempSubActionLabel = "CLOSE_PROCESS_VISUAL";
+                    }
+                    tempActionLabel = "PROCESS_VISUAL";
+                    break;
                 default:
-                    throw new RuntimeException("Exception in switch: subactionlabel:" + currentTraceData.getSubActionLabel() + "------id:" + currentTraceData.getId());
+                    throw new RuntimeException("Exception in switch: subactionlabel:" + currentTraceData.getSubActionLabel() + "------" + currentTraceData.getSource() + "------id:" + currentTraceData.getId());
             }
             if (StrUtil.isEmpty(tempSubActionLabel) || StrUtil.isEmpty(tempActionLabel)) {
                 System.out.println(currentTraceData);
@@ -1364,9 +1461,9 @@ public class ActionAndProcessService {
         String nextInstantEvent = nextTraceData.getInstantEvent();
         String nextPageEvent = nextTraceData.getPageEvent();
 
-        log.info("checkAddSimplifiedTrace: " + currentTraceData);
-        log.info("previous: " + previousTraceData);
-        log.info("next: " + nextTraceData);
+//        log.info("checkAddSimplifiedTrace: " + currentTraceData);
+//        log.info("previous: " + previousTraceData);
+//        log.info("next: " + nextTraceData);
 
         // 1. fix TRY_OUT_TOOLS
         if ("TRY_OUT_TOOLS".equals(currentTraceData.getSubActionLabel())) {
@@ -1381,14 +1478,16 @@ public class ActionAndProcessService {
 
 
         // 3. 将mouse move 和 mouse wheel 事件精简
-        if (MyConstant.MOUSE_EVENTS.contains(currentTraceData.getPageEvent()) &&
-                MyConstant.SUB_ACTION_LABELS.contains(currentTraceData.getSubActionLabel())) {
+        if (MyConstant.MOUSE_EVENTS.contains(currentTraceData.getPageEvent())
+//                && MyConstant.SUB_ACTION_LABELS.contains(currentTraceData.getSubActionLabel())
+        ) {
 
             // mouse 之前是 START_TASK, 则保留
             if (previousSubActionLabel.equals("START_TASK")) {
                 return true;
             }
 
+            /*
             // mouse 之前或之后是 Timer, 则保留
             if (("TIMER".equals(previousSource) || "TIMER".equals(nextSource)) &&
                     ("OPEN".equals(previousInstantEvent) || "OPEN".equals(nextInstantEvent))) {
@@ -1405,7 +1504,7 @@ public class ActionAndProcessService {
             if (MyConstant.OPEN_TOOL_LABELS.contains(nextSubActionLabel) ||
                     (nextInstantEvent.equals("OPEN") && (nextSubActionLabel.equals("SEARCH_ANNOTATION") || nextSubActionLabel.equals("TRY_OUT_TOOLS")))) {
                 return true;
-            }
+            }*/
 
             // mouse 之前是leave page, 则保留                          // mouse 之后是leave page, 则保留
             if (previousInstantEvent.equals("LEAVE_PAGE") || nextInstantEvent.equals("LEAVE_PAGE")) {

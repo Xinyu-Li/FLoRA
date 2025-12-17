@@ -16,5 +16,5 @@ import java.util.Map;
 public interface IMdlConfigService extends IService<MdlConfig> {
     boolean updateAdditionalHtml(String name, String value);
 
-    void setupConfigValueForOnlineEnvironment(String websiteAddress, Map<String, String[]> courseIdModalContentMap, List<Long> courseIdList, List<String> studies);
+    void setupConfigValueForOnlineEnvironment(String websiteAddress, Map<String, String[]> courseIdModalContentMap, String[] finishModalContentArray, List<Long> courseIdList, List<String> studies);
 }

@@ -111,6 +111,8 @@ public class TraceDataHandler implements WebSocketHandler {
         String courseId = session.getAttributes().get("courseId").toString();
         String isEvent = session.getAttributes().get("isEvent").toString();
 //        log.info(message.getPayload().toString());
+
+        //TODO 加上验证，如果Kafka 失去连接，可以直接写入数据库
         kafkaTemplate.send(MyConstant.KAFKA_TOPIC_TRACE_DATA, message.getPayload().toString());
 
     }

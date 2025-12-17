@@ -687,6 +687,55 @@ public class Backup {
                 "Combining topics: the essay does not reflect combining of the topics (1 point); the combination of topics is superficial (2 points); the combination of topic is detailed and aligns with the text (3 points); combination of topics is beyond the text and applications to daily life and future health care are discussed (4 points)\n");
 */
 
+
+    /*log.info("request for chatgpt-scaffold");
+        // 收到请求，先放入缓存，每个userid-courseid-gpt-scaffold-1 2 3
+        String redisKey = MyConstant.REDIS_GPT_SCAFFOLD_TRIGGER + gptScaffoldRequest.getUserId() + "-" + gptScaffoldRequest.getCourseId() + "-" + gptScaffoldRequest.getGptScaffoldNumber();
+        if (iGptScaffoldService.isRepeatGptScaffoldRequest(redisKey, gptScaffoldRequest.getUserId(), gptScaffoldRequest.getCourseId(), gptScaffoldRequest.getGptScaffoldNumber())) {
+            return JSONResult.errorMsg("repeat send gpt scaffold"); // TODO 需要查看此处能否正确在前端收到
+        }
+
+        if (!CollUtil.isEmpty(gptScaffoldRequest.getGptScaffoldReturnMessages())) {
+            //直接return message
+            log.info("number of scaffold generated--fixed---{}", gptScaffoldRequest.getGptScaffoldNumber());
+            GptScaffoldVO gptScaffoldVO = iGptScaffoldService.createGptScaffold(
+                    "manually generated-----" + gptScaffoldRequest.getGptScaffoldNumber(), gptScaffoldRequest.getIncludeEssay() ? gptScaffoldRequest.getEssay() : "",
+                    gptScaffoldRequest.getGptScaffoldReturnMessages().get(gptScaffoldRequest.getGptScaffoldNumber() - 1).getMessage(),
+                    MyUtils.getCurrentTimestamp(), MyUtils.getCurrentTimestamp(),
+                    gptScaffoldRequest.getGptScaffoldRole(), gptScaffoldRequest.getGptScaffoldRoleDescription(),
+                    gptScaffoldRequest.getGptScaffoldNumber(), gptScaffoldRequest.getUserId(), gptScaffoldRequest.getCourseId());
+            log.info("manually generated-----{}", gptScaffoldVO.toString());
+
+            return JSONResult.ok(gptScaffoldVO);
+        }
+
+        gptScaffoldRequest.setEssay(checkChatgptRequestEssay(gptScaffoldRequest.getEssay(), gptScaffoldRequest.getUserId(), gptScaffoldRequest.getCourseId()));
+
+        //动态生成GPT prompt
+//        String dynamicPrompt = gptScaffoldPromptService.generateAdaptivePrompt(studyName, MyConstant.testISDIMUName, MyConstant.preTestName, MyConstant.testAboutYourSelfName, courseId, userId, gptScaffoldNumber, essay);
+        String dynamicPrompt = gptScaffoldPromptService.generatePromptBasedOnLearningConditionAndSRLProcess(gptScaffoldRequest);
+        log.info("user:" + gptScaffoldRequest.getUserId() + "-----dynamicPrompt generated------" + StrUtil.isEmpty(dynamicPrompt));
+        if (StrUtil.isEmpty(dynamicPrompt)) { // 验空，如果scaffold的条件都不触发，则不需要发送  TODO 如果所有条件都满足，则不触发, 或者显示空scaffold
+            log.info("user:" + gptScaffoldRequest.getUserId() + "-----number of scaffold generated-----" + gptScaffoldRequest.getGptScaffoldNumber());
+//            UserChatgptLogVO userChatgptLogVO = iUserChatgptLogService.createUserChatgptLog("", userId, "no scaffold generated-----" + gptScaffoldOrder, askQuestionTimestamp, "", essay, courseId, "scaffold");
+            if (CollUtil.isEmpty(gptScaffoldRequest.getDefaultScaffoldMessages())) {
+                GptScaffoldVO gptScaffoldVO = iGptScaffoldService.createGptScaffold("no scaffold generated-----" + gptScaffoldRequest.getGptScaffoldNumber(), gptScaffoldRequest.getIncludeEssay() ? gptScaffoldRequest.getEssay() : "", "", MyUtils.getCurrentTimestamp(), MyUtils.getCurrentTimestamp(),
+                        gptScaffoldRequest.getGptScaffoldRole(), gptScaffoldRequest.getGptScaffoldRoleDescription(), gptScaffoldRequest.getGptScaffoldNumber(), gptScaffoldRequest.getUserId(), gptScaffoldRequest.getCourseId());
+                log.info(gptScaffoldVO.toString());
+
+                return JSONResult.errorMsg("number of scaffold generated-----number :" + gptScaffoldRequest.getGptScaffoldNumber());
+            } else { //此处使用 default message 来当scaffold
+                GptScaffoldVO gptScaffoldVO = iGptScaffoldService.createGptScaffold("manually generated-----" + gptScaffoldRequest.getGptScaffoldNumber(), gptScaffoldRequest.getIncludeEssay() ? gptScaffoldRequest.getEssay() : "",
+                        gptScaffoldRequest.getDefaultScaffoldMessages().get(gptScaffoldRequest.getGptScaffoldNumber() - 1).getMessage(), MyUtils.getCurrentTimestamp(), MyUtils.getCurrentTimestamp(),
+                        gptScaffoldRequest.getGptScaffoldRole(), gptScaffoldRequest.getGptScaffoldRoleDescription(), gptScaffoldRequest.getGptScaffoldNumber(), gptScaffoldRequest.getUserId(), gptScaffoldRequest.getCourseId());
+                log.info(gptScaffoldVO.toString());
+
+                return JSONResult.ok(gptScaffoldVO);
+            }
+        }
+
+        GptScaffoldVO gptScaffoldVO = iGptScaffoldService.getGptScaffoldResponse(dynamicPrompt, gptScaffoldRequest.getIncludeEssay() ? gptScaffoldRequest.getEssay() : "", gptScaffoldRequest.getBackgroundFileNameList(), gptScaffoldRequest.getGptScaffoldRole(), gptScaffoldRequest.getGptScaffoldRoleDescription(), gptScaffoldRequest.getGptScaffoldNumber(), gptScaffoldRequest.getUserId(), gptScaffoldRequest.getCourseId(), gptScaffoldRequest.getGptScaffoldParameters());
+        return JSONResult.ok(gptScaffoldVO);*/
 }
 
 

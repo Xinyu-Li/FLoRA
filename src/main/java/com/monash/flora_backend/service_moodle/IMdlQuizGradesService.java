@@ -1,8 +1,7 @@
 package com.monash.flora_backend.service_moodle;
 
-import com.monash.flora_backend.controller.vo.MdlQuizVO;
-import com.monash.flora_backend.dao.entity.MdlQuizGrades;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.monash.flora_backend.dao.entity.MdlQuizGrades;
 
 /**
  * <p>
@@ -14,5 +13,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IMdlQuizGradesService extends IService<MdlQuizGrades> {
 //    MdlQuizVO quizGradeTest();
-    MdlQuizVO findQuizGradeByUserIdAndCourseIdAndQuizName(String quizName, Long courseId, Long userId);
+
 }

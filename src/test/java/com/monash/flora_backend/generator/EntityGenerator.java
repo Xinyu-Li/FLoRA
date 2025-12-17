@@ -19,7 +19,7 @@ public class EntityGenerator {
 
 //    private String outputDir = "C:\\Users\\xlii0161\\IdeaProjects\\FLoRA_backend\\src\\main\\java";
 //    private String outputDir = "E:\\workspace\\FLoRA_backend\\src\\main\\java";
-    private String outputDir = "C:\\Users\\xlii0161\\develop\\FLoRA_backend\\src\\main\\java";
+    private String outputDir = "D:\\develop\\FLoRA_backend\\src\\main\\java";
     private String author = "xinyu";
     private String url = "jdbc:mysql://127.0.0.1:3306/flora_annotation?autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=CONVERT_TO_NULL&useSSL=false&serverTimezone=UTC";
     private String driverName = "com.mysql.cj.jdbc.Driver";
@@ -31,7 +31,7 @@ public class EntityGenerator {
 
     static{
         tableNames = new String[]{
-                "essay_product_goal"
+                "essay_at_time_point"
 
         };
     }

@@ -1,4 +1,5 @@
 CREATE DATABASE IF NOT EXISTS moodle;
+CREATE DATABASE IF NOT EXISTS flora_annotation;
 create table annotation
 (
     id                  bigint auto_increment

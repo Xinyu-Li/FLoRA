@@ -8,8 +8,9 @@ function render() {
 
 }
 render();
+//startCountdown();
 let chatInputText="";
-
+let startTime2;
 console.log("usercolor4pad: ", usercolor4pad)
 function createIframePad(padid) {
 
@@ -28,10 +29,20 @@ function createIframePad(padid) {
             height: '100%'
         });
     }
+
+let ready_bar = null;
+let ready_editor = null;
+let ready_chat = null;
+
 let showSelection = false;
 let collapseCollaborateWrite = document.querySelector("#collapseCollaborateWrite");
 toolList1.push(collapseCollaborateWrite);
 let collaborateWriteJQObj = $(collapseCollaborateWrite); // 重新把DOM包装为jQuery对象
+let etherpad_connection  = false;
+let userEtherpadSessionID = null;
+let userEtherpadPadID = null;
+let userEtherpadAuthorID = null;
+
 let showCollaborateWriteBtn = document.querySelector("#showCollaborateWriteBtn");
 let collaborateInnerBody = null;
 
@@ -49,6 +60,260 @@ const chatNameMap = new Map([
 
 
 let availableCollaborativeChatAgents = multiAgent4CollaborativeChatConfig.filter(agent => agent.useAgent === true);
+
+
+function loadEtherpadScript() {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = '/flora/js/etherpad.js'; // Replace with the correct path
+        script.onload = () => {
+            console.log('Etherpad script loaded successfully.');
+            resolve();
+        };
+        script.onerror = () => {
+            console.error('Failed to load Etherpad script.');
+            reject(new Error('Failed to load Etherpad script.'));
+        };
+        document.head.appendChild(script);
+    });
+}
+
+// Function to retry loading the script
+function retryLoadingScript(retries = 3, delay = 2000, padID, usrName) {
+    if (retries > 0) {
+        console.log(`Retrying script load... Attempts left: ${retries}`);
+        setTimeout(() => {
+            loadEtherpadScript()
+                .then(() => {
+                    initializePad(padID, usrName); // Re-check if the .pad() method is available
+                })
+                .catch(() => {
+                    retryLoadingScript(retries - 1, delay); // Retry again
+                });
+        }, delay);
+    } else {
+        console.error('Max retries reached. Failed to load Etherpad script.');
+    }
+}
+
+// function initializePad(padID,usrName){
+//     console.log("!!!!excute initializePad with padID as ", padID, "and userName as ", usrName);
+//
+//     if (typeof collaborateWriteJQObj.pad === 'function') {
+//         collaborateWriteJQObj.pad({'padId': padID, 'userName': usrName});
+//         let iframe = document.getElementById("epframecollapseCollaborateWrite");
+//         if (!iframe) {
+//             console.error("Iframe is missing!");
+//             return;
+//         }
+//         // Check if iframe is loaded
+//         iframe.addEventListener("load", function() {
+//             console.log("Iframe is fully loaded.");
+//             // Add any additional logic you need after the iframe is loaded
+//         });
+//         console.log("create pad");
+//     }
+//     else {
+//         console.error('The .pad() method is not available.');
+//         //retryLoadingScript(padID, usrName);
+//     }
+// };
+//
+// let iframeEther;
+//
+// $('#epframecollapseCollaborateWrite').on('load', function() {
+//     console.log('Etherpad iframe loaded:', this.src);
+//     iframeEther = document.getElementById('epframecollapseCollaborateWrite');
+//     checkIframeLoaded();
+//     isIframeLoaded = true;
+//     const endTime21 = performance.now();
+//     const timeTaken21 = endTime21 - startTime2;
+//     console.log("*******From excuting .pad function to iframe fully loaded took ", timeTaken21, " milliseconds!");
+//     alert("Etherpad iframe has loaded successfully!");
+//
+//     clearInterval(countdownInterval);
+//
+//     // Display an alert indicating the iframe is loaded
+//
+//     if(countdownDiv){
+//         countdownDiv.style.display = 'none';
+//     }
+//
+//     // You can now safely interact with the iframe
+//     // For example, fetching contents or triggering actions after the iframe is loaded
+// });
+// function checkIframeLoaded() {
+//
+//     try {
+//         let collaborateWriteWindow = iframeEther.contentWindow;
+//
+//         // Check if iframe document is accessible and loaded
+//         if (collaborateWriteWindow && collaborateWriteWindow.document.readyState === "complete") {
+//             console.log("Etherpad iframe loaded successfully:", iframe.src);
+//             // You can now interact with the iframe or trigger further actions
+//             console.log("collaborateWriteDocument available and setEtherpadCookie!");
+//             setSessionCookie(userEtherpadSessionID,"/");
+//         } else {
+//             console.log("Iframe not ready, reloading...");
+//             iframe.contentWindow.location.reload(); // Force reload
+//             setTimeout(checkIframeLoaded, 1000); // Retry after 1 second
+//         }
+//     } catch (e) {
+//         console.log("Unable to access iframe document due to cross-origin restrictions or other issues: ", e);
+//         setTimeout(checkIframeLoaded, 1000); // Retry after 1 second
+//     }
+// }
+//
+//
+// function createEtherPAD(padID,usrname){
+//     startTime2 = performance.now();
+//     collaborateWriteJQObj.pad({'padId': padID, 'userName': usrname});
+//     console.log("************* successfullly create etherpad!!")
+// }
+//
+// function run_initializePad(padID,usrname){
+//     const startTime = performance.now();
+//     if (typeof collaborateWriteJQObj.pad === 'function') {
+//         createEtherPAD(padID,usrname);
+//         const endTime = performance.now();
+//         const timeTaken = endTime - startTime;
+//         console.log("*******From entering run_initializePad() to finising createEtherPAD took ", timeTaken, " milliseconds!");
+//
+//         const startTime1 = performance.now();
+//         let iframe = document.getElementById("epframecollapseCollaborateWrite");
+//         if (!iframe) {
+//             console.error("Iframe is missing!");
+//             return;
+//         }
+//         // Check if iframe is loaded
+//         iframe.addEventListener("load", function() {
+//             const endTime1 = performance.now();
+//             const timeTaken1 = endTime1 - startTime1;
+//             console.log("*******From document.getElementById to iframe fully loaded took ", timeTaken1, " milliseconds!");
+//
+//             console.log("Iframe is fully loaded.");
+//             // Add any additional logic you need after the iframe is loaded
+//         });
+//         clearInterval(intervalId);
+//     }
+//     else{
+//         console.log("************ recreating Etherpad .......");
+//     }
+// }
+
+
+
+
+
+/** for collaborative writing, not used yet */
+// function getEtherpadName() {
+//     console.log("Ready to excute getEtherpadName");
+//     username = username == null ? getUsername() : username;
+//     console.log(userId);
+//     console.log(username);
+//     console.log("getEtherpadName:", apiBaseUrl + "/collaborate-write");
+//     $.post(apiBaseUrl + "/collaborate-write", {
+//         userId: userId,
+//         userName: username,
+//         userGroup: getLastname,
+//         //userGroup: "001",  //TODO 可以更改，如果moodle 出现分组
+//     }, function(data, status) {
+//         if (status === "success") {
+//             console.log("success connected to etherpad and get response as ", data);
+//             if (data.data!=null){
+//                 const padID = data.data.padID;
+//                 const sessionID = data.data.sessionID;
+//                 const authorID = data.data.authorID;
+//                 userEtherpadSessionID = sessionID;
+//                 userEtherpadPadID = padID;
+//                 userEtherpadAuthorID = authorID;
+//                 etherpad_connection = true;
+//                 console.log("userEtherpadSessionID: ",userEtherpadSessionID);
+//             }
+//             else{
+//                 console.log("connected to etherpad but userEtherpadSessionID is null!");
+//             }
+//             // console.log("-------document.cookie before setup--------: ",document.cookie)
+//             //setSessionCookie(userEtherpadSessionID,"/myapi")
+//             setSessionCookie(userEtherpadSessionID,"/")
+//             console.log("userEtherpadSessionID: ",userEtherpadSessionID);
+//
+//             // console.log("-------document.cookie after setup--------: ",document.cookie)
+//
+//             // if (etherpad_connection&&userEtherpadSessionID!=null){
+//             //     //console.log("typeof collaborateWriteJQObj.pad===> ", typeof collaborateWriteJQObj.pad)
+//             //     initializePad(userEtherpadPadID,username)
+//             //     // if (typeof collaborateWriteJQObj.pad === 'function') {
+//             //     //     collaborateWriteJQObj.pad({'padId': userEtherpadPadID, 'userName': username,});
+//             //     // }
+//             //     // else {
+//             //     //     console.error('The .pad() method is not available.');
+//             //     // }
+//             // }
+//             // else{
+//             //     console.log("Need to connect to etherpad service first or get padID first!");
+//             // }
+//         }
+//         else {
+//             alert("An error occurred while connecting etherpad!.");
+//             // if (typeof collaborateWriteJQObj.pad === 'function') {
+//             //     collaborateWriteJQObj.pad({ 'padId': padID, 'userName': username });
+//             // } else {
+//             //     console.error('The .pad() method is not available.');
+//             // }
+//         }
+//     });
+// }
+
+function setup_etherpad(){
+    console.log("@Etherpad===> under setting-up... ");
+    username = username == null ? getUsername() : username;
+    console.log("@Etherpad===> set up with [userId: ", userId, "], [username: ", username, "], [userGroup: ", getLastname(), "]");
+    console.log("@Etherpad===> requesting:", apiBaseUrl + "/collaborate-write");
+    $.post(apiBaseUrl + "/collaborate-write", {
+        userId: userId,
+        userName: username,
+        userGroup: getLastname,
+        //userGroup: "001",  //TODO 可以更改，如果moodle 出现分组
+    }, function(data, status) {
+        if (status === "success") {
+            console.log("@Etherpad===> success connected to etherpad and get response as ", data);
+            if (data && data.data){
+                const padID = data.data.padID;
+                const sessionID = data.data.sessionID;
+                const authorID = data.data.authorID;
+
+                userEtherpadSessionID = sessionID;
+                userEtherpadPadID = padID;
+                userEtherpadAuthorID = authorID;
+                etherpad_connection = true;
+                console.log("@Etherpad===> Successfully retrieved userEtherpadSessionID: ",userEtherpadSessionID);
+
+                collaborateWriteJQObj.pad({'padId': userEtherpadPadID, 'userName': username});
+                setSessionCookie(userEtherpadSessionID,"/");
+            }
+            else{
+                // console.warn("@Etherpad===> Connected to Etherpad but userEtherpadSessionID is missing in the response.");
+                // alert("@Etherpad===> Failed to retrieve a valid pad ID. Please try again.");
+
+                console.error("Connected to Etherpad but response data is missing or malformed.");
+                alert("Unexpected response from Etherpad. Please check the connection or try again.");
+            }
+            // // console.log("-------document.cookie before setup--------: ",document.cookie)
+            // //setSessionCookie(userEtherpadSessionID,"/myapi")
+            // setSessionCookie(userEtherpadSessionID,"/")
+            // console.log("userEtherpadSessionID: ",userEtherpadSessionID);
+
+        }
+        else {
+            console.error("Connected to Etherpad but response data is missing or malformed.");
+            alert("An error occurred while connecting etherpad!.");
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        console.error("Request failed:", textStatus, errorThrown);
+        alert("Failed to connect to Etherpad. Please check your network connection or try again later.");
+    });
+}
 
 function rgbToHex(rgb) {
     rgb = rgb.substring(4, rgb.length - 1);
@@ -159,11 +424,10 @@ function insertIntoInput(inputElement, value) {
 
 
 
-
 // Function to create the custom select container
 function createCustomSelectContainer() {
     const container = document.createElement("div");
-    container.classList.add("custom-select");
+    container.classList.add("collaborative-chat-select");
     return container;
 }
 // Check if customSelectContainer already exists, create if not
@@ -207,11 +471,15 @@ let selectElement = document.createElement("select");
 
   // Function to hide the custom select container
   function hideCustomSelectContainer() {
-    if (customSelectContainer) {
-      console.log("close list")
+      console.log("close list: ", customSelectContainer);
       showSelection = false;
       customSelectContainer.classList.remove("open");
-    }
+      //selectElement.style.display = 'none';
+      // if (customSelectContainer) {
+      //     console.log("close list")
+      //     showSelection = false;
+      //     customSelectContainer.classList.remove("open");
+      //   }
   }
 
 function showDropdownList(inputElement, option_list){
@@ -265,10 +533,18 @@ function showDropdownDynamic(inputElement, option_list){
     const inputRect = inputElement.getBoundingClientRect();
     const half_viewportWidth = window.innerWidth / 2 - 15;
 
+    const row = inputElement.selectionStart /40;
+    let cursor_pos = inputElement.selectionStart % 40;
+    if (cursor_pos > 35) {
+        cursor_pos = 35;
+    }
+
     //const inputTop = inputRect.top + window.scrollY + 7; // Adjust for page scroll
     const inputBottom = inputRect.bottom + window.scrollY;
-    const inputLeft = inputRect.left + window.scrollX; // Adjust for page scroll
+    let inputLeft = inputRect.left + cursor_pos*10+window.scrollX; // Adjust for page scroll
     //const inputBottom = inputRect.bottom + window.scrollY;
+
+    console.log("showDropdownDynamic inputLeft is ", inputLeft);
 
     // Clear previous content if any
     customSelectContainer.innerHTML = "";
@@ -298,6 +574,7 @@ function showDropdownDynamic(inputElement, option_list){
         maxOptionWidth = optionWidth;
       }
     });
+    selectElement.style.width = maxOptionWidth + 20 + "px";
 
     document.body.removeChild(tempDiv); // Remove the temporary div after calculating
 
@@ -307,7 +584,6 @@ function showDropdownDynamic(inputElement, option_list){
     console.log("maxOptionWidth: ", maxOptionWidth)
     const containerWidth = maxOptionWidth+30;
     selectElement.selectedIndex = -1;
-
 
     // Style the custom select container
     customSelectContainer.style.position = "absolute";
@@ -435,6 +711,11 @@ function getPadUsers() {
 
 function setupCollaborateWriteMain(toolbarId, editorId) {
 
+    // initialiize pad
+    setup_etherpad();
+
+
+
     console.log("---------setupCollaborateWriteMain-----------")
 
     //let collaborateWriteWindow = window.frames["epframecollapseCollaborateWrite"];
@@ -454,34 +735,21 @@ function setupCollaborateWriteMain(toolbarId, editorId) {
 //    window.addEventListener('message', function(event) {
 //        console.log('Message received:', event.data);
 //    });
-    let collaborateWriteFrame = document.getElementById('epframecollapseCollaborateWrite');
+    let collaborateWriteFrame;
+    let collaborateWriteWindow ;
+    let collaborateWriteDocument ;
+    let collaborateWriteBody;
+    let collaborateWriteToolbarMain;
+    let collaborateWriteToolbarCountable;
+    let collaborateWriteToolbarCountableDiv;
+    // let collaborateWriteToolbarUndo ;
+    // let collaborateWriteToolbarRedo;
 
-    if (collaborateWriteFrame==null){
-        alert("Need to start etherpad service first!");
-    }
-
-    let collaborateWriteWindow = collaborateWriteFrame.contentWindow;
-    let collaborateWriteDocument = collaborateWriteWindow.document;
-    let collaborateWriteBody = collaborateWriteDocument.querySelector("body");
-    let collaborateWriteToolbarMain = collaborateWriteDocument.querySelector("#editbar");
-    let collaborateWriteToolbarCountable = collaborateWriteDocument.querySelector("#ep_short_edition_countable-a");
-    let collaborateWriteToolbarCountableDiv = collaborateWriteDocument.querySelector("#ep_short_edition_countable-popup");
-    console.log("collaborateWriteToolbarMain: ",collaborateWriteToolbarMain)
-    console.log("collaborateWriteToolbarCountable: ",collaborateWriteToolbarCountable)
-
-    //newly added by lin
-//    let collaborateWriteToolbarBold = collaborateWriteDocument.querySelector(".buttonicon.buttonicon-bold");
-//    let collaborateWriteToolbarItalic = collaborateWriteDocument.querySelector(".buttonicon.buttonicon-italic");
-//    let collaborateWriteToolbarItalic = collaborateWriteDocument.querySelector(".buttonicon.buttonicon-underline");
-    let collaborateWriteToolbarUndo = collaborateWriteDocument.querySelector(".buttonicon.buttonicon-undo");
-    let collaborateWriteToolbarRedo = collaborateWriteDocument.querySelector(".buttonicon.buttonicon-redo");
-
-    let chatLabel = collaborateWriteDocument.querySelector("#chatlabel");
-    let chatText = collaborateWriteDocument.querySelector("#chattext");
-    let chatTitleLabel = collaborateWriteDocument.querySelector("#titlelabel");
-    let chatInputTextarea = collaborateWriteDocument.querySelector("#chatinput");
-    let stickyContainer = collaborateWriteDocument.querySelector(".sticky-container");
-    console.log("stickyContainer:", stickyContainer)
+    let chatLabel ;
+    let chatText;
+    let chatTitleLabel;
+    let chatInputTextarea ;
+    let stickyContainer;
 
     let ace_outer_window;
     let ace_outer_document;
@@ -491,27 +759,144 @@ function setupCollaborateWriteMain(toolbarId, editorId) {
     let collaborateEditorMainDiv;
     let ace_inner_body;
 
-    function get_innder_frame(){
-        console.log("excute get_innder_frame!")
-         ace_outer_window = collaborateWriteWindow.frames["ace_outer"];
-         if (ace_outer_window){
-            console.log("ace_outer_window available")
-             ace_outer_document = ace_outer_window.document;
-             outerdocbody = ace_outer_document.querySelector("body");
-             ace_inner_window = window.frames["epframecollapseCollaborateWrite"].frames["ace_outer"].frames["ace_inner"];
-             console.log("ace_inner_window: ",ace_inner_window)
-             ace_inner_document = ace_inner_window.document;
-             collaborateEditorMainDiv = ace_inner_document.querySelector("#innerdocbody");
-             ace_inner_body = ace_inner_document.querySelector("body");
-             f()
-             f1()
-         }
-         else{
-            console.log("wait for ace_outer_window available")
-            setTimeout(get_innder_frame, 30000);
-         }
-    }
-    get_innder_frame();
+    const checkIframe = setInterval(() => {
+        collaborateWriteFrame = document.getElementById('epframecollapseCollaborateWrite');
+        if (collaborateWriteFrame&&collaborateWriteFrame.contentWindow && collaborateWriteFrame.contentWindow.document) {
+            console.log("Iframe is ready!", collaborateWriteFrame);
+            clearInterval(checkIframe);
+            collaborateWriteWindow = collaborateWriteFrame.contentWindow;
+            collaborateWriteDocument = collaborateWriteWindow.document;
+
+            const check_editor_bar = setInterval(() => {
+                collaborateWriteToolbarMain = collaborateWriteDocument.querySelector("#editbar");
+                collaborateWriteToolbarCountable = collaborateWriteDocument.querySelector("#ep_short_edition_countable-a");
+                collaborateWriteToolbarCountableDiv = collaborateWriteDocument.querySelector("#ep_short_edition_countable-popup");
+
+                // collaborateWriteToolbarUndo = collaborateWriteDocument.querySelector(".buttonicon.buttonicon-undo");
+                // collaborateWriteToolbarRedo = collaborateWriteDocument.querySelector(".buttonicon.buttonicon-redo");
+
+                console.log("collaborateWriteToolbarMain: ",collaborateWriteToolbarMain)
+                console.log("collaborateWriteToolbarCountable: ",collaborateWriteToolbarCountable)
+
+                if(collaborateWriteToolbarMain && collaborateWriteToolbarCountable && collaborateWriteToolbarCountableDiv){
+                    clearInterval(check_editor_bar);
+                    listener_editbar();
+                    ready_bar = true;
+                }
+                else{
+                    console.log("************* wait for editor_bar loaded!!!!!");
+                }
+            }, 2000);
+
+           const check_main_editor = setInterval(() => {
+               collaborateWriteBody = collaborateWriteDocument.querySelector("body");
+               ace_outer_window = collaborateWriteWindow.frames["ace_outer"];
+               if(ace_outer_window){
+                   ace_outer_document = ace_outer_window.document;
+                   outerdocbody = ace_outer_document.querySelector("body");
+                   ace_inner_window = window.frames["epframecollapseCollaborateWrite"].frames["ace_outer"].frames["ace_inner"];
+                   if(ace_inner_window){
+                       ace_inner_document = ace_inner_window.document;
+                       collaborateEditorMainDiv = ace_inner_document.querySelector("#innerdocbody");
+                       ace_inner_body = ace_inner_document.querySelector("body");
+                       collaborateInnerBody = ace_inner_window.document.querySelector("body");
+                       if(outerdocbody && collaborateEditorMainDiv && ace_inner_body && collaborateInnerBody){
+                           clearInterval(check_main_editor);
+                           listener_main_editor();
+                           ready_editor = true;
+                       }
+                       else{
+                           console.log("************* wait for collaborateWriteToolbar fully loaded!");
+                       }
+                   }
+               }
+           }, 2000);
+
+           const check_chatArea= setInterval(() => {
+               chatLabel = collaborateWriteDocument.querySelector("#chatlabel");
+               chatText = collaborateWriteDocument.querySelector("#chattext");
+               chatTitleLabel = collaborateWriteDocument.querySelector("#titlelabel");
+               chatInputTextarea = collaborateWriteDocument.querySelector("#chatinput");
+               stickyContainer = collaborateWriteDocument.querySelector(".sticky-container");
+               console.log("stickyContainer:", stickyContainer);
+
+               if(chatLabel && chatText && chatTitleLabel && chatInputTextarea && stickyContainer){
+                   clearInterval(check_chatArea);
+                   listener_chatArea();
+                   ready_chat = true;
+               }
+               else{
+                   console.log("************* wait for collaborateWriteToolbar loaded!");
+               }
+
+           }, 2000);
+
+        }
+        else{
+            //initializePad();
+            alert("Please wait for etherpad service to be ready!");
+        }
+    }, 2000); // Check every 500ms
+
+
+    //let collaborateWriteFrame = document.getElementById('epframecollapseCollaborateWrite');
+
+    // if (collaborateWriteFrame==null){
+    //     alert("Please wait for etherpad service to be ready!");
+    // }
+    //
+    // let collaborateWriteWindow = collaborateWriteFrame.contentWindow;
+    // let collaborateWriteDocument = collaborateWriteWindow.document;
+    // let collaborateWriteBody = collaborateWriteDocument.querySelector("body");
+    // let collaborateWriteToolbarMain = collaborateWriteDocument.querySelector("#editbar");
+    // let collaborateWriteToolbarCountable = collaborateWriteDocument.querySelector("#ep_short_edition_countable-a");
+    // let collaborateWriteToolbarCountableDiv = collaborateWriteDocument.querySelector("#ep_short_edition_countable-popup");
+    // console.log("collaborateWriteToolbarMain: ",collaborateWriteToolbarMain)
+    // console.log("collaborateWriteToolbarCountable: ",collaborateWriteToolbarCountable)
+
+
+    //newly added by lin
+//    let collaborateWriteToolbarBold = collaborateWriteDocument.querySelector(".buttonicon.buttonicon-bold");
+//    let collaborateWriteToolbarItalic = collaborateWriteDocument.querySelector(".buttonicon.buttonicon-italic");
+//    let collaborateWriteToolbarItalic = collaborateWriteDocument.querySelector(".buttonicon.buttonicon-underline");
+//     let collaborateWriteToolbarUndo = collaborateWriteDocument.querySelector(".buttonicon.buttonicon-undo");
+//     let collaborateWriteToolbarRedo = collaborateWriteDocument.querySelector(".buttonicon.buttonicon-redo");
+//
+//     let chatLabel = collaborateWriteDocument.querySelector("#chatlabel");
+//     let chatText = collaborateWriteDocument.querySelector("#chattext");
+//     let chatTitleLabel = collaborateWriteDocument.querySelector("#titlelabel");
+//     let chatInputTextarea = collaborateWriteDocument.querySelector("#chatinput");
+//     let stickyContainer = collaborateWriteDocument.querySelector(".sticky-container");
+//     console.log("stickyContainer:", stickyContainer)
+
+
+
+    // function get_innder_frame(){
+    //     console.log("excute get_innder_frame!")
+    //      ace_outer_window = collaborateWriteWindow.frames["ace_outer"];
+    //      if (ace_outer_window){
+    //         console.log("ace_outer_window available")
+    //          ace_outer_document = ace_outer_window.document;
+    //          outerdocbody = ace_outer_document.querySelector("body");
+    //          ace_inner_window = window.frames["epframecollapseCollaborateWrite"].frames["ace_outer"].frames["ace_inner"];
+    //          console.log("ace_inner_window: ",ace_inner_window)
+    //          if (ace_inner_window && chatInputTextarea) {
+    //              console.log("ace_inner_window && chatInputTextarea is loaded!");
+    //              ace_inner_document = ace_inner_window.document;
+    //              collaborateEditorMainDiv = ace_inner_document.querySelector("#innerdocbody");
+    //              ace_inner_body = ace_inner_document.querySelector("body");
+    //              collaborateInnerBody = ace_inner_window.document.querySelector("body");
+    //              f()
+    //              f1();
+    //          }
+    //      }
+    //      else{
+    //         console.log("wait for ace_outer_window available")
+    //         setTimeout(get_innder_frame, 5000);
+    //      }
+    // }
+
+
 
 //         ace_outer_document = ace_outer_window.document;
 //         outerdocbody = ace_outer_document.querySelector("body");
@@ -534,72 +919,303 @@ function setupCollaborateWriteMain(toolbarId, editorId) {
 //    let collaborateEditorMainDiv = ace_inner_document.querySelector("#innerdocbody");
 //    let ace_inner_body = ace_inner_document.querySelector("body");
 
-    let collapseCollaborateWriteElement = document.querySelector("#collapseCollaborateWrite")
+    let collapseCollaborateWriteElement = document.querySelector("#collapseCollaborateWrite");
 
+    function listener_editbar(){
 
-    function changeDefaultLanguage(language) {
-        const chatObj = chatNameMap.get(language);
-        //chatInputTextarea.setAttribute("placeholder", chatObj.chatInputPlaceholder);
-        chatInputTextarea.placeholder = chatObj.chatInputPlaceholder
-        chatTitleLabel.innerHTML = chatObj.titlelabel;
-        chatLabel.innerHTML = chatObj.iconLabel;
-    }
+        function changeWordCountIcon() {
+            // debugger;
+            let btn = collaborateWriteToolbarCountable.children[0]
+            btn.classList.remove("buttonicon-gauge");
+            btn.innerHTML = "count";
+        }
+        changeWordCountIcon();
 
-    function changeWordCountIcon() {
-        // debugger;
-        let btn = collaborateWriteToolbarCountable.children[0]
-        btn.classList.remove("buttonicon-gauge");
-        btn.innerHTML = "count";
-    }
+        collaborateWriteToolbarCountable.onclick = function (e) {
+            // debugger;
+            console.log("collaborateWriteToolbarCountable click")
+            setTimeout(function () {
+                collaborateWriteToolbarCountable.classList.remove("selected");
+                collaborateWriteToolbarCountableDiv.classList.remove("popup-show");}, 10000);
 
-    changeDefaultLanguage("en");
-    changeWordCountIcon();
-    function f(){
-
-
-    // targetUrl, saveTime, source, pageEvent, subAction, action, targetObject, instantEvent, eventValue, e
-    collaborateWriteToolbarMain.onclick = function (e) {
-        console.log("collaborateWriteToolbarMain click")
+            //event.stopPropagation();
+            let eventValue = $.extend(true, {}, e);
+            eventValue.innerWidth = collaborateWriteWindow.innerWidth;
+            eventValue.innerHeight = collaborateWriteWindow.innerHeight;
+            eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
+            sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "MOUSE_CLICK", subActionLabelMap["COLLABORATIVE_ESSAY_CHECK_WORD_COUNT"], "COLLABORATE_ESSAY", "COLLABORATIVE_WORD_COUNT_BTN", "WORD_COUNT", "",eventValue);
+        }
+        collaborateWriteToolbarMain.onclick = function (e) {
+            console.log("collaborateWriteToolbarMain click")
 //        if (showSelection) {
 //                    hideCustomSelectContainer();
 //                }
-        stopEventPropagation(e);
-        let eventValue = $.extend(true, {}, e);
-        eventValue.innerWidth = collaborateWriteWindow.innerWidth;
-        eventValue.innerHeight = collaborateWriteWindow.innerHeight;
-        eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
-        //console.log("collaborateWriteToolbarMain onclick eventValue", eventValue);
-        //console.log("collaborateWriteToolbarMain onclick", e);
-        //修改essay 样式
-        sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "MOUSE_CLICK", subActionLabelMap["COLLABORATIVE_ESSAY_CHANGE_STYLE"], "COLLABORATE_ESSAY", "COLLABORATE_ESSAY_TOOLBAR", "CHANGE_STYLE", "", eventValue);
-    }
-//    console.log("collaborateWriteToolbarBold: ",collaborateWriteToolbarBold)
-//    collaborateWriteToolbarBold.onlick = function (e) {
-//        console.log("collaborateWriteToolbarBold click")
-//    }
+            stopEventPropagation(e);
+            let eventValue = $.extend(true, {}, e);
+            eventValue.innerWidth = collaborateWriteWindow.innerWidth;
+            eventValue.innerHeight = collaborateWriteWindow.innerHeight;
+            eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
+            //console.log("collaborateWriteToolbarMain onclick eventValue", eventValue);
+            //console.log("collaborateWriteToolbarMain onclick", e);
+            //修改essay 样式
+            sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "MOUSE_CLICK", subActionLabelMap["COLLABORATIVE_ESSAY_CHANGE_STYLE"], "COLLABORATE_ESSAY", "COLLABORATE_ESSAY_TOOLBAR", "CHANGE_STYLE", "", eventValue);
+        }
 
-    collaborateWriteToolbarCountable.onclick = function (e) {
-        // debugger;
-        console.log("collaborateWriteToolbarCountable click")
-        setTimeout(function () {
-            collaborateWriteToolbarCountable.classList.remove("selected");
-            collaborateWriteToolbarCountableDiv.classList.remove("popup-show");}, 10000);
-
-        //event.stopPropagation();
-        let eventValue = $.extend(true, {}, e);
-        eventValue.innerWidth = collaborateWriteWindow.innerWidth;
-        eventValue.innerHeight = collaborateWriteWindow.innerHeight;
-        eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
-        sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "MOUSE_CLICK", subActionLabelMap["COLLABORATIVE_ESSAY_CHECK_WORD_COUNT"], "COLLABORATE_ESSAY", "COLLABORATIVE_WORD_COUNT_BTN", "WORD_COUNT", "",eventValue);
     }
 
-    let oldText = "";
-    let bgcolor = "";
+    function listener_main_editor(){
+        let oldText = "";
+        let bgcolor = "";
 
-//    console.log("collaborateWriteToolbarBold: ",collaborateWriteToolbarBold)
-//    collaborateWriteToolbarBold.onlick = function (e) {
-//        console.log("collaborateWriteToolbarBold click")
-//    }
+        collaborateEditorMainDiv.onkeyup = function(e) {
+            console.log("collaborateEditorMainDiv.onkeyup")
+            let eventValue = $.extend(true, {}, e);
+            eventValue.innerWidth = collaborateWriteWindow.innerWidth;
+            eventValue.innerHeight = collaborateWriteWindow.innerHeight;
+            eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
+            if (getCollaborate().length == 1) {
+                // debugger;
+                console.log("getCollaborate().length == 1")
+                oldText = getCollaborate();
+                console.log("oldText: ", oldText)
+                const spanEle = ace_inner_document.getSelection().focusNode.parentElement;
+                bgcolor = getComputedStyle(spanEle).backgroundColor;
+                bgcolor = rgbToHex(bgcolor);
+                console.log("第一次输入:", bgcolor)
+                sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "KEYBOARD_STROKE", subActionLabelMap["COLLABORATIVE_ESSAY_WRITE"], "WRITE", "COLLABORATE_INNER-EDITOR", "KEY", "KEY:::" + eventValue.key + "---" + eventValue.code, eventValue);
+            }
+            if (getCollaborate().length == 0) {
+                console.log("getCollaborate().length == 0")
+                if (oldText == "") {
+                    // debugger;
+                    eventValue.userId = "";
+                    sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "KEYBOARD_STROKE", subActionLabelMap["COLLABORATIVE_ESSAY_DELETE"],"DELETE","COLLABORATE_INNER-EDITOR", "DELETE_TEXT","DELETE_TEXT:::",  eventValue);
+                }
+                if (bgcolor == userColor) {
+                    // debugger;
+                    eventValue.userId = "";
+                    sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "KEYBOARD_STROKE", subActionLabelMap["COLLABORATIVE_ESSAY_DELETE"],"DELETE", "COLLABORATE_INNER-EDITOR","DELETE_TEXT","DELETE_TEXT:::" + oldText, eventValue);
+                }
+                if (bgcolor != userColor) {
+                    // debugger;
+                    eventValue.userId = userId;
+                    sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "KEYBOARD_STROKE",subActionLabelMap["COLLABORATIVE_ESSAY_OTHER_DELETE"], "OTHER_DELETE","COLLABORATE_INNER-EDITOR", "DELETE_TEXT", "DELETE_TEXT:::" + oldText,eventValue);
+                }
+                oldText = "";
+            }
+            if (getCollaborate().length > oldText.length) {
+                console.log("getCollaborate().length > oldText.length")
+                console.log("getCollaborate().length: ",getCollaborate().length)
+                console.log("oldText.length: ",oldText.length)
+                const newText = getCollaborate();
+                // const spanEle = ace_inner_document.getSelection().focusNode.parentElement;
+                // bgcolor = getComputedStyle(spanEle).backgroundColor;
+                // bgcolor = rgbToHex(bgcolor);
+                if (bgcolor == userColor) {
+                    // debugger;
+                    eventValue.userId = "";
+                    sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "KEYBOARD_STROKE", subActionLabelMap["COLLABORATIVE_ESSAY_WRITE"],"COLLABORATE_INNER-EDITOR", "WRITE", "CHANGE_INPUT", "KEY:::" + eventValue.key + "---" + eventValue.code, e);
+                }
+                if (bgcolor != userColor) {
+                    // debugger;
+                    eventValue.userId = userId;
+                    const diffRes = Diff.diffChars(oldText, newText);
+                    // console.log("diffRes:", diffRes);
+                    diffRes.forEach((part) => {
+                        if(part.added) {
+                            sendEventMessage("", getCurrentTimestamp(), "COLLABORATE", "KEYBOARD_STROKE", subActionLabelMap["COLLABORATIVE_ESSAY_WRITE"], "COLLABORATE_INNER-EDITOR", "OTHER_ADD_WRITE", "CHANGE_INPUT","KEY:::" + part.value, e);
+                        }
+                    });
+                }
+                oldText = newText;
+            }
+            if (getCollaborate().length > 0 && getCollaborate().length < oldText.length) {
+                console.log("getCollaborate().length > 0 && getCollaborate().length < oldText.length")
+                const newText = getCollaborate();
+                // const spanEle = ace_inner_document.getSelection().focusNode.parentElement;
+                // bgcolor = getComputedStyle(spanEle).backgroundColor;
+                // bgcolor = rgbToHex(bgcolor);
+                if (bgcolor == userColor) {
+                    // debugger;
+                    eventValue.userId = "";
+                    const diffRes = Diff.diffChars(oldText, newText);
+                    // console.log("diffRes:", diffRes);
+                    diffRes.forEach((part) => {
+                        if(part.removed) {
+                            sendEventMessage("", getCurrentTimestamp(), "COLLABORATE", "KEYBOARD_STROKE",null, "COLLABORATE_INNER-EDITOR", "DELETE", "CHANGE_INPUT", "DELETE_TEXT:::" + part.value, e);
+                        }
+                    });
+                }
+                if (bgcolor != userColor) {
+                    // debugger;
+                    eventValue.userId = userId;
+                    const diffRes = Diff.diffChars(oldText, newText);
+                    // console.log("diffRes:", diffRes);
+                    diffRes.forEach((part) => {
+                        if(part.removed) {
+                            sendEventMessage("", getCurrentTimestamp(), "COLLABORATE", "KEYBOARD_STROKE", null,"COLLABORATE_INNER-EDITOR", "OTHER_DELETE", "CHANGE_INPUT", "DELETE_TEXT:::" + part.value, e);
+                        }
+                    });
+                }
+                oldText = newText;
+            }
+
+            // const diffRes1 = Diff.diffChars("aaa", "aaabbb");
+            // const diffRes2 = Diff.diffChars("aaabbb", "aaacccbbb");
+            // debugger;
+            // console.log("diffRes1:",diffRes1);
+            // console.log("diffRes2:",diffRes2);
+            // // console.log("collaborateEditorMainDiv onkeyup");
+            // if(e.key == "Backspace") {
+            //     const newText = getCollaborate();
+            //     const diffRes = Diff.diffChars(oldText, newText);
+            //     console.log("diffRes:", diffRes);
+            //     diffRes.forEach((part) => {
+            //         if(part.added) {
+            //             // part.value
+            //             // sendEventMessage("", getCurrentTimestamp(), "COLLABORATE", "KEYBOARD_STROKE", "COLLABORATE_INNER-EDITOR", "DELETE", "PASTE_TEXT:::" + eventValue.key + "---" + eventValue.code, eventValue);
+            //         }
+            //         if(part.removed) {
+            //
+            //         }
+            //     });
+            // }
+            // oldText = getCollaborate();
+            //
+            // //敲击键盘，正在写essay
+            //sendEventMessage("", getCurrentTimestamp(), "COLLABORATE", "KEYBOARD_STROKE", "COLLABORATE_INNER-EDITOR", "WRITE", "KEY:::" + eventValue.key + "---" + eventValue.code, eventValue);
+            sendEventMessage("", getCurrentTimestamp(), "COLLABORATE", "KEYBOARD_STROKE", null,"COLLABORATE_INNER-EDITOR", "WRITE", "KEY:::" + eventValue.key + "---" + eventValue.code, e);
+
+        };
+
+        collaborateEditorMainDiv.onpaste = function(e) {
+            console.log("collaborateEditorMainDiv onpaste");
+            let pasteText = e.clipboardData.getData("text");
+            let eventValue = $.extend(true, {}, e);
+            eventValue.innerWidth = collaborateWriteWindow.innerWidth;
+            eventValue.innerHeight = collaborateWriteWindow.innerHeight;
+            eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
+            // console.log(pasteText); //此处名称必须用text，其他会得到空值
+            //手动粘贴文字到essay中
+
+            sendEventMessage("", getCurrentTimestamp(), "COLLABORATE", "PASTE_TEXT", null,"COLLABORATE_INNER-EDITOR", "PASTE_TEXT", "CHANGE_INPUT", "PASTE_TEXT:::" + pasteText, e);
+
+        };
+
+        let tempEventValue = "";
+        let tempInstantEvent = "";
+
+        collaborateEditorMainDiv.onmouseup = function(e) {
+
+            let selectedText = ace_inner_window.getSelection().toString();
+            if (selectedText.length == 0) {
+                // 未选中文本
+                tempEventValue = "CURSOR_POSITION:::_" ; // + range.index
+                tempInstantEvent = "FOCUS";
+            }else {
+                // 选中文本
+                tempEventValue = "SELECTED_TEXT:::" + selectedText;
+                tempInstantEvent = "SELECT_TEXT";
+            }
+            //console.log("collaborateEditorMainDiv onmouseup: ", tempEventValue)
+            //console.log("collaborateEditorMainDiv onmouseup tempInstantEvent: ", tempInstantEvent)
+            sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "MOUSE_CLICK", subActionLabelMap["COLLABORATIVE_ESSAY_SELECT_TEXT"], "COLLABORATE_INNER-EDITOR", tempInstantEvent,tempEventValue,e);
+        };
+
+        collaborateEditorMainDiv.onblur = function (e) {
+            console.log('collaborateEditorMainDiv onblur');
+            tempInstantEvent = "BLUR";
+            sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "MOUSE_CLICK", null, "COLLABORATE_INNER-EDITOR", tempInstantEvent, tempEventValue,  e);
+        };
+
+        outerdocbody.onclick = function (e) {
+            // stopEventPropagation(e)
+            console.log("outerdocbody click");
+//        if (selectElement.value=="" && showSelection) {
+//                    hideCustomSelectContainer();
+//                }
+            let currentTimestamp = getCurrentTimestamp();
+            let eventValue = $.extend(true, {}, e);
+            eventValue.innerWidth = collaborateWriteWindow.innerWidth;
+            eventValue.innerHeight = collaborateWriteWindow.innerHeight;
+            eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
+
+            sendEventMessage("", currentTimestamp, "EXTRA", "MOUSE_CLICK", null, "BODY_CLICK", "COLLABORATE_OUTER-EDITOR", null, "", e);
+
+        };
+
+        collaborateWriteBody.onmousemove = function(e) {
+            console.log("collaborateWriteBody onmousemove")
+            let eventValue = $.extend(true, {}, e);
+            eventValue.innerWidth = collaborateWriteWindow.innerWidth;
+            eventValue.innerHeight = collaborateWriteWindow.innerHeight;
+            eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
+            //console.log("collapseCollaborateWriteElementXPosition: ",collapseCollaborateWriteElementXPosition)
+            iframeMousePosition = generateMousePositionData(eventValue, "COLLABORATE_TOOLBAR_BODY");
+            CurrentiframeMousePosition = iframeMousePosition;
+
+            //console.log("position: ",iframeMousePosition)
+        };
+
+        outerdocbody.onmousemove = function(e) {
+            console.log("outerdocbody onmousemove")
+            let eventValue = $.extend(true, {}, e);
+            eventValue.innerWidth = collaborateWriteWindow.innerWidth;
+            eventValue.innerHeight = collaborateWriteWindow.innerHeight;
+            eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
+            iframeMousePosition = generateMousePositionData(eventValue, "COLLABORATE_OUTER_BODY");
+            //console.log("position: ",iframeMousePosition)
+            CurrentiframeMousePosition = iframeMousePosition;
+        };
+
+        ace_inner_body.onmousemove = function(e) {
+            console.log("ace_inner_body onmousemove")
+            let eventValue = $.extend(true, {}, e);
+            eventValue.innerWidth = collaborateWriteWindow.innerWidth;
+            eventValue.innerHeight = collaborateWriteWindow.innerHeight;
+            //console.log("collapseCollaborateWriteElementXPosition: ",collapseCollaborateWriteElementXPosition)
+            //console.log("collapseCollaborateWriteElementXPosition: ",collapseCollaborateWriteElementXPosition)
+            //console.log("eventValue.clientX: ", eventValue.clientX, "eventValue.clientY: ", eventValue.clientY)
+            eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
+            iframeMousePosition = generateMousePositionData(eventValue, "COLLABORATE_INNER_BODY");
+            //console.log("position: ",iframeMousePosition)
+            CurrentiframeMousePosition = iframeMousePosition;
+        };
+
+        ace_inner_body.onmousewheel = function(e) {
+            console.log("ace_inner_body onmousewheel")
+            let eventValue = $.extend(true, {}, e);
+            eventValue.innerWidth = collaborateWriteWindow.innerWidth;
+            eventValue.innerHeight = collaborateWriteWindow.innerHeight;
+            eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
+            // iframeMouseWheelData.push(generateMouseWheelData(eventValue, "COLLABORATE_INNER_BODY")); //TODO 此处需要重写
+            //console.log("position: ",iframeMousePosition)
+            CurrentiframeMousePosition = iframeMousePosition;
+        };
+
+        setInterval(function () {
+            if (iframeMousePosition !== "") {
+                iframeMouseMoveData.push(iframeMousePosition);
+                iframeMousePosition = "";
+            }
+        }, 100);
+    };
+
+    function listener_chatArea(){
+
+        function changeDefaultLanguage(language) {
+            const chatObj = chatNameMap.get(language);
+            //chatInputTextarea.setAttribute("placeholder", chatObj.chatInputPlaceholder);
+            chatInputTextarea.placeholder = chatObj.chatInputPlaceholder
+            chatTitleLabel.innerHTML = chatObj.titlelabel;
+            chatLabel.innerHTML = chatObj.iconLabel;
+        }
+
+        changeDefaultLanguage("en");
+
+
+    // let oldText = "";
+    // let bgcolor = "";
 
   // Add change event listener to select element
     selectElement.addEventListener("change", function() {
@@ -620,201 +1236,168 @@ function setupCollaborateWriteMain(toolbarId, editorId) {
 //        }
 //     });
 
-    console.log("collaborateEditorMainDiv: ",collaborateEditorMainDiv)
-    collaborateEditorMainDiv.onkeydown = function (e) {
-        console.log("collaborateEditorMainDiv.onkeydown")
-        oldText = getCollaborate();
-        console.log("oldText: ", oldText)
-        if (oldText.length != 0) {
-            const spanEle = ace_inner_document.getSelection().focusNode.parentElement;
-            bgcolor = getComputedStyle(spanEle).backgroundColor;
-            bgcolor = rgbToHex(bgcolor);
-        }else {
-            bgcolor = "";
-        }
-    }
 
-    collaborateEditorMainDiv.onkeyup = function(e) {
-        console.log("collaborateEditorMainDiv.onkeyup")
-        let eventValue = $.extend(true, {}, e);
-        eventValue.innerWidth = collaborateWriteWindow.innerWidth;
-        eventValue.innerHeight = collaborateWriteWindow.innerHeight;
-        eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
-        if (getCollaborate().length == 1) {
-            // debugger;
-            console.log("getCollaborate().length == 1")
-            oldText = getCollaborate();
-            console.log("oldText: ", oldText)
-            const spanEle = ace_inner_document.getSelection().focusNode.parentElement;
-            bgcolor = getComputedStyle(spanEle).backgroundColor;
-            bgcolor = rgbToHex(bgcolor);
-            console.log("第一次输入:", bgcolor)
-            sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "KEYBOARD_STROKE", subActionLabelMap["COLLABORATIVE_ESSAY_WRITE"], "WRITE", "COLLABORATE_INNER-EDITOR", "KEY", "KEY:::" + eventValue.key + "---" + eventValue.code, eventValue);
-        }
-        if (getCollaborate().length == 0) {
-            console.log("getCollaborate().length == 0")
-            if (oldText == "") {
-                // debugger;
-                eventValue.userId = "";
-                sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "KEYBOARD_STROKE", subActionLabelMap["COLLABORATIVE_ESSAY_DELETE"],"DELETE","COLLABORATE_INNER-EDITOR", "DELETE_TEXT","DELETE_TEXT:::",  eventValue);
-            }
-            if (bgcolor == userColor) {
-                // debugger;
-                eventValue.userId = "";
-                sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "KEYBOARD_STROKE", subActionLabelMap["COLLABORATIVE_ESSAY_DELETE"],"DELETE", "COLLABORATE_INNER-EDITOR","DELETE_TEXT","DELETE_TEXT:::" + oldText, eventValue);
-            }
-            if (bgcolor != userColor) {
-                // debugger;
-                eventValue.userId = userId;
-                sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "KEYBOARD_STROKE",subActionLabelMap["COLLABORATIVE_ESSAY_OTHER_DELETE"], "OTHER_DELETE","COLLABORATE_INNER-EDITOR", "DELETE_TEXT", "DELETE_TEXT:::" + oldText,eventValue);
-            }
-            oldText = "";
-        }
-        if (getCollaborate().length > oldText.length) {
-            console.log("getCollaborate().length > oldText.length")
-            console.log("getCollaborate().length: ",getCollaborate().length)
-            console.log("oldText.length: ",oldText.length)
-            const newText = getCollaborate();
-            // const spanEle = ace_inner_document.getSelection().focusNode.parentElement;
-            // bgcolor = getComputedStyle(spanEle).backgroundColor;
-            // bgcolor = rgbToHex(bgcolor);
-            if (bgcolor == userColor) {
-                // debugger;
-                eventValue.userId = "";
-                sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "KEYBOARD_STROKE", subActionLabelMap["COLLABORATIVE_ESSAY_WRITE"],"COLLABORATE_INNER-EDITOR", "WRITE", "KEY", "KEY:::" + eventValue.key + "---" + eventValue.code, eventValue);
-            }
-            if (bgcolor != userColor) {
-                // debugger;
-                eventValue.userId = userId;
-                const diffRes = Diff.diffChars(oldText, newText);
-                // console.log("diffRes:", diffRes);
-                diffRes.forEach((part) => {
-                    if(part.added) {
-                        sendEventMessage("/trace-collaborate", getCurrentTimestamp(), "COLLABORATE", "KEYBOARD_STROKE", null, "COLLABORATE_INNER-EDITOR", "OTHER_ADD_WRITE", "KEY:::" + part.value, eventValue);
-                    }
-                });
-            }
-            oldText = newText;
-        }
-        if (getCollaborate().length > 0 && getCollaborate().length < oldText.length) {
-            console.log("getCollaborate().length > 0 && getCollaborate().length < oldText.length")
-            const newText = getCollaborate();
-            // const spanEle = ace_inner_document.getSelection().focusNode.parentElement;
-            // bgcolor = getComputedStyle(spanEle).backgroundColor;
-            // bgcolor = rgbToHex(bgcolor);
-            if (bgcolor == userColor) {
-                // debugger;
-                eventValue.userId = "";
-                const diffRes = Diff.diffChars(oldText, newText);
-                // console.log("diffRes:", diffRes);
-                diffRes.forEach((part) => {
-                    if(part.removed) {
-                         sendEventMessage("/trace-collaborate", getCurrentTimestamp(), "COLLABORATE", "KEYBOARD_STROKE",null, "COLLABORATE_INNER-EDITOR", "DELETE", "DELETE_TEXT:::" + part.value, eventValue);
-                    }
-                });
-            }
-            if (bgcolor != userColor) {
-                // debugger;
-                eventValue.userId = userId;
-                const diffRes = Diff.diffChars(oldText, newText);
-                // console.log("diffRes:", diffRes);
-                diffRes.forEach((part) => {
-                    if(part.removed) {
-                         sendEventMessage("/trace-collaborate", getCurrentTimestamp(), "COLLABORATE", "KEYBOARD_STROKE", null,"COLLABORATE_INNER-EDITOR", "OTHER_DELETE", "DELETE_TEXT:::" + part.value, eventValue);
-                    }
-                });
-            }
-            oldText = newText;
-        }
 
-        // const diffRes1 = Diff.diffChars("aaa", "aaabbb");
-        // const diffRes2 = Diff.diffChars("aaabbb", "aaacccbbb");
-        // debugger;
-        // console.log("diffRes1:",diffRes1);
-        // console.log("diffRes2:",diffRes2);
-        // // console.log("collaborateEditorMainDiv onkeyup");
-        // if(e.key == "Backspace") {
-        //     const newText = getCollaborate();
-        //     const diffRes = Diff.diffChars(oldText, newText);
-        //     console.log("diffRes:", diffRes);
-        //     diffRes.forEach((part) => {
-        //         if(part.added) {
-        //             // part.value
-        //             // sendEventMessage("", getCurrentTimestamp(), "COLLABORATE", "KEYBOARD_STROKE", "COLLABORATE_INNER-EDITOR", "DELETE", "PASTE_TEXT:::" + eventValue.key + "---" + eventValue.code, eventValue);
-        //         }
-        //         if(part.removed) {
-        //
-        //         }
-        //     });
-        // }
-        // oldText = getCollaborate();
-        //
-        // //敲击键盘，正在写essay
-        //sendEventMessage("", getCurrentTimestamp(), "COLLABORATE", "KEYBOARD_STROKE", "COLLABORATE_INNER-EDITOR", "WRITE", "KEY:::" + eventValue.key + "---" + eventValue.code, eventValue);
-        sendEventMessage("", getCurrentTimestamp(), "COLLABORATE", "KEYBOARD_STROKE", null,"COLLABORATE_INNER-EDITOR", "WRITE", "KEY:::" + eventValue.key + "---" + eventValue.code, eventValue);
-
-    };
-
-    collaborateEditorMainDiv.onpaste = function(e) {
-        console.log("collaborateEditorMainDiv onpaste");
-        let pasteText = e.clipboardData.getData("text");
-        let eventValue = $.extend(true, {}, e);
-        eventValue.innerWidth = collaborateWriteWindow.innerWidth;
-        eventValue.innerHeight = collaborateWriteWindow.innerHeight;
-        eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
-        // console.log(pasteText); //此处名称必须用text，其他会得到空值
-        //手动粘贴文字到essay中
-
-        sendEventMessage("", getCurrentTimestamp(), "COLLABORATE", "PASTE_TEXT", null,"COLLABORATE_INNER-EDITOR", "PASTE_TEXT", "PASTE_TEXT:::" + pasteText, eventValue);
-
-    };
-
-    let tempEventValue = "";
-    let tempInstantEvent = "";
-
-    collaborateEditorMainDiv.onmouseup = function(e) {
-
-        let selectedText = ace_inner_window.getSelection().toString();
-        if (selectedText.length == 0) {
-            // 未选中文本
-            tempEventValue = "CURSOR_POSITION:::_" ; // + range.index
-            tempInstantEvent = "FOCUS";
-        }else {
-            // 选中文本
-            tempEventValue = "SELECTED_TEXT:::" + selectedText;
-            tempInstantEvent = "SELECT_TEXT";
-        }
-        //console.log("collaborateEditorMainDiv onmouseup: ", tempEventValue)
-        //console.log("collaborateEditorMainDiv onmouseup tempInstantEvent: ", tempInstantEvent)
-        sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "MOUSE_CLICK", subActionLabelMap["COLLABORATIVE_ESSAY_SELECT_TEXT"], "COLLABORATE_INNER-EDITOR", tempInstantEvent,tempEventValue,e);
-    }
-
-    collaborateEditorMainDiv.onblur = function (e) {
-        console.log('collaborateEditorMainDiv onblur');
-        tempInstantEvent = "BLUR";
-        sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "MOUSE_CLICK", null, "COLLABORATE_INNER-EDITOR", tempInstantEvent, tempEventValue,  e);
-    }
-
-    outerdocbody.onclick = function (e) {
-        // stopEventPropagation(e)
-        console.log("outerdocbody click");
-//        if (selectElement.value=="" && showSelection) {
-//                    hideCustomSelectContainer();
-//                }
-        let currentTimestamp = getCurrentTimestamp();
-        let eventValue = $.extend(true, {}, e);
-        eventValue.innerWidth = collaborateWriteWindow.innerWidth;
-        eventValue.innerHeight = collaborateWriteWindow.innerHeight;
-        eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
-// <<<<<<< HEAD
-         sendEventMessage("", currentTimestamp, "EXTRA", "MOUSE_CLICK", null, "BODY_CLICK", "COLLABORATE_OUTER-EDITOR", null, "", e);
-//     }
-//     };
-//
-// =======
-        //sendEventMessage("", currentTimestamp, "EXTRA", "MOUSE_CLICK", null, "BODY_CLICK", "COLLABORATE_OUTER-EDITOR", null, eventValue, e);
-    }
-    };
+    // collaborateEditorMainDiv.onkeyup = function(e) {
+    //     console.log("collaborateEditorMainDiv.onkeyup")
+    //     let eventValue = $.extend(true, {}, e);
+    //     eventValue.innerWidth = collaborateWriteWindow.innerWidth;
+    //     eventValue.innerHeight = collaborateWriteWindow.innerHeight;
+    //     eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
+    //     if (getCollaborate().length == 1) {
+    //         // debugger;
+    //         console.log("getCollaborate().length == 1")
+    //         oldText = getCollaborate();
+    //         console.log("oldText: ", oldText)
+    //         const spanEle = ace_inner_document.getSelection().focusNode.parentElement;
+    //         bgcolor = getComputedStyle(spanEle).backgroundColor;
+    //         bgcolor = rgbToHex(bgcolor);
+    //         console.log("第一次输入:", bgcolor)
+    //         sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "KEYBOARD_STROKE", subActionLabelMap["COLLABORATIVE_ESSAY_WRITE"], "WRITE", "COLLABORATE_INNER-EDITOR", "KEY", "KEY:::" + eventValue.key + "---" + eventValue.code, eventValue);
+    //     }
+    //     if (getCollaborate().length == 0) {
+    //         console.log("getCollaborate().length == 0")
+    //         if (oldText == "") {
+    //             // debugger;
+    //             eventValue.userId = "";
+    //             sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "KEYBOARD_STROKE", subActionLabelMap["COLLABORATIVE_ESSAY_DELETE"],"DELETE","COLLABORATE_INNER-EDITOR", "DELETE_TEXT","DELETE_TEXT:::",  eventValue);
+    //         }
+    //         if (bgcolor == userColor) {
+    //             // debugger;
+    //             eventValue.userId = "";
+    //             sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "KEYBOARD_STROKE", subActionLabelMap["COLLABORATIVE_ESSAY_DELETE"],"DELETE", "COLLABORATE_INNER-EDITOR","DELETE_TEXT","DELETE_TEXT:::" + oldText, eventValue);
+    //         }
+    //         if (bgcolor != userColor) {
+    //             // debugger;
+    //             eventValue.userId = userId;
+    //             sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "KEYBOARD_STROKE",subActionLabelMap["COLLABORATIVE_ESSAY_OTHER_DELETE"], "OTHER_DELETE","COLLABORATE_INNER-EDITOR", "DELETE_TEXT", "DELETE_TEXT:::" + oldText,eventValue);
+    //         }
+    //         oldText = "";
+    //     }
+    //     if (getCollaborate().length > oldText.length) {
+    //         console.log("getCollaborate().length > oldText.length")
+    //         console.log("getCollaborate().length: ",getCollaborate().length)
+    //         console.log("oldText.length: ",oldText.length)
+    //         const newText = getCollaborate();
+    //         // const spanEle = ace_inner_document.getSelection().focusNode.parentElement;
+    //         // bgcolor = getComputedStyle(spanEle).backgroundColor;
+    //         // bgcolor = rgbToHex(bgcolor);
+    //         if (bgcolor == userColor) {
+    //             // debugger;
+    //             eventValue.userId = "";
+    //             sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "KEYBOARD_STROKE", subActionLabelMap["COLLABORATIVE_ESSAY_WRITE"],"COLLABORATE_INNER-EDITOR", "WRITE", "CHANGE_INPUT", "KEY:::" + eventValue.key + "---" + eventValue.code, e);
+    //         }
+    //         if (bgcolor != userColor) {
+    //             // debugger;
+    //             eventValue.userId = userId;
+    //             const diffRes = Diff.diffChars(oldText, newText);
+    //             // console.log("diffRes:", diffRes);
+    //             diffRes.forEach((part) => {
+    //                 if(part.added) {
+    //                     sendEventMessage("", getCurrentTimestamp(), "COLLABORATE", "KEYBOARD_STROKE", subActionLabelMap["COLLABORATIVE_ESSAY_WRITE"], "COLLABORATE_INNER-EDITOR", "OTHER_ADD_WRITE", "CHANGE_INPUT","KEY:::" + part.value, e);
+    //                 }
+    //             });
+    //         }
+    //         oldText = newText;
+    //     }
+    //     if (getCollaborate().length > 0 && getCollaborate().length < oldText.length) {
+    //         console.log("getCollaborate().length > 0 && getCollaborate().length < oldText.length")
+    //         const newText = getCollaborate();
+    //         // const spanEle = ace_inner_document.getSelection().focusNode.parentElement;
+    //         // bgcolor = getComputedStyle(spanEle).backgroundColor;
+    //         // bgcolor = rgbToHex(bgcolor);
+    //         if (bgcolor == userColor) {
+    //             // debugger;
+    //             eventValue.userId = "";
+    //             const diffRes = Diff.diffChars(oldText, newText);
+    //             // console.log("diffRes:", diffRes);
+    //             diffRes.forEach((part) => {
+    //                 if(part.removed) {
+    //                      sendEventMessage("", getCurrentTimestamp(), "COLLABORATE", "KEYBOARD_STROKE",null, "COLLABORATE_INNER-EDITOR", "DELETE", "CHANGE_INPUT", "DELETE_TEXT:::" + part.value, e);
+    //                 }
+    //             });
+    //         }
+    //         if (bgcolor != userColor) {
+    //             // debugger;
+    //             eventValue.userId = userId;
+    //             const diffRes = Diff.diffChars(oldText, newText);
+    //             // console.log("diffRes:", diffRes);
+    //             diffRes.forEach((part) => {
+    //                 if(part.removed) {
+    //                      sendEventMessage("", getCurrentTimestamp(), "COLLABORATE", "KEYBOARD_STROKE", null,"COLLABORATE_INNER-EDITOR", "OTHER_DELETE", "CHANGE_INPUT", "DELETE_TEXT:::" + part.value, e);
+    //                 }
+    //             });
+    //         }
+    //         oldText = newText;
+    //     }
+    //
+    //     // const diffRes1 = Diff.diffChars("aaa", "aaabbb");
+    //     // const diffRes2 = Diff.diffChars("aaabbb", "aaacccbbb");
+    //     // debugger;
+    //     // console.log("diffRes1:",diffRes1);
+    //     // console.log("diffRes2:",diffRes2);
+    //     // // console.log("collaborateEditorMainDiv onkeyup");
+    //     // if(e.key == "Backspace") {
+    //     //     const newText = getCollaborate();
+    //     //     const diffRes = Diff.diffChars(oldText, newText);
+    //     //     console.log("diffRes:", diffRes);
+    //     //     diffRes.forEach((part) => {
+    //     //         if(part.added) {
+    //     //             // part.value
+    //     //             // sendEventMessage("", getCurrentTimestamp(), "COLLABORATE", "KEYBOARD_STROKE", "COLLABORATE_INNER-EDITOR", "DELETE", "PASTE_TEXT:::" + eventValue.key + "---" + eventValue.code, eventValue);
+    //     //         }
+    //     //         if(part.removed) {
+    //     //
+    //     //         }
+    //     //     });
+    //     // }
+    //     // oldText = getCollaborate();
+    //     //
+    //     // //敲击键盘，正在写essay
+    //     //sendEventMessage("", getCurrentTimestamp(), "COLLABORATE", "KEYBOARD_STROKE", "COLLABORATE_INNER-EDITOR", "WRITE", "KEY:::" + eventValue.key + "---" + eventValue.code, eventValue);
+    //     sendEventMessage("", getCurrentTimestamp(), "COLLABORATE", "KEYBOARD_STROKE", null,"COLLABORATE_INNER-EDITOR", "WRITE", "KEY:::" + eventValue.key + "---" + eventValue.code, e);
+    //
+    // };
+    //
+    // collaborateEditorMainDiv.onpaste = function(e) {
+    //     console.log("collaborateEditorMainDiv onpaste");
+    //     let pasteText = e.clipboardData.getData("text");
+    //     let eventValue = $.extend(true, {}, e);
+    //     eventValue.innerWidth = collaborateWriteWindow.innerWidth;
+    //     eventValue.innerHeight = collaborateWriteWindow.innerHeight;
+    //     eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
+    //     // console.log(pasteText); //此处名称必须用text，其他会得到空值
+    //     //手动粘贴文字到essay中
+    //
+    //     sendEventMessage("", getCurrentTimestamp(), "COLLABORATE", "PASTE_TEXT", null,"COLLABORATE_INNER-EDITOR", "PASTE_TEXT", "CHANGE_INPUT", "PASTE_TEXT:::" + pasteText, e);
+    //
+    // };
+    //
+    // let tempEventValue = "";
+    // let tempInstantEvent = "";
+    //
+    // collaborateEditorMainDiv.onmouseup = function(e) {
+    //
+    //     let selectedText = ace_inner_window.getSelection().toString();
+    //     if (selectedText.length == 0) {
+    //         // 未选中文本
+    //         tempEventValue = "CURSOR_POSITION:::_" ; // + range.index
+    //         tempInstantEvent = "FOCUS";
+    //     }else {
+    //         // 选中文本
+    //         tempEventValue = "SELECTED_TEXT:::" + selectedText;
+    //         tempInstantEvent = "SELECT_TEXT";
+    //     }
+    //     //console.log("collaborateEditorMainDiv onmouseup: ", tempEventValue)
+    //     //console.log("collaborateEditorMainDiv onmouseup tempInstantEvent: ", tempInstantEvent)
+    //     sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "MOUSE_CLICK", subActionLabelMap["COLLABORATIVE_ESSAY_SELECT_TEXT"], "COLLABORATE_INNER-EDITOR", tempInstantEvent,tempEventValue,e);
+    // }
+    //
+    // collaborateEditorMainDiv.onblur = function (e) {
+    //     console.log('collaborateEditorMainDiv onblur');
+    //     tempInstantEvent = "BLUR";
+    //     sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "MOUSE_CLICK", null, "COLLABORATE_INNER-EDITOR", tempInstantEvent, tempEventValue,  e);
+    // }
 
     chatInputTextarea.addEventListener('input', function (e) {
       var text = chatInputTextarea.value;
@@ -884,6 +1467,7 @@ function setupCollaborateWriteMain(toolbarId, editorId) {
         if (e.key=="@"||(e.keyCode === 50 && e.shiftKey)){
             console.log("press @!")
             console.log("e:", e);
+            console.log("chatInputTextarea selectionStart: ", chatInputTextarea.selectionStart);
             showDropdownDynamic(chatInputTextarea,availableCollaborativeChatAgents);
 
         }
@@ -932,13 +1516,18 @@ function setupCollaborateWriteMain(toolbarId, editorId) {
                         contentType: "application/json; charset=utf-8",
                         success: function(data, status) {
                             if (status === "success") {
-                             let resContent = data.data.chatgptAnswer;
-                                console.log("successful GPT response: ",data);
-                                if (resContent == "gpt-error") {
-                                    resContent = "There is an error from Chatgpt, Please re-send your question.";
+                                if(data.data!=null){
+                                    let resContent = data.data.chatgptAnswer;
+                                    console.log("successful GPT response: ",data);
+                                    if (resContent == "gpt-error") {
+                                        resContent = "There is an error from Chatgpt, Please re-send your question.";
+                                    }
+                                    $.post(apiBaseUrl + "/collaborate-send-message",
+                                        {padID: userEtherpadPadID,message:resContent,userEtherpadAuthorID});
                                 }
-                                $.post(apiBaseUrl + "/collaborate-send-message",
-                                    {padID: userEtherpadPadID,message:resContent,userEtherpadAuthorID});
+                                else{
+                                    console.log("/chatgpt response data is mull")
+                                }
 
                             }
                         }
@@ -961,7 +1550,8 @@ function setupCollaborateWriteMain(toolbarId, editorId) {
                     backgroundFileNameList: chatgptBackgroundFileNameList,
                     chatgptParameters: chatgptParameters,
                     padId: userEtherpadPadID,
-                    type: -1
+                    type: -1,
+                    toolsLanguage: toolsLanguage
                 }
                 //$.post(apiBaseUrl + "/collaborate-write-openai", {padId: userEtherpadPadID, question: question, userId: userId, courseId: currentCourseId, essay: getCollaborate(), type: -1,chatgptParameters});
                 $.ajax({
@@ -1110,7 +1700,7 @@ function setupCollaborateWriteMain(toolbarId, editorId) {
         eventValue.innerWidth = collaborateWriteWindow.innerWidth;
         eventValue.innerHeight = collaborateWriteWindow.innerHeight;
         eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
-        sendEventMessage("", currentTimestamp, "COLLABORATE_ESSAY", "KEYBOARD_STROKE", null, "CHAT_WRITE", "KEY", "KEY:::" + eventValue.key + "---" + eventValue.code, e);
+        sendEventMessage("", currentTimestamp, "COLLABORATE_ESSAY", "KEYBOARD_STROKE", null, "CHAT_WRITE", "KEY", "CHANGE_INPUT","KEY:::" + eventValue.key + "---" + eventValue.code, e);
     }, true)
 
     let chatTempEventValue = "";
@@ -1133,64 +1723,13 @@ function setupCollaborateWriteMain(toolbarId, editorId) {
         }
         sendEventMessage("", getCurrentTimestamp(), "COLLABORATE_ESSAY", "MOUSE_CLICK", null, "COLLABORATIVE_CHAT_CONTENT", chatTempInstantEvent, chatTempEventValue,  null);
     }
+    }
 
-    collaborateWriteBody.onmousemove = function(e) {
-        console.log("collaborateWriteBody onmousemove")
-        let eventValue = $.extend(true, {}, e);
-        eventValue.innerWidth = collaborateWriteWindow.innerWidth;
-        eventValue.innerHeight = collaborateWriteWindow.innerHeight;
-        eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
-        //console.log("collapseCollaborateWriteElementXPosition: ",collapseCollaborateWriteElementXPosition)
-        iframeMousePosition = generateMousePositionData(eventValue, "COLLABORATE_TOOLBAR_BODY");
-        CurrentiframeMousePosition = iframeMousePosition;
 
-        //console.log("position: ",iframeMousePosition)
-    };
 
-    function f1(){
-    outerdocbody.onmousemove = function(e) {
-        console.log("outerdocbody onmousemove")
-        let eventValue = $.extend(true, {}, e);
-        eventValue.innerWidth = collaborateWriteWindow.innerWidth;
-        eventValue.innerHeight = collaborateWriteWindow.innerHeight;
-        eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
-        iframeMousePosition = generateMousePositionData(eventValue, "COLLABORATE_OUTER_BODY");
-        //console.log("position: ",iframeMousePosition)
-        CurrentiframeMousePosition = iframeMousePosition;
-    };
 
-    ace_inner_body.onmousemove = function(e) {
-        console.log("ace_inner_body onmousemove")
-        let eventValue = $.extend(true, {}, e);
-        eventValue.innerWidth = collaborateWriteWindow.innerWidth;
-        eventValue.innerHeight = collaborateWriteWindow.innerHeight;
-        //console.log("collapseCollaborateWriteElementXPosition: ",collapseCollaborateWriteElementXPosition)
-        //console.log("collapseCollaborateWriteElementXPosition: ",collapseCollaborateWriteElementXPosition)
-        //console.log("eventValue.clientX: ", eventValue.clientX, "eventValue.clientY: ", eventValue.clientY)
-        eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
-        iframeMousePosition = generateMousePositionData(eventValue, "COLLABORATE_INNER_BODY");
-        //console.log("position: ",iframeMousePosition)
-        CurrentiframeMousePosition = iframeMousePosition;
-    };
 
-    ace_inner_body.onmousewheel = function(e) {
-        console.log("ace_inner_body onmousewheel")
-        let eventValue = $.extend(true, {}, e);
-        eventValue.innerWidth = collaborateWriteWindow.innerWidth;
-        eventValue.innerHeight = collaborateWriteWindow.innerHeight;
-        eventValue.clientX = eventValue.clientX + collapseCollaborateWriteElementXPosition + 1; // 1是collapseCollaborateWrite元素的border宽度
-        // iframeMouseWheelData.push(generateMouseWheelData(eventValue, "COLLABORATE_INNER_BODY")); //TODO 此处需要重写
-        //console.log("position: ",iframeMousePosition)
-        CurrentiframeMousePosition = iframeMousePosition;
-    };
-    };
 
-    setInterval(function () {
-        if (iframeMousePosition !== "") {
-            iframeMouseMoveData.push(iframeMousePosition);
-            iframeMousePosition = "";
-        }
-    }, 100);
 
     // TODO 此处需要重写
     /*setInterval(function() {
@@ -1261,6 +1800,10 @@ showCollaborateWriteBtn.onclick = function (e) {
         eventValue = "START_USE_TOOL:::" + saveTime;
         collaborateToolUseLength = saveTime;
 
+        // if (window.frames["epframecollapseCollaborateWrite"]==null){
+        //     initializePad(user)
+        // }
+
     } else {
         instantEvent = "CLOSE";
         collaborateToolUseLength = saveTime - collaborateToolUseLength;
@@ -1269,13 +1812,39 @@ showCollaborateWriteBtn.onclick = function (e) {
     //打开或关闭Essay 工具
     sendEventMessage("", saveTime, "COLLABORATE_ESSAY", "MOUSE_CLICK",subActionLabelMap["COLLABORATIVE_ESSAY_"+instantEvent], "COLLABORATIVE_ESSAY", "COLLABORATE_WRITE_BTN", instantEvent, eventValue, e);
 
-    if (window.frames["epframecollapseCollaborateWrite"]!=null){
-        setupCollaborateWriteMain("collaborateWriteToolbarMain", "collaborateWriteEditorMain");
-        collaborateInnerBody = window.frames["epframecollapseCollaborateWrite"].frames["ace_outer"].frames["ace_inner"].document.querySelector("body");
+    // prevent the elements being repeatedly attached with listerner
+    // const marker = document.querySelector("#etherpadCreated");
+    // if (!marker) {
+    //     const div = document.createElement("div");
+    //     div.id = "etherpadCreated"; // Acts as a flag
+    //     div.setAttribute("data-script-executed", "true");
+    //     document.body.appendChild(div);
+    //     // Your script logic here
+    //     console.log("Script executed only once");
+    //     setupCollaborateWriteMain("collaborateWriteToolbarMain", "collaborateWriteEditorMain");
+    // }
 
-    }
-    else{
-        alert("Need to start etherpad service first!");
-    }
+    // if(isIframeLoaded){
+    //     setupCollaborateWriteMain("collaborateWriteToolbarMain", "collaborateWriteEditorMain");
+    // }
+    // else{
+    //     alert("please wait for etherpad ready and try again");
+    // }
+
+    // if (!ready_bar || !ready_editor || !ready_chat){
+    //     setupCollaborateWriteMain("collaborateWriteToolbarMain", "collaborateWriteEditorMain");
+    // }
+
+
+
+    // if (window.frames["epframecollapseCollaborateWrite"]==null){
+    //     setupCollaborateWriteMain("collaborateWriteToolbarMain", "collaborateWriteEditorMain");
+    //     // if (window.frames["epframecollapseCollaborateWrite"].frames["ace_outer"].frames["ace_inner"]){
+    //     //     collaborateInnerBody = window.frames["epframecollapseCollaborateWrite"].frames["ace_outer"].frames["ace_inner"].document.querySelector("body");
+    //     // }
+    // }
+    // else{
+    //     alert("Need to start etherpad service first!");
+    // }
 
 };

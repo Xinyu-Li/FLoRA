@@ -1,11 +1,9 @@
 package com.monash.flora_backend.dao.mapper;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
-import com.monash.flora_backend.controller.vo.MdlQuizVO;
-import com.monash.flora_backend.dao.entity.MdlQuizGrades;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.monash.flora_backend.dao.entity.MdlQuizGrades;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
 
 /**
  * <p>
@@ -22,6 +20,5 @@ public interface MdlQuizGradesMapper extends BaseMapper<MdlQuizGrades> {
 //    MdlQuizVO findQuizGradesVO();
 
 //    @Select("SELECT q.name as quiz_name, qg.userid as user_id, qg.grade, q.course as course_id FROM mdl_quiz q JOIN mdl_quiz_grades qg ON q.id = qg.quiz WHERE q.name LIKE CONCAT('%', #{quizName}, '%') AND q.course = #{courseId} AND qg.userid = #{userId};")
-    @Select("SELECT q.name as quiz_name, qg.userid as user_id, qg.sumgrades as grade, q.course as course_id FROM mdl_quiz q JOIN mdl_quiz_attempts qg ON q.id = qg.quiz WHERE q.name LIKE CONCAT('%', #{quizName}, '%') AND q.course = #{courseId} AND qg.userid = #{userId} limit 1;")
-    MdlQuizVO findQuizGradeByUserIdAndCourseIdAndQuizName(String quizName, Long courseId, Long userId);
+
 }

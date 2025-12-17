@@ -23,4 +23,10 @@ public class ChatgptRequest {
     private List<Integer> chatgptParameters;
     private String agentName;// 用以区分不同的agent，具体每个agent的标识
     private Integer roundNumber;
+    private Long topicId;
+    private String threadId;
+    private String oldThreadId;
+    private String specialRequirementPrompt;
+    private GptScaffoldRequest gptScaffoldRequest;
+    private String toolsLanguage;
 }

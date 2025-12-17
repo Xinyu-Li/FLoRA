@@ -31,10 +31,12 @@ public class MyConstantMariaModelSRLPattern {
     public static String PRIORITY1_MCE1 = "\\d+--(?:IR)?RELEVANT_(?:RE)?READING=====(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*(?:\\d+--(?:TASK_REQUIREMENT|RUBRIC|(?:READ|DELETE)_ANNOTATION)=====)+(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*\\d+--(?:IR)?RELEVANT_(?:RE)?READING=====";
 //    public static String PRIORITY2_MCE2 = "\\d+--\\w{4,10}_ESSAY=====(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*(?:\\d+--(?:TASK_REQUIREMENT|RUBRIC|(?:READ|DELETE)_ANNOTATION)=====)+(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*\\d+--(?:(?:IR)?RELEVANT_(?:RE)?READING|\\w{4,10}_ESSAY)=====";
     //after discussion with joep
-    public static String PRIORITY2_MCE2 = "\\d+--\\w{4,10}_ESSAY=====(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*(?:\\d+--(?:TASK_REQUIREMENT|RUBRIC|(?:READ|DELETE)_ANNOTATION)=====)+(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*(?:\\d+--(?:(?:IR)?RELEVANT_(?:RE)?READING|\\w{4,10}_ESSAY)=====)+";
+//    public static String PRIORITY2_MCE2 = "\\d+--\\w{4,10}_ESSAY=====(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*(?:\\d+--(?:TASK_REQUIREMENT|RUBRIC|(?:READ|DELETE)_ANNOTATION)=====)+(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*(?:\\d+--(?:(?:IR)?RELEVANT_(?:RE)?READING|\\w{4,10}_ESSAY)=====)+"; // 将结尾修改为READING 或者 READ_ESSAY
+    public static String PRIORITY2_MCE2 = "\\d+--\\w{4,10}_ESSAY=====(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*(?:\\d+--(?:TASK_REQUIREMENT|RUBRIC|(?:READ|DELETE)_ANNOTATION)=====)+(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*(?:\\d+--(?:(?:IR)?RELEVANT_(?:RE)?READING|READ_ESSAY)=====)+";
     // 修改过 鼠标移动的影响
 //    public static String PRIORITY2_MCE2 = "\\d+--OPEN_ESSAY=====(?:\\d+--(?:TASK_REQUIREMENT|RUBRIC)=====)*(?:\\d+--WRITE_ESSAY=====)+(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*(?:\\d+--(?:TASK_REQUIREMENT|RUBRIC|(?:READ|DELETE)_ANNOTATION)=====)+(?:\\d+--WRITE_ESSAY=====)*(?:\\d+--(?:TASK_REQUIREMENT|RUBRIC)=====)*(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*\\d+--(?:(?:IR)?RELEVANT_(?:RE)?READING|\\w{4,10}_ESSAY)=====";
-    public static String PRIORITY3_MCE3 = "(?:\\d+--(?:WRITE_ESSAY|OPEN_ESSAY)=====)?(?:\\d+--CHECKLIST=====)+";
+//    public static String PRIORITY3_MCE3 = "(?:\\d+--(?:WRITE_ESSAY|OPEN_ESSAY)=====)?(?:\\d+--CHECKLIST=====)+";
+    public static String PRIORITY3_MCE3 = "(?:\\d+--(?:READ_ESSAY|WRITE_ESSAY|OPEN_ESSAY)=====)?(?:\\d+--CHECKLIST=====)+";
     public static String PRIORITY4_MCE4 = "(?:\\d+--(?:(?:IR)?RELEVANT_(?:RE)?READING|\\w{4,10}_ESSAY)=====)?(?:\\d+--(?:INTERACT_SCAFFOLD|INTERACT_TODOLIST)=====)+";
 
 
@@ -57,8 +59,14 @@ public class MyConstantMariaModelSRLPattern {
     public static String PRIORITY14_MCM5 = "(?:\\d+--OPEN_PLANNER=====)*(?:\\d+--EDIT_PLANNER=====)+(?:\\d+--CLOSE_PLANNER=====)?";
     public static String PRIORITY15_MCM8 = "\\d+--OPEN_ESSAY=====\\d+--(?:IR)?RELEVANT_(?:RE)?READING=====";
 
-    public static String PRIORITY16_HCEO2 = "\\d+--(?:TASK_REQUIREMENT|RUBRIC)=====(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*(?:\\d+--OPEN_ESSAY=====)?(?:\\d+--WRITE_ESSAY=====)+(?:\\d+--CLOSE_ESSAY=====)?";
-    public static String PRIORITY17_HCEO1 = "\\d+--\\w{8,10}_REREADING=====(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*(?:\\d+--OPEN_ESSAY=====)?(?:\\d+--(?:IR)?RELEVANT_(?:RE)?READING=====)*(?:\\d+--WRITE_ESSAY=====)+(?:\\d+--CLOSE_ESSAY=====)?";
+    //TODO add MCM9 for ChatGPT
+
+    public static String PRIORITY15_2_MCM10 = "(?:\\d+--\\w{4,5}_ESSAY_PRODUCT=====)+";
+    public static String PRIORITY15_1_MCM11 = "(?:\\d+--\\w{4,5}_PROCESS_VISUAL=====)+";
+
+    public static String PRIORITY16_HCEO2 = "\\d+--(?:TASK_REQUIREMENT|RUBRIC)=====(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*(?:\\d+--OPEN_ESSAY=====)?(?:\\d+--(?:READ_ESSAY|WRITE_ESSAY)=====)+(?:\\d+--CLOSE_ESSAY=====)?";
+//    public static String PRIORITY17_HCEO1 = "\\d+--\\w{8,10}_REREADING=====(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*(?:\\d+--OPEN_ESSAY=====)?(?:\\d+--(?:IR)?RELEVANT_(?:RE)?READING=====)*(?:\\d+--WRITE_ESSAY=====)+(?:\\d+--CLOSE_ESSAY=====)?";
+    public static String PRIORITY17_HCEO1 = "\\d+--\\w{8,10}_REREADING=====(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*(?:\\d+--OPEN_ESSAY=====)?(?:\\d+--(?:IR)?RELEVANT_(?:RE)?READING=====)*(?:\\d+--(?:READ_ESSAY|WRITE_ESSAY)=====)+(?:\\d+--CLOSE_ESSAY=====)?";
     public static String PRIORITY18_HCEO4 = "\\d+--\\w{4,10}_ESSAY=====(?:\\d+--PAGE_NAVIGATION=====)*(?:\\d+--(?:READ_ANNOTATION|SEARCH_ANNOTATION)=====)+";
 
     public static String PRIORITY19_LCR1 = "(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*\\d+--\\w{8,10}_REREADING=====(?:\\d+--(?:\\w{4,6}_ANNOTATION|CREATE_NOTE|CREATE_HIGHLIGHT)=====)+(?:\\d+--\\w{8,10}_REREADING=====)?";
@@ -79,7 +87,7 @@ public class MyConstantMariaModelSRLPattern {
 //    public static String PRIORITY30_HCEO3 = "(?:\\d+--WRITE_ESSAY=====)+(?:\\d+--CLOSE_ESSAY=====)?";
 
     //after discussion with joep
-    public static String PRIORITY30_HCEO3 = "(?:\\d+--WRITE_ESSAY=====)+(?:\\d+--CLOSE_ESSAY=====)?(?:\\d+--(?:IR)?RELEVANT_(?:RE)?READING=====)*";
+    public static String PRIORITY30_HCEO3 = "(?:\\d+--(?:READ_ESSAY|WRITE_ESSAY)=====)+(?:\\d+--CLOSE_ESSAY=====)?(?:\\d+--(?:IR)?RELEVANT_(?:RE)?READING=====)*";
 
 //    public static String PRIORITY31_LCR2 = "(?:\\d+--\\w{8,10}_REREADING=====)+";
 //    public static String PRIORITY31_LCR2 = "(?:\\d+--(?:PAGE_NAVIGATION|TABLE_OF_CONTENT)=====)*(?:\\d+--\\w{8,10}_REREADING=====)+";
@@ -94,11 +102,13 @@ public class MyConstantMariaModelSRLPattern {
     public static List<String> BEFORE_15MIN_MARIA_MODEL_PROCESS_PATTERN_LIST = List.of("MCE1", "MCE2", "MCE3", "MCE4", "MCP1",
             "MCP2", "MCP3", "MCO1", "MCO3", "MCO4",   "MCM1", "MCM8", "MCM9",
             "HCEO2", "HCEO1", "HCEO4", "LCR1", "LCF1",  "LCF3", "LCF2", "MCP4", "MCM6", "MCM7",
-            "MCM4", "MCO2", "HCEO5", "HCEO6", "HCEO3",  "LCR2", "LCF4", "MCO5");
+            "MCM4", "MCO2", "HCEO5", "HCEO6", "HCEO3",  "LCR2", "LCF4", "MCO5"
+            , "MCM11", "MCM10");// temporary added
     public static List<String> AFTER_15MIN_MARIA_MODEL_PROCESS_PATTERN_LIST = List.of("MCE1", "MCE2", "MCE3", "MCE4", "MCP1",
             "MCP3", "MCO1", "MCO3", "MCO4",  "MCM2", "MCM3", "MCM1", "MCM5", "MCM8", "MCM9",
             "HCEO2", "HCEO1", "HCEO4", "LCR1", "LCF1",  "LCF3", "LCF2", "MCP4", "MCM6", "MCM7",
-            "MCM4", "MCO2", "HCEO5", "HCEO6", "HCEO3",  "LCR2", "LCF4", "MCO5");
+            "MCM4", "MCO2", "HCEO5", "HCEO6", "HCEO3",  "LCR2", "LCF4", "MCO5"
+            , "MCM11", "MCM10");// temporary added
 //    public static List<String> KEY_ACTION_LIST = List.of("EDIT_ANNOTATION", "TABLE_OF_CONTENT", "PAGE_NAVIGATION", "TRY_OUT_TOOLS", "INSTRUCTION",
 //            "RUBRIC", "READ_ANNOTATION", "WRITE_ESSAY", "");
     public static Map<String, String> MARIA_MODEL_PROCESS_PATTERN_REGEX_MAP = Map.ofEntries(
@@ -119,6 +129,8 @@ public class MyConstantMariaModelSRLPattern {
             Map.entry("MCM1", PRIORITY13_MCM1),
             Map.entry("MCM5", PRIORITY14_MCM5),
             Map.entry("MCM8", PRIORITY15_MCM8),
+            Map.entry("MCM11", PRIORITY15_1_MCM11),
+            Map.entry("MCM10", PRIORITY15_2_MCM10),
 
             Map.entry("HCEO2", PRIORITY16_HCEO2),
             Map.entry("HCEO1", PRIORITY17_HCEO1),

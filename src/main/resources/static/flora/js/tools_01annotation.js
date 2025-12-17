@@ -493,7 +493,7 @@ function sidebarEvents() {
             sendEventMessage("", getCurrentTimestamp(), "ANNOTATION", "MOUSE_CLICK", subActionLabelMap["ANNOTATION_" + instantEvent], "ANNOTATION", "EDIT_NOTE_BTN", instantEvent, "EDIT_ANNOTATION:::" + highlightTimestamp, e);
         })
         .on("click", ".deleteNoteBtn", function (e) {  // finish
-            if (!confirm("Do you want to delete this note?")) {
+            if (!confirm(deleteNoteConfirmMessage)) {
                 return;
             }
             stopEventPropagation(e);
@@ -805,6 +805,7 @@ function sidebarEvents() {
     // });
 }
 
+// setup writing box for notes
 function setupEssayWriting(toolbarId, editorId) {
     editors[editorId] = new Quill('#' + editorId, {
         modules: { toolbar: '#' + toolbarId },
@@ -910,7 +911,7 @@ function addHighlightsToSidebarAfterHighlight(userId, defaultTagName, e) {
 }
 
 function setupAnnotationToolboxBtns() {
-    takenoteBtn.onclick = function (e) {
+    takenoteBtn.addEventListener("click", function (e) {
         // 获取文本
         // console.log("noteBtn click");
         stopEventPropagation(e);
@@ -934,11 +935,11 @@ function setupAnnotationToolboxBtns() {
         newAddedNotesDiv.find("button.editNoteBtn").click();
         newAddedNotesDiv[0].scrollIntoView();
 
-    };
+    });
 
     for (let i = 1; i < annotationToolboxLabelBtns.length; i++) {
-        annotationToolboxLabelBtns[i].onclick = function(e) {
-            // console.log(annotationLabelColors[i-1].annotationLabel + "Btn click");
+        annotationToolboxLabelBtns[i].addEventListener("click", function(e) {
+            console.log(annotationLabelColors[i-1].annotationLabel + "Btn click");
             stopEventPropagation(e);
             whetherDoHighlight = true;
             hltr1.setColor(annotationLabelColors[i-1].annotationLabelColor);
@@ -947,91 +948,52 @@ function setupAnnotationToolboxBtns() {
             hideAnnotationToolbox();
             // 展示到右侧边栏 // 此函数中会发送trace log
             addHighlightsToSidebarAfterHighlight(userId, annotationLabelColors[i-1].annotationLabel, e); //传入userid and username
-        };
+
+        });
     }
 }
 
 function setupMainHighlightAreaEvent() {
     //无法阻止事件冒泡
-    $(pageContent).on("mouseup", function(e) {
-        // console.log(e); //查看事件propagation
-        // console.log("page content mouseup");
+    function handleUp(e) {
 
-        // console.log(currentRange);
+        const sel = window.getSelection();
+        if (sel.isCollapsed) return;                        // 没选中文字
+        if (!pageContent.contains(sel.anchorNode) ||
+            !pageContent.contains(sel.focusNode)) return;         // 选区不全在 page-content 内
+        console.log("--------------mouse up--------------------before currentRange:", currentRange, e.type);
         if (currentRange != null && !currentRange.collapsed) { //选中了text，正在highlight  //TODO 如果currentRange 没有更新，会导致toolbox 一直跟随出现
-//            let width = $(annotationToolbox).children().width();
-//            let height = $(annotationToolbox).children().height();
-//            let yOffset = height / 4;
-//            let xOffset = width / 2;
-//            console.log("e.pageX: ", e.pageX);
-//            console.log("e.pageY: ", e.pageY);
-//            $("#annotation-toolbox-div").css({"top": (e.pageY + yOffset) + "px", "left": (e.pageX - xOffset) + "px"});
 
-                let viewportWidth = window.innerWidth;
-                let viewportHeight = window.innerHeight;
-//                let annotationBarWidth = $(annotationToolbox).children().width();
-                let annotationBarHeight = 62
-                //let annotationBarWidth = 0;
+            let viewportWidth = window.innerWidth;
+            let viewportHeight = window.innerHeight;
+    //                let annotationBarWidth = $(annotationToolbox).children().width();
+            let annotationBarHeight = 62
+            //let annotationBarWidth = 0;
 
-                let annotationBarWidth = 602
-                let yOffset = annotationBarHeight / 4;
-                let xOffset = annotationBarWidth / 2;
-                // console.log("annotationBarWidth: ", annotationBarWidth);
-                // console.log("annotationBarHeight: ", annotationBarHeight);
-                let top = e.pageY + yOffset
-                let left = e.pageX - xOffset
+            let annotationBarWidth = 602
+            let yOffset = annotationBarHeight / 4;
+            let xOffset = annotationBarWidth / 2;
+            // console.log("annotationBarWidth: ", annotationBarWidth);
+            // console.log("annotationBarHeight: ", annotationBarHeight);
+            let top = e.clientY + yOffset;
+            let left = e.clientX - xOffset;
 
-                if (top + annotationBarHeight > viewportHeight){
-                    top = viewportHeight - annotationBarHeight-1
-                }
-                if (left + annotationBarWidth > viewportWidth){
-                    left =  viewportWidth - annotationBarWidth-1
-                }
-                if (left < 0 ){
-                    left =  1
-                }
-                // console.log("e.pageX: ", e.pageX);
-                // console.log("e.pageY: ", e.pageY);
+            top += window.scrollY;
+            left += window.scrollX;
 
-                // console.log("top: ", top);
-                // console.log("left: ", left);
+            if (top + annotationBarHeight > window.scrollY + viewportHeight) {
+                top = window.scrollY + viewportHeight - annotationBarHeight - 50;
+            }
 
-                $("#annotation-toolbox-div").css({"top": top + "px", "left": left + "px"});
+            if (left + annotationBarWidth > window.scrollX + viewportWidth) {
+                left = window.scrollX + viewportWidth - annotationBarWidth - 20;
+            }
+            if (left < window.scrollX) {
+                left = window.scrollX + 1;
+            }
 
 
-//              let rect = currentRange.getBoundingClientRect();
-//              //let topPosition = rect.bottom + window.scrollY; // Adjust for scroll position
-//              //let leftPosition = rect.left + window.scrollX; // Adjust for scroll position
-//
-//              let annotationBar = $(annotationToolbox);
-//              let annotationBarWidth = $(annotationToolbox).children().width();
-//              let annotationBarHeight = $(annotationToolbox).children().width();
-//
-//              console.log("annotation bar: " + annotationBarWidth + " h: "+annotationBarHeight)
-//              let viewportWidth = window.innerWidth;
-//              let viewportHeight = window.innerHeight;
-//
-//
-//              let scrollLeft = window.scrollX || window.pageXOffset;
-//              let scrollTop = window.scrollY || window.pageYOffset;
-//
-//              let topPosition = rect.bottom + scrollTop + 10; // Adjust for scroll position and offset
-//              let leftPosition = rect.left + scrollLeft; // Adjust for scroll position
-//
-//              // Adjust top position to keep annotation bar within viewport vertically
-//              if (topPosition + annotationBarHeight > scrollTop + viewportHeight) {
-//                  topPosition = rect.top - annotationBarHeight - 10; // Adjust as needed
-//              }
-//
-//              // Adjust left position to keep annotation bar within viewport horizontally
-//              if (leftPosition + annotationBarWidth > scrollLeft + viewportWidth) {
-//                  leftPosition = scrollLeft + viewportWidth - annotationBarWidth - 10; // Adjust as needed
-//              }
-
-              // Ensure annotation bar fits within the viewport
-
-                // Set annotation bar position
-              //$(annotationToolbox).css({"top": top + "px", "left": left + "px"});
+            $("#annotation-toolbox-div").css({"top": top + "px", "left": left + "px"});
             showAnnotationToolbox();
             currentRange = null; //点击button之后会给currentRange 重复赋值，text.js 里面置成null
         } else {
@@ -1041,9 +1003,64 @@ function setupMainHighlightAreaEvent() {
         // if (!offcanvasRightNotesDiv.classList.contains("show")) {
         //     moveTogetherWithSidebarClose();
         // }
-    });
+    }
+    // 推荐：优先用 pointer 事件，降级到 mouse + touch
+    // if (window.PointerEvent) {
+    //     pageContent.addEventListener('pointerup', handleUp);
+    // } else {
+        pageContent.addEventListener('mouseup', handleUp);
+        pageContent.addEventListener('touchend', handleUp);
+        pageContent.addEventListener("selectionchange", handleUp);
+    // }
+
+    /*$(pageContent).on("mouseup", function(e) {
+        const sel = window.getSelection();
+        if (sel.isCollapsed) return;                        // 没选中文字
+        if (!pageContent.contains(sel.anchorNode) ||
+            !pageContent.contains(sel.focusNode)) return;         // 选区不全在 page-content 内
+        console.log("----------------------------------before currentRange:", currentRange);
+        if (currentRange != null && !currentRange.collapsed) { //选中了text，正在highlight  //TODO 如果currentRange 没有更新，会导致toolbox 一直跟随出现
+
+            let viewportWidth = window.innerWidth;
+            let viewportHeight = window.innerHeight;
+//                let annotationBarWidth = $(annotationToolbox).children().width();
+            let annotationBarHeight = 62
+            //let annotationBarWidth = 0;
+
+            let annotationBarWidth = 602
+            let yOffset = annotationBarHeight / 4;
+            let xOffset = annotationBarWidth / 2;
+            // console.log("annotationBarWidth: ", annotationBarWidth);
+            // console.log("annotationBarHeight: ", annotationBarHeight);
+            let top = e.pageY + yOffset
+            let left = e.pageX - xOffset
+
+            if (top + annotationBarHeight > viewportHeight){
+                top = viewportHeight - annotationBarHeight-1
+            }
+            if (left + annotationBarWidth > viewportWidth){
+                left =  viewportWidth - annotationBarWidth-1
+            }
+            if (left < 0 ){
+                left =  1
+            }
+            console.log("----------------------------------showAnnotationToolbox:", currentRange);
+            console.log("----------------------------------showAnnotationToolbox sel:", sel);
+            $("#annotation-toolbox-div").css({"top": top + "px", "left": left + "px"});
+            showAnnotationToolbox();
+            currentRange = null; //点击button之后会给currentRange 重复赋值，text.js 里面置成null
+            console.log("----------------------------------showAnnotationToolbox:", currentRange);
+        }
+        else {
+            hideAnnotationToolbox();
+        }
+        //------------------关闭侧边栏，并修改按钮样式颜色------------------------------
+        // if (!offcanvasRightNotesDiv.classList.contains("show")) {
+        //     moveTogetherWithSidebarClose();
+        // }
+    });*/
     //无法阻止事件冒泡
-    $(pageContent).on("click", function(e) {
+    /*$(pageContent).on("click", function(e) {
         // console.log("page content click");
 
         if (offcanvasRightNotesDiv.classList.contains("show")) {
@@ -1052,10 +1069,27 @@ function setupMainHighlightAreaEvent() {
             $(showAnnotationSideBarBtn).click();
             // moveTogetherWithSidebarClose();
         }
-    });
+    });*/
+    function handleDown(e) {
+        console.log("mouse/pointer down--------------------------------------------")
+        hideAnnotationToolbox();
+        if (offcanvasRightNotesDiv.classList.contains("show")) {
+            annotationClickTargetObject = "PAGE_CONTENT_CLICK";
+            annotationPageEvent = "AUTO_CLOSE";
+            $(showAnnotationSideBarBtn).click();
+            // moveTogetherWithSidebarClose();
+        }
+    }
+    // if (window.PointerEvent) {
+    //     pageContent.addEventListener('pointerdown', handleDown);
+    // } else {
+        pageContent.addEventListener('mousedown', handleDown);
+        pageContent.addEventListener('touchstart', handleDown);
+    // }
 }
 
 function loadAnnotation() {
+    // console.log("loadAnnotation");
     $.post(apiBaseUrl + "/load-highlights-to-sidebar", {// TODO 尝试放入缓存
             userId: userId,
             url: getCurrentUrl(),
@@ -1081,7 +1115,7 @@ function loadAnnotation() {
                 // console.log("************************no Highlights in server");
             }
         });
-
+    // console.log("load-highlights-to-sidebar finish");
     // 加载页面highlight
     // let serializeHighlightsJson = localStorage.getItem("mySerializeHighlightsJson");
     // if (serializeHighlightsJson === null) {
@@ -1091,6 +1125,8 @@ function loadAnnotation() {
         url: getCurrentUrl(),
     }, function (data, status) {
         if (data.data != null) {
+            console.log("/load-whole-page-highlights");
+            console.log(data);
             hltr1.deserializeHighlights(data.data.serializeHighlightsJson);
             // localStorage.setItem("mySerializeHighlightsJson", data.data.serializeHighlightsJson);
         } else {
@@ -1137,10 +1173,11 @@ showAnnotationSideBarBtn.onclick = function (e) {
     // sendMyTraceDataPost("/trace-annotation", saveTime, "ANNOTATION", "MOUSE_CLICK", "ANNOTATION_SIDE_BAR_BTN", annotationInstantEvent, eventValue, e);
 
 };
+showSearchAnnotationsBtn.addEventListener("mousedown", function (e) {e.stopPropagation();});
 showSearchAnnotationsBtn.onclick = function(e) {
     // console.log("showSearchAnnotationsBtn clicked");
     stopEventPropagation(e);
-    hideAnnotationToolbox(); // 隐藏annotation toolbox，当点击其他按钮时候
+    // hideAnnotationToolbox(); // 隐藏annotation toolbox，当点击其他按钮时候
     collapseSearch.classList.toggle("in-tools");
     toolsAndEssayToggle(collapseSearch);
 

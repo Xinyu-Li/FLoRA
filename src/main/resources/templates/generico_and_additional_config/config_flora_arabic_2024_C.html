@@ -15,34 +15,34 @@
 <script src="/flora/js/jsmind.js"></script>
 <script src="/flora/js/jsmind_draggable_node.js"></script>
 <script>
-  var currentRange = null;
-  var whetherDoHighlight = false;
-  var saveHighlight = null;
-  var saveHighlightText = '';
+    var currentRange = null;
+    var whetherDoHighlight = false;
+    var saveHighlight = null;
+    var saveHighlightText = '';
 
-  var totalMinutes = 45;
-  var unlimitedTime = false; //如果使用unlimited time 则让timer 变成增长，不再是count down
-  var hintMinutesBeforeEnd = 5; // 提示学生，当任务快结束时候
-  var isCountdown = true;
+    var totalMinutes = 45;
+    var unlimitedTime = false; //如果使用unlimited time 则让timer 变成增长，不再是count down
+    var hintMinutesBeforeEnd = 5; // 提示学生，当任务快结束时候
+    var isCountdown = true;
 
-  let eventWebsocket = null;
-  let teacherChatWebsocket = null;
+    let eventWebsocket = null;
+    let teacherChatWebsocket = null;
 
-  var apiBaseUrl = "http://localhost:8080";
-  var websocketApiBaseUrl = "ws://localhost:8080";
-  var mainEditor = null;
-  var editors = {}; //多个不同的侧边栏editor
+    var apiBaseUrl = "http://localhost:8080";
+    var websocketApiBaseUrl = "ws://localhost:8080";
+    var mainEditor = null;
+    var editors = {}; //多个不同的侧边栏editor
 
-  // 是否展示工具
-  var useAnnotationTool = true;
-  var useScaffoldTool = false;
-  var useGPTScaffoldTool = true;
+    // 是否展示工具
+    var useAnnotationTool = true;
+    var useScaffoldTool = false;
+    var useGPTScaffoldTool = true;
 
-  var srlModel = "maria";    // copes
-  var gptScaffoldRole = "assistant";
-  // var gptScaffoldRoleDescription = "You are a helpful assistant, please give suggestions based on the given text.";
-  var gptScaffoldPromptIncludeEssay = true;
-  var gptScaffoldPromptTemplate = `
+    var srlModel = "maria";    // copes
+    var gptScaffoldRole = "assistant";
+    // var gptScaffoldRoleDescription = "You are a helpful assistant, please give suggestions based on the given text.";
+    var gptScaffoldPromptIncludeEssay = true;
+    var gptScaffoldPromptTemplate = `
 
 لدينا طالب قَبِلَ مهمة كتابة مقالة.
 
@@ -102,183 +102,184 @@ o\tالوصف : لا توجد معلومات أو معلومات غير صحيح
 
 
 `;
-  var gptScaffoldBackgroundFileNameList = ["flora_arabic_background.pdf"];
-  var gptScaffoldParameters = [300, 1, 2]; //  response max token, n, temperature/10
+    var gptScaffoldBackgroundFileNameList = ["flora_arabic_background.pdf"];
+    var gptScaffoldParameters = [300, 1, 2]; //  response max token, n, temperature/10
 
 
-  var testISDIMUCourseId = 26; // todo 改课程id
-  var hasTakePreviousStudyTestNameCourseId = 26; // todo 改课程id
-  var pretestNameCourseId = 26; // todo 改课程id
+    var testISDIMUCourseId = 26; // todo 改课程id
+    var hasTakePreviousStudyTestNameCourseId = 26; // todo 改课程id
+    var pretestNameCourseId = 26; // todo 改课程id
 
-  var preTestName = "النشاط ٢: اختبار المعرفة - الذكاء الاصطناعي في التعليم"; // todo 改名字
-  var testISDIMUName = "النشاط ٣: المعرفة في تكتيكات التعلم"; // todo 改名字
-  var hasTakePreviousStudyTestName = "النشاط ١: عن نفسك";
+    var preTestName = "النشاط ٢: اختبار المعرفة - الذكاء الاصطناعي في التعليم"; // todo 改名字
+    var testISDIMUName = "النشاط ٣: المعرفة في تكتيكات التعلم"; // todo 改名字
+    var hasTakePreviousStudyTestName = "النشاط ١: عن نفسك";
 
 
-  var pretestGradesPrompt = [{"threshold": 0, "prompt": "هذا الطالب لديه مستوى عالٍ من المعرفة حول الذكاء الاصطناعي في التعليم."},
-    {"threshold": 5, "prompt": "هذا الطالب لديه مستوى منخفض من المعرفة حول الذكاء الاصطناعي في التعليم."},
-    {"threshold": 10, "prompt": "هذا الطالب لديه مستوى متوسط من المعرفة حول الذكاء الاصطناعي في التعليم."}];
-  var isdimuScorePrompt = [{"threshold": 0, "prompt": "يبدو أن هذا الطالب لديه مستوى عالٍ من المعرفة حول استراتيجيات التعلم المختلفة التي قد تسهل هذه المهمة."},
-    {"threshold": 16, "prompt": "يبدو أن هذا الطالب لديه مستوى منخفض من المعرفة حول استراتيجيات التعلم المختلفة التي قد تسهل هذه المهمة."},
-    {"threshold": 32, "prompt": "يبدو أن لدى هذا الطالب مستوى متوسطًا من المعرفة باستراتيجيات التعلم المختلفة التي قد تسهل عليه هذه المهمة."}];
-  var classifySentenceBackgroundFileNameList = ["flora_arabic_background.docx"]; // cella_monash_main_task2_medicine.docx, TODO 使其可以支持docx 和pdf
+    var pretestGradesPrompt = [{"threshold": 0, "prompt": "هذا الطالب لديه مستوى عالٍ من المعرفة حول الذكاء الاصطناعي في التعليم."},
+        {"threshold": 5, "prompt": "هذا الطالب لديه مستوى منخفض من المعرفة حول الذكاء الاصطناعي في التعليم."},
+        {"threshold": 10, "prompt": "هذا الطالب لديه مستوى متوسط من المعرفة حول الذكاء الاصطناعي في التعليم."}];
+    var isdimuScorePrompt = [{"threshold": 0, "prompt": "يبدو أن هذا الطالب لديه مستوى عالٍ من المعرفة حول استراتيجيات التعلم المختلفة التي قد تسهل هذه المهمة."},
+        {"threshold": 16, "prompt": "يبدو أن هذا الطالب لديه مستوى منخفض من المعرفة حول استراتيجيات التعلم المختلفة التي قد تسهل هذه المهمة."},
+        {"threshold": 32, "prompt": "يبدو أن لدى هذا الطالب مستوى متوسطًا من المعرفة باستراتيجيات التعلم المختلفة التي قد تسهل عليه هذه المهمة."}];
+    var classifySentenceBackgroundFileNameList = ["flora_arabic_background.docx"]; // cella_monash_main_task2_medicine.docx, TODO 使其可以支持docx 和pdf
 
-  var srlProcessBackupPromptList = [
-      {
-          "scaffoldNumber": 0,
-          "srlProcess": "MCO1",
-          "srlProcessFreqComparison": "",
-          "notExistPrompt": "عند الدقيقة 2 (من اجمالي الوقت وقدره 45 دقيقة)، لم يتمكن الطالب من توجيه عملية القراءة بفهم واضح لمتطلبات المهمة ومعايير التقييم. يمكن تحقيق ذلك من خلال مراجعة صفحة متطلبات المهمة ومعايير التقييم أولاً، ثم اختيار الصفحة المتعلقة بالقراءة لبدء القراءة الانتقائية بفعالية.",
-          "existPrompt": "",
-          "threshold": 0,
-          "appearOverThresholdPrompt": "",
-          "appearLessThanEqualThresholdPrompt": "",
-          "appearOverOther": "",
-          "appearLessThanOther": "",
-      },
-      {
-          "scaffoldNumber": 0,
-          "srlProcess": "HCEO1",
-          "srlProcessFreqComparison": "",
-          "notExistPrompt": "عند الدقيقة 2 (من اجمالي الوقت وقدره 45 دقيقة)، لم يتمكن الطالب من توجيه عملية القراءة بفهم واضح لمتطلبات المهمة ومعايير التقييم. يمكن تحقيق ذلك من خلال مراجعة صفحة متطلبات المهمة ومعايير التقييم أولاً، ثم اختيار الصفحة المتعلقة بالقراءة لبدء القراءة الانتقائية بفعالية.",
-          "existPrompt": "",
-          "threshold": 0,
-          "appearOverThresholdPrompt": "",
-          "appearLessThanEqualThresholdPrompt": "",
-          "appearOverOther": "",
-          "appearLessThanOther": "",
-      },
-      {
-          "scaffoldNumber": 0,
-          "srlProcess": "MCE2",
-          "srlProcessFreqComparison": "",
-          "notExistPrompt": "عند الدقيقة 2 (من اجمالي الوقت وقدره 45 دقيقة)، لم يتمكن الطالب من توجيه عملية القراءة بفهم واضح لمتطلبات المهمة ومعايير التقييم. يمكن تحقيق ذلك من خلال مراجعة صفحة متطلبات المهمة ومعايير التقييم أولاً، ثم اختيار الصفحة المتعلقة بالقراءة لبدء القراءة الانتقائية بفعالية.",
-          "existPrompt": "",
-          "threshold": 0,
-          "appearOverThresholdPrompt": "",
-          "appearLessThanEqualThresholdPrompt": "",
-          "appearOverOther": "",
-          "appearLessThanOther": "",
-      },
-  ];
-  var gptScaffoldNeedCheckSRLProcessPrompt = [
-      {
-          triggerMinute: 2, // 5
-          beginMinute: 0, // 0
-          endMinute: 2, // 5
-          checkSrlProcess: "MCO1",
-      },
-      {
-          triggerMinute: 21, // 56
-          beginMinute: 2, // 5
-          endMinute: 21, // 56
-          checkSrlProcess: "HCEO1",
-      },
-      {
-          triggerMinute: 35, // 93
-          beginMinute: 21, // 56
-          endMinute: 35, // 93
-          checkSrlProcess: "MCE2",
-      }
-  ];
+    var srlProcessBackupPromptList = [
+        {
+            "scaffoldNumber": 0,
+            "srlProcess": "MCO1",
+            "srlProcessFreqComparison": "",
+            "notExistPrompt": "عند الدقيقة 2 (من اجمالي الوقت وقدره 45 دقيقة)، لم يتمكن الطالب من توجيه عملية القراءة بفهم واضح لمتطلبات المهمة ومعايير التقييم. يمكن تحقيق ذلك من خلال مراجعة صفحة متطلبات المهمة ومعايير التقييم أولاً، ثم اختيار الصفحة المتعلقة بالقراءة لبدء القراءة الانتقائية بفعالية.",
+            "existPrompt": "",
+            "threshold": 0,
+            "appearOverThresholdPrompt": "",
+            "appearLessThanEqualThresholdPrompt": "",
+            "appearOverOther": "",
+            "appearLessThanOther": "",
+        },
+        {
+            "scaffoldNumber": 0,
+            "srlProcess": "HCEO1",
+            "srlProcessFreqComparison": "",
+            "notExistPrompt": "عند الدقيقة 2 (من اجمالي الوقت وقدره 45 دقيقة)، لم يتمكن الطالب من توجيه عملية القراءة بفهم واضح لمتطلبات المهمة ومعايير التقييم. يمكن تحقيق ذلك من خلال مراجعة صفحة متطلبات المهمة ومعايير التقييم أولاً، ثم اختيار الصفحة المتعلقة بالقراءة لبدء القراءة الانتقائية بفعالية.",
+            "existPrompt": "",
+            "threshold": 0,
+            "appearOverThresholdPrompt": "",
+            "appearLessThanEqualThresholdPrompt": "",
+            "appearOverOther": "",
+            "appearLessThanOther": "",
+        },
+        {
+            "scaffoldNumber": 0,
+            "srlProcess": "MCE2",
+            "srlProcessFreqComparison": "",
+            "notExistPrompt": "عند الدقيقة 2 (من اجمالي الوقت وقدره 45 دقيقة)، لم يتمكن الطالب من توجيه عملية القراءة بفهم واضح لمتطلبات المهمة ومعايير التقييم. يمكن تحقيق ذلك من خلال مراجعة صفحة متطلبات المهمة ومعايير التقييم أولاً، ثم اختيار الصفحة المتعلقة بالقراءة لبدء القراءة الانتقائية بفعالية.",
+            "existPrompt": "",
+            "threshold": 0,
+            "appearOverThresholdPrompt": "",
+            "appearLessThanEqualThresholdPrompt": "",
+            "appearOverOther": "",
+            "appearLessThanOther": "",
+        },
+    ];
+    var gptScaffoldNeedCheckSRLProcessPrompt = [
+        {
+            triggerMinute: 2, // 5
+            beginMinute: 0, // 0
+            endMinute: 2, // 5
+            checkSrlProcess: "MCO1",
+        },
+        {
+            triggerMinute: 21, // 56
+            beginMinute: 2, // 5
+            endMinute: 21, // 56
+            checkSrlProcess: "HCEO1",
+        },
+        {
+            triggerMinute: 35, // 93
+            beginMinute: 21, // 56
+            endMinute: 35, // 93
+            checkSrlProcess: "MCE2",
+        }
+    ];
 
-  var useWriteEssayTool = true;
-  var useWriteEssayWordCountButton = false;
-  var useCollaborativeWriteEssayTool = false;
-  var useCollaborativeWriteEssayWordCountButton = false;
-  var includeChatgptToCollaborativeWriteEssay = false;
-  var useMathEditorTool = false;
+    var useWriteEssayTool = true;
+    var useEssayProductAnalysisTool = false;
+    var useWriteEssayWordCountButton = false;
+    var useCollaborativeWriteEssayTool = false;
+    var useCollaborativeWriteEssayWordCountButton = false;
+    var includeChatgptToCollaborativeWriteEssay = false;
+    var useMathEditorTool = false;
 
-  var usePlannerTool = true;
-  var useChatgptTool = false;
+    var usePlannerTool = true;
+    var useChatgptTool = false;
 
-  var useZoteroNotesTool = false;
-  var useProcessVisualTool = false;
+    var useZoteroNotesTool = false;
+    var useProcessVisualTool = false;
 
-  var useChatgptRating = false; // chatgpt rating visible or not
-  var useChatgptAssistantTool = false;
-  var useChatgptAssistantRating = false; // chatgpt assistant rating visible or not
+    var useChatgptRating = false; // chatgpt rating visible or not
+    var useChatgptAssistantTool = false;
+    var useChatgptAssistantRating = false; // chatgpt assistant rating visible or not
 
-  var useDoctorScaffold = false;
+    var useDoctorScaffold = false;
 
-  var useConsultationSubmitTool = false;
-  // =========use type for different patient, scaffold and assessment================
-  var medicalConsultAssistanceType = "";
-  var patientRoleDescription="";
-  var scaffoldRoleDescription="";
-  var assessmentRoleDescription="";
+    var useConsultationSubmitTool = false;
+    // =========use type for different patient, scaffold and assessment================
+    var medicalConsultAssistanceType = "";
+    var patientRoleDescription="";
+    var scaffoldRoleDescription="";
+    var assessmentRoleDescription="";
 
-  // var chatgptPrompt = "You are a helpful assistant. Please answer all the questions.";
-  var chatgptBackgroundFileNameList = []; // add pdf file names here
-  // var chatgptRoleDescription = "You are a helpful assistant and please answers questions based on the provided text."; //这个会和question 一起发送给GPT
-  var chatgptRole = "assistant";
-  var chatgptPromptIncludeEssay = false;
-  var chatgptParameters = [1000, 1, 2]; //  response max token, n, temperature/10
+    // var chatgptPrompt = "You are a helpful assistant. Please answer all the questions.";
+    var chatgptBackgroundFileNameList = []; // add pdf file names here
+    // var chatgptRoleDescription = "You are a helpful assistant and please answers questions based on the provided text."; //这个会和question 一起发送给GPT
+    var chatgptRole = "assistant";
+    var chatgptPromptIncludeEssay = false;
+    var chatgptParameters = [1000, 1, 2]; //  response max token, n, temperature/10
 
-  var useChecklistTool = false;
-  var useChecklistToolGrammar = false;
-  var useChecklistToolAcademic = false;
-  var useChecklistToolOriginality = false;
-  var useChecklistToolClassification = false;
-  var useDictionaryTool = false;
-  var dictionarySourceLanguage = "zh-cn";
-  var dictionaryTargetLanguage = "en";
-  var useTeacherChat = false;
-  var useTimerTool = true;
-  var useVideoRecordingTool = false;
+    var useChecklistTool = false;
+    var useChecklistToolGrammar = false;
+    var useChecklistToolAcademic = false;
+    var useChecklistToolOriginality = false;
+    var useChecklistToolClassification = false;
+    var useDictionaryTool = false;
+    var dictionarySourceLanguage = "zh-cn";
+    var dictionaryTargetLanguage = "en";
+    var useTeacherChat = false;
+    var useTimerTool = true;
+    var useVideoRecordingTool = false;
 
-  var toolsLanguage = "ar";
+    var toolsLanguage = "ar";
 
-  const toolList1 = [];
+    const toolList1 = [];
 
-  var studyName = "flora_arabic_2024"; //change to "uniSA" if needed
+    var studyName = "flora_arabic_2024"; //change to "uniSA" if needed
 
-  function loadScript(url) {
-    let currentDate = new Date();
+    function loadScript(url) {
+        let currentDate = new Date();
 
-    // Get the year, month, and day from the date object
-    let year = currentDate.getFullYear();
-    let month = currentDate.getMonth() + 1; // Month is 0-indexed
-    let day = currentDate.getDate();
+        // Get the year, month, and day from the date object
+        let year = currentDate.getFullYear();
+        let month = currentDate.getMonth() + 1; // Month is 0-indexed
+        let day = currentDate.getDate();
 
-    // Pad the month and day with leading zeros if they are less than 10
-    month = month < 10 ? '0' + month : month;
-    day = day < 10 ? '0' + day : day;
+        // Pad the month and day with leading zeros if they are less than 10
+        month = month < 10 ? '0' + month : month;
+        day = day < 10 ? '0' + day : day;
 
-    // Concatenate the year, month, and day to form the desired format
-    let formattedDate = year.toString() + month.toString() + day.toString();
+        // Concatenate the year, month, and day to form the desired format
+        let formattedDate = year.toString() + month.toString() + day.toString();
 
-    var script = document.createElement("script");
-    script.type = "text/javascript";
-    script.src = url + "?v=" + formattedDate;
-    script.defer = true;
-    script.async = false;
-    document.head.appendChild(script);
-  }
-  function getURLParameters(url) {
-    var params = {};
-    var parser = document.createElement('a');
-    parser.href = url;
-    var query = parser.search.substring(1);
-    var vars = query.split('&');
-    for (var i = 0; i < vars.length; i++) {
-      var pair = vars[i].split('=');
-      params[pair[0]] = decodeURIComponent(pair[1]);
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = url + "?v=" + formattedDate;
+        script.defer = true;
+        script.async = false;
+        document.head.appendChild(script);
     }
-    return params; // string 类型
-  }
-  let navTagAList = document.querySelectorAll("#page-navbar>nav>ol>li a");
-  let currentCourseId = 0;
-  if (navTagAList != null) {
-    navTagAList.forEach(link => {
-      if (link.href.includes("course/view.php?id=")) {
-        currentCourseId = getURLParameters(link.href).id;
-      }
-      link.addEventListener('click', function(e) {
-        e.preventDefault();
-      });
-    });
-  }
+    function getURLParameters(url) {
+        var params = {};
+        var parser = document.createElement('a');
+        parser.href = url;
+        var query = parser.search.substring(1);
+        var vars = query.split('&');
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split('=');
+            params[pair[0]] = decodeURIComponent(pair[1]);
+        }
+        return params; // string 类型
+    }
+    let navTagAList = document.querySelectorAll("#page-navbar>nav>ol>li a");
+    let currentCourseId = 0;
+    if (navTagAList != null) {
+        navTagAList.forEach(link => {
+            if (link.href.includes("course/view.php?id=")) {
+                currentCourseId = getURLParameters(link.href).id;
+            }
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+            });
+        });
+    }
 </script>
 
 
@@ -314,13 +315,14 @@ o\tالوصف : لا توجد معلومات أو معلومات غير صحيح
     }
     // // if(useTimerTool) 不确定timer是否需要按需加载
     loadScript("/flora/js/tools_08timer.js");
-    if(useDictionaryTool) loadScript("/flora/js/tools_10dictionary.js");
-    if(useTeacherChat) loadScript("/flora/js/tools_11teacherchat.js");
+    if (useDictionaryTool) loadScript("/flora/js/tools_10dictionary.js");
+    if (useTeacherChat) loadScript("/flora/js/tools_11teacherchat.js");
     if (useCollaborativeWriteEssayTool) loadScript("/flora/js/tools_12collaboratewrite.js");
-    if(useZoteroNotesTool) loadScript("/flora/js/tools_16zoteronotes.js");
-    if(useProcessVisualTool) loadScript("/flora/js/tools_17process_visual.js");
-    if(useGPTScaffoldTool) loadScript("/flora/js/tools_07gpt_scaffolding.js");
-    if(useMathEditorTool) loadScript("/flora/js/tools_16matheditor.js");
+    if (useZoteroNotesTool) loadScript("/flora/js/tools_16zoteronotes.js");
+    if (useProcessVisualTool) loadScript("/flora/js/tools_17process_visual.js");
+    if (useEssayProductAnalysisTool) loadScript("/flora/js/tools_17essay_product_visual.js");
+    if (useGPTScaffoldTool) loadScript("/flora/js/tools_07gpt_scaffolding.js");
+    if (useMathEditorTool) loadScript("/flora/js/tools_16matheditor.js");
     loadScript("/flora/js/setupInstrumentationTools.js");
 
 </script>

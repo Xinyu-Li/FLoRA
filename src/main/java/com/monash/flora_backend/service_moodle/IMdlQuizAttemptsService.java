@@ -14,6 +14,8 @@ import java.util.List;
  */
 public interface IMdlQuizAttemptsService extends IService<MdlQuizAttempts> {
     MdlQuizVO findUserTakePreviousStudy(String quizName, Long courseId, Long userId);
+    List<MdlQuizVO> getQuizResponseByUserIdAndCourseIdAndQuizName(String quizName, Long courseId, Long userId);
+    List<MdlQuizVO> getQuizResponseByUserIdAndCourseIdAndQuizNameSimplified(String quizName, Long courseId, Long userId);
     List <MdlQuizVO> getQuizResponseAllUser(String quizName, Long courseId); //added by Lin
-
+    MdlQuizVO findQuizGradeByUserIdAndCourseIdAndQuizName(String quizName, Long courseId, Long userId);
 }

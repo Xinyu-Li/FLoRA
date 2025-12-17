@@ -48,7 +48,7 @@ public class UserStartTimeServiceImpl extends ServiceImpl<UserStartTimeMapper, U
     @Override
     public UserStartTimeVO findByUserIdAndCourseId(Long userId, String courseId) {
         QueryWrapper<UserStartTime> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", userId).eq("course_id", courseId).last("limit 1");
+        queryWrapper.eq("user_id", userId).eq("course_id", courseId).orderByDesc("user_start_time").last("limit 1");
         UserStartTime one = super.getOne(queryWrapper);
         if (one == null) {
             return null;

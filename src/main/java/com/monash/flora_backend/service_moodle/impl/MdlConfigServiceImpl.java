@@ -54,7 +54,7 @@ public class MdlConfigServiceImpl extends ServiceImpl<MdlConfigMapper, MdlConfig
     }
 
     @Override
-    public void setupConfigValueForOnlineEnvironment(String websiteAddress, Map<String, String[]> courseIdModalContentMap, List<Long> courseIdList, List<String> studies) {
+    public void setupConfigValueForOnlineEnvironment(String websiteAddress, Map<String, String[]> courseIdModalContentMap, String[] finishModalContentArray, List<Long> courseIdList, List<String> studies) {
 
         //todo: 在生成打包文件之前，要改回https 和wss
         MyMoodleConfigConstant.MOODLE_WEBSITE_URL =  "https://" + websiteAddress; //"https://study.floralearn.cn/";     //   https://study.floralearn.cn/      https://cella-monash.floraproject.org/
@@ -85,9 +85,16 @@ public class MdlConfigServiceImpl extends ServiceImpl<MdlConfigMapper, MdlConfig
 //        List<String> studies = MyMoodleConfigConstant.websiteUrlStudyNameMap.get(websiteAddress);
         for (int i = 0; i < studies.size(); i++) {
             String studyName = studies.get(i);
-            log.info("studyname:-------------" + studyName);
+            log.info("studyname:-------------{}", studyName);
+            String folderPath = "";
+            if (studyName.contains("/")) {
+                String[] splitTemp = studyName.split("/");
+                folderPath = splitTemp.length <= 1 ? "" : String.join("/", Arrays.copyOf(splitTemp, splitTemp.length - 1));;
+                studyName = splitTemp[splitTemp.length - 1];
+            }
+            log.info("folderpath:{}-------studyname:{}", folderPath, studyName);
             int templateIndex = i + 2; // Generico template index start from 2
-            String genericoTemplateBody = this.readGenericoConfig("config_" + studyName + ".html");
+            String genericoTemplateBody = this.readGenericoConfig("config_" + studyName + ".html", folderPath);
 
             //对每个页面，添加label， 例如 relevant reading
 //            Map<String, String> studyPageIdAndLabel = MyMoodleConfigConstant.STUDY_PAGE_ID_AND_LABEL_MAP.get(studyName);
@@ -101,15 +108,15 @@ public class MdlConfigServiceImpl extends ServiceImpl<MdlConfigMapper, MdlConfig
             iMdlConfigPluginsService.updateGenericoTemplateMoodleDB(templateIndex, genericoTemplateBody, studyName);
         }
 
-
+        log.info("before readGeneralConfigForServer----------------------");
 
         //修改additional html 部分
-        this.readGeneralConfigForServer(courseAndPageIdsString.toString(), "general_config_all_course.html", courseIdAndModalContent.toString());
-
+        this.readGeneralConfigForServer(courseAndPageIdsString.toString(), "general_config_all_course.html", courseIdAndModalContent.toString(), finishModalContentArray);
+        log.info("finish readGeneralConfigForServer----------------------");
     }
 
-    private String readGenericoConfig(String filename) {
-        List<String> indexFileLineList = readHtmlFile(filename);
+    private String readGenericoConfig(String filename, String folderPath) {
+        List<String> indexFileLineList = readHtmlFile(filename, folderPath);
         if (indexFileLineList == null) {
             return "";
         }
@@ -143,9 +150,9 @@ public class MdlConfigServiceImpl extends ServiceImpl<MdlConfigMapper, MdlConfig
      * @param filename
      */
     private void readGeneralConfigForServer(String serverAllCourseIdAndPageStartEndId, String filename,
-                                            String courseIdAndModalContent) {
+                                            String courseIdAndModalContent, String[] finishModalContentArray) {
 
-        List<String> indexFileLineList = readHtmlFile(filename);
+        List<String> indexFileLineList = readHtmlFile(filename, "");
         if (indexFileLineList == null) {
             return;
         }
@@ -166,6 +173,15 @@ public class MdlConfigServiceImpl extends ServiceImpl<MdlConfigMapper, MdlConfig
             if (s.equals("<!--start_ADDITIONAL_HTML_BODY-->")) { startAppendAdditionalHTMLBody = true;}
             if (s.equals("<!--end_ADDITIONAL_HTML_BODY-->")) { startAppendAdditionalHTMLBody = false;}
             if (startAppendAdditionalHTMLBody) {
+                if (s.contains("Time is up")) { // 此处字符串是Modal 里面的默认text
+                    s = s.replace("Time is up", finishModalContentArray[0]);
+                }
+                if (s.contains("Back to Homepage")) { // 此处字符串是Modal 里面的默认text
+                    s = s.replace("Back to Homepage", finishModalContentArray[1]);
+                }
+                if (s.contains("Download Essay")) { // 此处字符串是Modal 里面的默认text
+                    s = s.replace("Download Essay", finishModalContentArray[2]);
+                }
                 stringBuilderAdditionalHTMLBody.append(s).append("\n");
             }
 
@@ -187,18 +203,20 @@ public class MdlConfigServiceImpl extends ServiceImpl<MdlConfigMapper, MdlConfig
                 stringBuilderAdditionalHTMLFooter.append(s).append("\n");
             }
         }
-
+        log.info("-------------stringBuilderAdditionalHTMLFooter----------------");
+//        log.info(stringBuilderAdditionalHTMLFooter.toString());
         updateAdditionalHtml(MyMoodleConfigConstant.MDL_CONFIG_ADDITIONAL_HTML_HEAD_ATTR_NAME, stringBuilderAdditionalHTMLHead.toString());
         updateAdditionalHtml(MyMoodleConfigConstant.MDL_CONFIG_ADDITIONAL_HTML_TOP_OF_BODY_ATTR_NAME, stringBuilderAdditionalHTMLBody.toString());
         updateAdditionalHtml(MyMoodleConfigConstant.MDL_CONFIG_ADDITIONAL_HTML_FOOTER_ATTR_NAME, stringBuilderAdditionalHTMLFooter.toString());
     }
 
-    private List<String> readHtmlFile(String filename) {
+    private List<String> readHtmlFile(String filename, String folderPath) {
         List<String> indexFileLineList = null;
         try {
             ResourceLoader resourceLoader = new DefaultResourceLoader();
             //可以读取到，从此处想办法变成动态
-            Resource resource = resourceLoader.getResource("classpath:templates/generico_and_additional_config/" + filename);
+            log.info("filepath: classpath:templates/generico_and_additional_config/" + (StrUtil.isEmpty(folderPath) ? "" : folderPath + "/") + filename);
+            Resource resource = resourceLoader.getResource("classpath:templates/generico_and_additional_config/" + (StrUtil.isEmpty(folderPath) ? "" : folderPath + "/") + filename);
             InputStreamReader inputStreamReader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8);
             BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
             indexFileLineList = bufferedReader.lines().collect(Collectors.toList());

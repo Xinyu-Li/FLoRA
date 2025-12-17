@@ -1,0 +1,949 @@
+<!--start_PLUGINS_GENERICO_TEMPLATE_BODY-->
+
+<script src="/flora/js/jquery.min.js"></script>
+<script src="/flora/js/etherpad.js"></script>
+<script src="/flora/js/diff.js"></script>
+<link href="/flora/css/bootstrap.min.css" rel="stylesheet"/>
+<script src="/flora/js/bootstrap.bundle.min.js"></script>
+<!--    <script src="/flora/js/jquery-ui.min.js" id="myJqueryUI" ></script>-->
+<script src="/flora/js/quill.min.js"></script>
+<!--    <script src="/js/flipclock.js"></script>-->
+<script src="/flora/js/flipdown.min.js"></script>
+<script src="/flora/js/mathquill.min.js"></script> <!-- Include MathQuill JS -->
+<script src="/flora/js/Sortable.min.js"></script>
+<script src="/flora/js/d3.min.js"></script>
+<script src="/flora/js/jsmind.js"></script>
+<script src="/flora/js/jsmind_draggable_node.js"></script>
+<!-- Bootstrap Icons CSS -->
+<!--    <link rel="stylesheet" href="/flora/css/font/bootstrap-icons.css">-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+<script src="/flora/js/marked.min.js"></script>
+<script>
+    var currentRange = null;
+    var whetherDoHighlight = false;
+    var saveHighlight = null;
+    var saveHighlightText = '';
+
+    var totalMinutes = 30;
+    var unlimitedTime = true; //如果使用unlimited time 则让timer 变成增长，不再是count down
+    var hintMinutesBeforeEnd = 5;
+    var isCountdown = true;
+
+    var plannerSelectStrategyHint = "Zuerst bitte einen Strategieplan auswählen!";
+    var plannerAllocateTimeHint = "Bitte weisen Sie allen Aufgaben Zeit zu, und die Gesamtzeit muss innerhalb von " + totalMinutes + " Minuten liegen!!!";
+    var plannerSelectSkillsHint = "Bitte die Lesestrategien auswählen!";
+    var plannerSavePlanHint = "Bitte achte darauf, dass die eingegebene Zeit die Gesamtzeit nicht überschreitet!";
+    // var plannerOverallStrategy = ["Read First, then Write", "Read and Write Simultaneously", "Write Intensively, Read Selectively"];
+    // var plannerOverallStrategy = ["Erst lesen, dann schreiben", "Mit dem Schreiben beginnen und dann in Abschnitten lesen", "Gleichzeitiges Lesen, dann Schreiben und danach erneut Lesen"];
+    // var plannerStep2Task = [ ["Read first module - AI", "Read second module - Differentiation", "Read third module - Scaffolding", "Write essay"], ["Read/writing about first module - AI", "Read/writing about second module - Differentiation", "Read/writing about third module - Scaffolding"], ["Conceive the structure of the essay", "Write the first draft", "Read additional information in relation to the essay", "Review, refine and enhance the essay"]];
+    // var plannerStep2Task = [ ["Erstes Thema lesen", "Zweites Thema lesen", "Aufsatz schreiben"], ["Zuerst Entwurf des Aufsatzes schreiben", "Themen lesen", "Aufsatz fertigstellen"], ["Themen lesen", "Aufsatz schreiben", "Themen erneut lesen", "Aufsatz weiterschreiben und fertigstellen"], ["Erstes Thema lesen", "Über Thema 1 schreiben", "Zweites Thema lesen", "Über Thema 2 schreiben"]];
+    // var plannerStep2Instruction = ["Wie viel Zeit würdest du für jeden Teil aufwenden?", "Wie viel Zeit würdest du für jeden Teil aufwenden?", "Wie viel Zeit würdest du für jeden Teil aufwenden?"];
+
+    var plannerAllStrategy = [
+
+    ]
+
+
+    // var defaultStep3ReadingStrategy = ["Read the material page by page", "Quick browsing and then detailed reading", "Use the highlight tool to mark key content", "Write down my understanding in notes while reading", "Question-guided reading with focus on certain content", "Read selectively and skip irrelevant content"];
+    var defaultStep3ReadingStrategy = ["Alle Themen Seite für Seite lesen", "Schnelles Durchblättern und dann detailliertes Lesen", "Nach Rubrikkategorien ausgewähltes Lesen", "Markieren von wichtigem Text mit dem Highlighter Annotation Tool", "Notizen während des Lesens mit dem Annotation Tool machen"];
+    // var defaultStep3ReadingInstruction = "What reading skills do you plan to use (multiple choice)?";
+    var defaultStep3ReadingInstruction = "Allgemeine Lesestrategien";
+    // var defaultStep3WritingStrategy = ["First draft an essay structure and then fill in with details", "Use my notes and highlighting when writing the essay", "Review instructions and rubrics to get writing in line", "Copy Paste key sentences and then rewrite them fluently", "Use the writing framework and patterns I have learned to write"];
+    var defaultStep3WritingStrategy = ["Zuerst die Aufsatzstruktur entwerfen und dann den detaillierten Text ausfüllen", "Mit dem offenen Schreiben anfangen und den Text später ausrichten", "Kopieren und Übertragen von wichtigen Sätzen und anschließendes Umschreiben", "Verwendung meiner Notizen und Markierungen beim Schreiben des Aufsatzes", "Überprüfung der Anweisungen und Rubriken, um entsprechend zu schreiben"];
+    // var defaultStep3WritingInstruction = "What writing skills do you plan to use (multiple choice)?";
+    var defaultStep3WritingInstruction = "Allgemeine Schreibstrategien";
+
+    // var customiseStep2Instruction = "Please describe in detail the learning strategy you plan to adopt and how you will allocate your time. You may also include the reasons for the strategy and time allocation.";
+    var customiseStep2Instruction = "Bitte notiere dir die Lernstrategien, die du anwenden möchtest. Notiere die Zeit, die du für jeden Teil der Strategien aufwenden möchtest.";
+
+
+
+    let eventWebsocket = null;
+    let teacherChatWebsocket = null;
+
+    var apiBaseUrl = 'https://yidelearn.com/myapi';
+    var websocketApiBaseUrl = 'wss://yidelearn.com';
+    var mainEditor = null;
+    var editors = {}; //多个不同的侧边栏editor
+
+    // 是否展示工具
+    var useAnnotationTool = true;
+    var useScaffoldTool = false; // enable
+    var useGPTScaffoldTool = false;
+
+    var srlModel = "maria";    // copes
+    var gptScaffoldRole = "scaffold";
+
+
+    // var gptScaffoldRoleDescription = "You are a helpful assistant, please give suggestions based on the given text.";
+    var gptScaffoldPromptIncludeEssay = false;
+    var gptScaffoldPromptTemplate = `This student is working on an essay writing task.
+
+These are task instructions:
+Hey there! You're about to dive into a cool project about (1) artificial intelligence (AI) and (2) how it's changing medicine. Your mission is to write a short essay sharing your thoughts.
+
+Here's what you need to do:
+
+Read Up: We've given you some articles to read about AI and the future of medicine.
+Write Down: Based on your reading, write a short essay in your own words. Tell us how you think AI fits into everyday life and how it might change healthcare.
+
+Keep in Mind:
+
+Stick to What's Given: Your essay should only use information from the articles we provided.
+Be Original: Make sure your essay is all from you. No copying!
+Watch the Clock: The time is limited, so plan your time wisely!
+
+Tools for You: You can use the tools we've given you, like the planner, highlighter, and the essay tool to assist you.
+
+This Is All You: Remember, this task is for you to do on your own. No asking for help from friends or teachers.
+
+These are the rubric.
+
+There are two global criteria and three components on which the essay will be graded.
+
+The two global criteria are:
+1.    The essay consists of 200 to 300 words.
+2.    The essay is written clearly and in your own words, meaning that no part in the essay can be copied from the text or from other sources.
+
+The three components are:
+1. Discussion of the concept of AI
+
+2. Discussion of the current use of AI-based technologies in your daily life and in medicine
+
+3. Discussion of the future integration of AI-based technologies in your daily life and in medicine
+
+This is the detailed marking rubric.
+1. Discussion of the concept of AI:
+No mention (0): No definition of AI is provided.
+Sufficient (1): The basic definition of AI is given without further explanation.
+Good (2): AI is defined and explained in the student's own words but lacks depth or examples.
+Excellent (3): AI is thoroughly defined and explained in the student's own words, including novel information and personal insights with examples.
+
+2. Discussion of the current use of AI-based technologies in your daily life and in medicine:
+No mention (0): No mention of AI's current medical applications.
+Sufficient (1): Mentions AI's current applications in medicine but lacks detail.
+Good (2): Describes AI's current applications in medicine in detail but lacks examples or insights.
+Excellent (3): Describes AI's current applications in medicine in detail, providing examples or personal insights.
+
+3. Discussion of the future integration of AI-based technologies in your daily life and in medicine:
+No mention (0): No mention of AI's potential future applications in medicine.
+Sufficient (1): Mentions possible future applications of AI in medicine but lacks detail.
+Good (2): Discusses potential future applications of AI in medicine in detail but lacks innovation or deep analysis.
+Excellent (3): Discusses potential future applications of AI in medicine in detail, offering innovative ideas or in-depth analysis.
+
+This is the reading material for the task:
+Artificial intelligence:
+
+1.     What is artificial intelligence?
+Artificial intelligence (AI) is the ability of computers to perform tasks for which humans will use their intelligence. You can consider solving problems, identifying objects, making predictions, and interacting with the environment as examples of AI tasks. For example, a robot can talk to a child to help the child enhance communication skills and improve learning. Intelligent robots can also be involved to assist doctors treating young patients. Intelligent robots can be used for psychological treatment by providing interactive support for people who have depression.
+
+2.     How does AI work?
+Systems that use artificial intelligence (AI) can simulate human intelligence by analysing data and predicting future events. Typically, AI consists of two components: algorithms and data. Each algorithm includes a set of steps that the system needs to perform to find a solution. You can consider an algorithm like a recipe when you are baking a cake. Data is the ingredient that makes the cake. By analysing more data, the algorithm can make better recommendations. Just like when you have more variety of ingredients, you can make a fancier cake. A key difference between AI and other technologies is that the AI-incorporated systems can learn from the data. Another example, the more analysed data in the health field, the more efficient recommendations that doctors can get.
+
+3.     AI in practice
+During the COVID-19 pandemic, researchers developed an AI tool to predict which patients might get COVID and how severe their symptoms might be. They tested it on 53 patients, gathering their health details. Instead of common signs like fever or age, the AI successfully used unique factors like liver enzymes, muscle pain, and blood hemoglobin levels to predict breathing problems with up to 80% accuracy. This shows the powerful potential of AI in medical practices.
+
+4.     Difference between AI and regular programming
+When you build a program to check a person's temperature, it simply reads the thermometer and gives a number. That's regular programming. But with AI, it's different. Imagine you're trying to create a program that looks at pictures of skin and tells if someone has a rash or not. Instead of telling the program exactly what every rash looks like, you show it thousands of skin pictures, some with rashes and some without. The AI learns by studying these photos and spotting patterns or differences. For a human, checking all those photos would be tough, but AI can do it quickly. Once trained, the AI can check new skin photos on its own. But if it doesn't see new pictures regularly, it won't keep learning.
+
+5.     The role of the human remains crucial.
+Although AI is being increasingly used in hospitals and healthcare, doctors’ roles are still important for many reasons. Firstly, doctors should always review the outcomes of AI systems to make sure that there are no potential mistakes. Secondly, some medical cases are unique or they rarely happen, so AI couldn’t learn about them. So, these special cases need expert doctors to make the right diagnosis based on their previous experiences. Finally, doctors can understand the patients' feelings better than AI systems.
+
+6.     Are AI machines smarter than humans?
+There are some differences between artificial intelligence and human intelligence. For example, AI systems can analyse and learn from patients’ data very quickly which will take a long time for doctors. However, doctors can think in a more flexible way. They could often spot patients' behaviours better than AI systems.
+
+7.     The current limits and possibilities of AI.
+Although artificial intelligence has facilitated our daily life, there are some limitations and possibilities to use it. For example, AI systems that are used in hospitals can solve problems based on identified data which sometimes is not enough for illness diagnosing. Also, AI systems can not realise their mistakes like humans which could sometimes be dangerous. On the other hand, intelligent systems can assist doctors to do the routine tasks which can save their as well as patients’ time who wait for treatment. For example, the AI system can read and discover the illness signs from the patient scan picture.
+
+The medicine and the future:
+
+1.     Technology changing medicine
+Globally, many countries are updating their health systems to be based on AI due to many advantages. First, AI could reduce the cost of healthcare and the cost of patient travel by minimising the visits to clinics. Second, AI systems can help people to monitor their health and predict their possible illnesses, even in the long term. Finally, many healthcare providers could use virtual robots to provide their services while patients are at home.
+
+2.     AI and disease detection
+Researchers at a US university developed an AI system to help identify patients at high risk of heart problems. They recognized that many heart patients faced dangers because there wasn't enough knowledge about their health problems. To fix this, they used AI to analyse data from hundreds of heart patients. They collected hundreds of heart images. They also created another AI system that analysed 10 years of data, considering factors like age and weight. Both AI systems were very accurate in predicting heart health risks. This shows that AI can play a crucial role in helping doctors prevent heart-related complications.
+
+It often takes doctors some time to study X-ray images. But researchers from two US groups made an AI tool that can look at X-ray results in just 10 seconds, which is very quick! They used this AI to make clearer pictures for people with lung problems. They trained the AI using 188,000 chest images to tell if someone has a lung issue. This fast and clear way of checking X-rays with AI might help doctors study other diseases, too.
+
+3.     AI and mental illness
+Previously, more people were suffering from mental health problems. Researchers at Mayo Clinic made an AI tool to guess how well medicine for depression works. They tested it on kids and adults with depression, looking at 6 depression points and how they improved over 10 to 12 weeks. The AI was right about 76% of the time. This shows that AI can help in treating mental health issues.
+
+4.     Patients’ perspectives
+Researchers at a US university found that many patients do not trust AI systems to get advice due to privacy reasons. For example, an AI doctor (robot) may sometimes ask the patient too many questions that would make her or him uncomfortable. Also, some patients may feel that AI systems are too far from reality.
+
+5.     Doctor’s perspectives
+Researchers explained that doctors should know how AI systems “think” before applying them in their work, to avoid any risk. Also, researchers have discussed that many doctors do not know how to use those intelligent systems due to the shortage of their technical skills.
+
+6.     AI accuracy in medicine
+AI is getting popular in health care, but it's not always perfect. Some researchers wanted to see if AI could identify lung problems by looking at chest photos from 5 different places across the world. They tested it with 158,000 pictures! But, the AI didn't work well in 3 of those countries. This shows that while AI can be helpful, it's important to test it a lot and use it carefully, especially in health care.
+
+In another study, researchers at two big universities found that using AI for medical images isn't perfect yet. They tested an AI program on a number of images and found mistakes. So, they warn doctors to be careful using AI-made pictures. However, AI can make clear medical images fast. This could mean patients spend less time using MRI devices, which is safer and more efficient. But for AI to work well in medicine, it needs to be accurate and stable. Programmers should check their AI programs well before using them in hospitals. Remember, the more data an AI looks at, the better it can get.
+
+7.     AI and data security in health field
+Many online AI systems can be tricked by hackers. Researchers found that hackers can change medical images, which might make doctors give the wrong advice to a patient. To help stop this, researchers made a smart AI tool that can tell if medical images have been changed. They also made another AI tool that can explain how these changes happened. The researchers found that many medical images were changed. This means researchers and engineers need to ensure that AI used in hospitals is safe from hackers.
+
+8.     How does hospitals in the future looks like with AI
+In the future hospitals, AI systems might play a huge role in patient care. When a patient first arrives, AI can assist doctors in understanding symptoms quickly and in recommending treatments. As the patient gets better, the system might adjust its advice, trusting the doctor's judgement more. For instance, if the AI suggests a particular medicine, but the doctor, with her or his experience, believes another medicine  is more suitable, the AI system gets updated and learns from the doctor’s choice. Over time, the AI gets to understand more about the doctor's approach, making the doctor-AI collaboration smoother. As a result, AI adapts to doctor’s expertise, ensuring the best care for patients.
+
+
+;;;ADAPTIVE_PROMPT;;;
+
+
+;;;SRL_PROCESS_PROMPT;;;
+
+For this feedback, please follow the effective feedback framework. It is learner-centred and it should include three main components:
+1. Highlight both strengths and weaknesses of the student’s performance in relation to what they did in the task so far. This should come from conditions listed above.
+2. Focus on the future impact by providing comments with actionable information to help the student achieve the learning outcomes for the task. This should come from the advice listed above.
+3. Support the student to feel in control of their learning, attend to their social, emotional and motivational needs, and encourage them to be open to evaluative comments.
+
+The feedback should not exceed 100 words.`;
+    var gptScaffoldBackgroundFileNameList = [];
+    var gptScaffoldParameters = [200, 1, 2]; //  response max token, n, temperature/10
+
+    var testISDIMUCourseId = 2;
+    var hasTakePreviousStudyTestNameCourseId = 2;
+    var pretestNameCourseId = 2;
+
+    var pretestGradesPrompt = [{"threshold": 0, "prompt": "This student has a high level of knowledge about AI in medicine.", "scaffoldSrlProcess": []},  // 根据scaffolding 的 个数来添加相应的 SRL process 的个数
+        {"threshold": 5, "prompt": "This student has a low level of knowledge about AI in medicine.", "scaffoldSrlProcess": []},
+        {"threshold": 10, "prompt": "This student has a medium level of knowledge about AI in medicine.", "scaffoldSrlProcess": []}];
+    var isdimuScorePrompt = [{"threshold": 0, "prompt": "This student seems to have good understanding of various strategies or techniques that can be applied to facilitate learning.", "scaffoldSrlProcess": []},
+        {"threshold": 16, "prompt": "This student seems to have a low level of understanding of various strategies or techniques that can be applied to facilitate learning.", "scaffoldSrlProcess": []},
+        {"threshold": 32, "prompt": "This student seems to have some understanding of various strategies or techniques that can be applied to facilitate learning.", "scaffoldSrlProcess": []}];
+    //
+    // var userTakePreviousStudyPrompt = "This student has participated in the prior study so he/she has a certain level of task knowledge.";
+
+    var classifySentenceBackgroundFileNameList = ["CELLA_main_task_reading.docx"]; // cella_monash_main_task2_medicine.docx, TODO 使其可以支持docx 和pdf
+
+    // var srlProcessBackupPromptList = []; // 这个参数定义在 i18n 中为了支持多语言设定
+
+
+    var useWriteEssayTool = true;
+    var useEssayProductAnalysisTool = false;
+    var allowEssayProductAnalysis = false;
+    var useWriteEssayWordCountButton = false;
+
+    var useCollaborativeWriteEssayTool = false;
+    var useCollaborativeWriteEssayWordCountButton = false;
+    var includeChatgptToCollaborativeWriteEssay = false;
+    var useMathEditorTool = false;
+
+
+    var usePlannerTool = false;
+    var useChatgptTool = true;
+    var useChatgptRating = true; // chatgpt rating visible or not
+    var chatgptDefaultDisplayName = "AI助手"
+    var chatgptDefaultAvatar = "<svg t=\"1751871369726\" viewBox=\"0 0 1024 1024\" xmlns=\"http://www.w3.org/2000/svg\" p-id=\"10812\" width=\"35\" height=\"35\"><path d=\"M256 213.333333a42.666667 42.666667 0 0 0-42.666667 42.666667v512a42.666667 42.666667 0 0 0 42.666667 42.666667h512a42.666667 42.666667 0 0 0 42.666667-42.666667V256a42.666667 42.666667 0 0 0-42.666667-42.666667H256m0-42.666666h512a85.333333 85.333333 0 0 1 85.333333 85.333333v512a85.333333 85.333333 0 0 1-85.333333 85.333333H256a85.333333 85.333333 0 0 1-85.333333-85.333333V256a85.333333 85.333333 0 0 1 85.333333-85.333333z\" p-id=\"10813\"></path><path d=\"M597.333333 649.088h-63.445333l-25.216-62.293333h-115.2l-23.808 62.293333H307.754667l112.426666-274.176h61.610667z m-107.306666-108.458667l-39.765334-101.76-38.954666 101.76z m136.533333 108.458667V374.912h58.197333v274.176z\" p-id=\"10814\"></path></svg>"
+
+    var useZoteroNotesTool = false;
+    var useProcessVisualTool = false;
+    var processVisualRelatedQuestionnaireCourseId = 97;
+    var processVisualRelatedQuestionnaireName = "Goal Setting Questionnaire";
+
+
+    var useConsultationSubmitTool = true;
+    // var assessmentRoleDescription="You are a helpful assistant and please answers questions based on the provided text.";
+
+    var usercolor4pad = "%23FCF3CF";
+
+
+    var multiAgent4CollaborativeChatConfig = [
+        {
+            "agentDisplayName":"Mediator",
+            "agentName":"mediator_discuss_01",// 根据课程不同需要修改 eg mediator_write_01
+            "agentRole":"mediator",
+            "model":"gpt-4o",
+            "agentDescription":"You are the mediator. Please answer all the questions.",
+
+            "agentAvatarSvg": "<svg t=\"1721961683121\" class=\"icon\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" p-id=\"5712\" width=\"35\" height=\"35\"><path d=\"M903.616 0C969.984 0 1024 54.016 1024 120.384V903.68A120.576 120.576 0 0 1 903.552 1024H120.384A120.512 120.512 0 0 1 0 903.616V120.32C0 54.016 54.016 0 120.384 0H903.68z m0 69.12H120.32a51.328 51.328 0 0 0-51.264 51.264V903.68c0 28.288 23.04 51.264 51.264 51.264H903.68c28.288 0 51.264-23.04 51.264-51.264V120.32a51.392 51.392 0 0 0-51.264-51.264zM501.952 288v58.56H268.928v115.904h218.944v58.56H268.928v126.528h242.944v58.496H200.384V288h301.568z m224.832 107.136c75.52 0 113.6 40.96 113.6 124.16v186.752h-66.752V525.12c0-49.728-22.848-74.368-68.48-74.368a61.12 61.12 0 0 0-43.328 17.6c-14.08 12.864-22.272 31.616-24.64 55.68v182.016H570.432v-302.72h66.752v35.2c9.408-11.264 19.84-20.672 31.232-27.52l8.64-4.736c15.424-7.616 32.512-11.392 49.728-11.136z\" fill=\"#f9d6ff\" p-id=\"5713\"></path></svg>",
+            "agentToolIconSvg": "",
+
+            "useAgent": false,
+            "promptIncludeEssay":true,
+            "backgroundFileNameList":[],
+            "chatgptParameters":[1000,1,2],
+        },
+        {
+            "agentDisplayName":"Structure",
+            "agentName":"expert_structure",
+            "agentRole":"expert",
+            "model":"gpt-4o",
+            "agentDescription":"You are the structure expert. Please answer all the questions.",
+
+            "agentAvatarSvg": "<svg t=\"1717136978189\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" p-id=\"6006\" width=\"30\" height=\"30\"><path d=\"M903.616 0C969.984 0 1024 54.016 1024 120.384V903.68A120.576 120.576 0 0 1 903.552 1024H120.384A120.512 120.512 0 0 1 0 903.616V120.32C0 54.016 54.016 0 120.384 0H903.68z m0 69.12H120.32a51.328 51.328 0 0 0-51.264 51.264V903.68c0 28.288 23.04 51.264 51.264 51.264H903.68c28.288 0 51.264-23.04 51.264-51.264V120.32a51.392 51.392 0 0 0-51.264-51.264zM501.952 288v58.56H268.928v115.904h218.944v58.56H268.928v126.528h242.944v58.496H200.384V288h301.568z m224.832 107.136c75.52 0 113.6 40.96 113.6 124.16v186.752h-66.752V525.12c0-49.728-22.848-74.368-68.48-74.368a61.12 61.12 0 0 0-43.328 17.6c-14.08 12.864-22.272 31.616-24.64 55.68v182.016H570.432v-302.72h66.752v35.2c9.408-11.264 19.84-20.672 31.232-27.52l8.64-4.736c15.424-7.616 32.512-11.392 49.728-11.136z\" fill=\"#efb336\" p-id=\"6007\"></path></svg>",
+            "agentToolIconSvg": "",
+
+            "useAgent": false,
+            "promptIncludeEssay":true,
+            "backgroundFileNameList":[],
+            "chatgptParameters":[1000,1,2],
+        },
+
+    ];
+
+
+
+    // 212 213 214
+    var relatedCourseIdMap = {
+        212:212,
+        213:212,
+        214:213
+    }
+
+    var taskStage = "stage3"
+    const patientAgentName = 'masi'
+    const patientAgentDisplayName = '马斯';
+    var useMultiAgentsSingleWindowTool = false;
+    var useMultiAgentsSingleWindowRating = false;
+    var allowMultiAgentsSingleWindowReminder = false;
+
+
+    // 所有description 都暂时没用
+    // rating 部分添加到 工具层面，不能留到agent层面控制
+    // 每个 agent config 都要加 useAgent 参数
+    // scaffold Agent 触发方式有两种，一种是按时间触发，一种是按轮数触发，可以同时存在
+    // 测试单个窗口，窗口内有多个agents
+    var multiAgentsSingleWindowConfig = {
+        // 此处的agents 表示可以聊天的agents， scaffold agents 表示可以触发scaffolding 的agents，
+        // 同一个agent 可以同时handle聊天和scaffold，需要在config里面重复写入
+        "agents": [
+            {
+                "agentDisplayName":patientAgentDisplayName, // 根据课程不同需要修改 eg 里里
+                "agentName":`patient_${patientAgentName}`, // 根据课程不同需要修改 eg patient_lili
+                "agentRole":"patient",
+                "model":"gpt-4o",
+                "agentDescription":"",
+
+                "agentAvatarSvg": "<svg t=\"1711278978396\" viewBox=\"0 0 1024 1024\"  xmlns=\"http://www.w3.org/2000/svg\" p-id=\"4674\" width=\"30\" height=\"30\"><path d=\"M1024 512c0-70.4-12.8-134.4-38.4-198.4-25.6-64-64-115.2-108.8-160S774.4 70.4 716.8 44.8C646.4 12.8 582.4 0 512 0S377.6 12.8 313.6 38.4c-64 25.6-115.2 64-160 108.8C102.4 198.4 64 249.6 38.4 313.6 12.8 377.6 0 441.6 0 512s12.8 134.4 38.4 198.4c25.6 64 64 115.2 108.8 160s102.4 83.2 160 108.8c64 25.6 128 38.4 198.4 38.4s134.4-12.8 198.4-38.4c64-25.6 115.2-64 160-108.8s83.2-102.4 108.8-160c38.4-64 51.2-128 51.2-198.4z\" fill=\"#336FA4\" p-id=\"4675\"></path><path d=\"M601.6 723.2V640H441.6v76.8l89.6 38.4 70.4-32z m0 0\" fill=\"#F7D8B5\" p-id=\"4676\"></path><path d=\"M441.6 652.8c0 12.8 12.8 25.6 38.4 32 25.6 6.4 51.2 6.4 76.8 0 25.6-6.4 38.4-19.2 38.4-32s-12.8-25.6-38.4-32c-25.6-6.4-51.2-6.4-76.8 0-19.2 0-38.4 12.8-38.4 32z m0 0\" fill=\"#E9C8AF\" p-id=\"4677\"></path><path d=\"M755.2 345.6c0 128-102.4 256-230.4 256s-230.4-128-230.4-256S396.8 128 524.8 128s230.4 89.6 230.4 217.6z m0 0\" fill=\"#3E3121\" p-id=\"4678\"></path><path d=\"M352 460.8c6.4 32 6.4 64-12.8 70.4-25.6 6.4-57.6-19.2-64-51.2-6.4-32 0-64 25.6-70.4 19.2-6.4 38.4 19.2 51.2 51.2z m0 0M780.8 480c6.4-32 0-64-25.6-70.4-19.2-6.4-44.8 19.2-51.2 51.2-6.4 32-12.8 64 12.8 70.4 19.2 6.4 57.6-19.2 64-51.2z m0 0\" fill=\"#F7D8B5\" p-id=\"4679\"></path><path d=\"M742.4 422.4c0 134.4-96 243.2-217.6 243.2S307.2 556.8 307.2 422.4c0-134.4 96-204.8 217.6-204.8s217.6 70.4 217.6 204.8z m0 0\" fill=\"#F7D8B5\" p-id=\"4680\"></path><path d=\"M473.6 211.2s25.6 89.6 243.2 147.2l25.6 25.6-12.8-96-268.8-128 12.8 51.2z m0 0\" fill=\"#3E3121\" p-id=\"4681\"></path><path d=\"M672 736H384s-134.4 25.6-179.2 185.6c32 25.6 70.4 44.8 108.8 64 64 25.6 128 38.4 198.4 38.4s134.4-12.8 198.4-38.4c38.4-19.2 76.8-38.4 115.2-70.4-12.8-76.8-51.2-166.4-153.6-179.2zM825.6 915.2z\" fill=\"#FFFFFF\" p-id=\"4682\"></path><path d=\"M518.4 857.6s0 6.4 6.4 6.4h6.4l6.4-6.4s0-6.4-6.4-6.4h-6.4c-6.4 0-6.4 0-6.4 6.4z m0 0M518.4 902.4c0 6.4 6.4 6.4 6.4 6.4l6.4-6.4c0-6.4-6.4-6.4-6.4-6.4l-6.4 6.4z m0 0M518.4 947.2s0 6.4 6.4 6.4h6.4l6.4-6.4s0-6.4-6.4-6.4h-6.4c-6.4 0-6.4 6.4-6.4 6.4z m0 0M518.4 998.4s0 6.4 6.4 6.4h6.4l6.4-6.4s0-6.4-6.4-6.4h-6.4l-6.4 6.4z m0 0\" fill=\"#FFFFFF\" p-id=\"4683\"></path><path d=\"M275.2 966.4v-172.8l-25.6 25.6v128c6.4 6.4 19.2 12.8 25.6 19.2zM313.6 985.6l6.4-224c-6.4 6.4-19.2 12.8-25.6 19.2v192c6.4 6.4 12.8 6.4 19.2 12.8zM364.8 1004.8v-262.4s-6.4 0-25.6 6.4v243.2c6.4 6.4 19.2 6.4 25.6 12.8zM448 1017.6v-307.2h-25.6v307.2H448zM409.6 1011.2v-281.6h-12.8l-12.8 12.8v268.8h25.6zM492.8 1024v-262.4l-25.6-12.8V1024h25.6zM812.8 928v-64c-6.4-19.2-12.8-32-25.6-51.2v128c6.4-6.4 19.2-12.8 25.6-12.8zM537.6 1024v-256l-25.6-12.8V1024h25.6zM710.4 985.6c6.4 0 6.4-6.4 12.8-6.4v-224c-6.4-6.4-12.8-6.4-25.6-12.8v243.2h12.8zM761.6 953.6v-172.8c-6.4-6.4-12.8-12.8-25.6-19.2v204.8c12.8 0 19.2-6.4 25.6-12.8zM678.4 998.4v-262.4l-25.6-12.8v275.2c6.4 6.4 12.8 0 25.6 0zM627.2 1011.2v-262.4h-19.2v268.8c6.4-6.4 12.8-6.4 19.2-6.4zM582.4 1017.6v-300.8l-25.6 19.2V1024c12.8 0 19.2-6.4 25.6-6.4z\" fill=\"#CECECE\" p-id=\"4684\"></path><path d=\"M518.4 800c0 6.4 6.4 6.4 6.4 6.4l6.4-6.4c0-6.4-6.4-6.4-6.4-6.4s-6.4 0-6.4 6.4z m0 0M518.4 857.6s0 6.4 6.4 6.4h6.4l6.4-6.4s0-6.4-6.4-6.4h-6.4c-6.4 0-6.4 0-6.4 6.4z m0 0M518.4 902.4c0 6.4 6.4 6.4 6.4 6.4l6.4-6.4c0-6.4-6.4-6.4-6.4-6.4l-6.4 6.4z m0 0M518.4 947.2s0 6.4 6.4 6.4h6.4l6.4-6.4s0-6.4-6.4-6.4h-6.4c-6.4 0-6.4 6.4-6.4 6.4z m0 0M518.4 998.4s0 6.4 6.4 6.4h6.4l6.4-6.4s0-6.4-6.4-6.4h-6.4l-6.4 6.4z m0 0\" fill=\"#FFFFFF\" p-id=\"4685\"></path><path d=\"M230.4 934.4v-83.2l-19.2 38.4v25.6c0 12.8 6.4 19.2 19.2 19.2z\" fill=\"#CECECE\" p-id=\"4686\"></path><path d=\"M480 819.2l38.4-51.2 51.2 51.2 102.4-83.2-51.2-25.6-19.2-12.8-70.4 57.6h-12.8l-51.2-38.4-25.6-19.2-19.2 12.8-51.2 25.6z\" fill=\"#4B4C4B\" p-id=\"4687\"></path><path d=\"M518.4 800c0 6.4 6.4 6.4 6.4 6.4l6.4-6.4c0-6.4-6.4-6.4-6.4-6.4s-6.4 0-6.4 6.4z m0 0\" fill=\"#FFFFFF\" p-id=\"4688\"></path><path d=\"M601.6 723.2V640H441.6v76.8l89.6 38.4 70.4-32z m0 0\" fill=\"#F7D8B5\" p-id=\"4689\"></path><path d=\"M441.6 652.8c0 12.8 12.8 25.6 38.4 32 25.6 6.4 51.2 6.4 76.8 0 25.6-6.4 38.4-19.2 38.4-32s-12.8-25.6-38.4-32c-25.6-6.4-51.2-6.4-76.8 0-19.2 0-38.4 12.8-38.4 32z m0 0\" fill=\"#E9C8AF\" p-id=\"4690\"></path><path d=\"M755.2 345.6c0 128-102.4 256-230.4 256s-230.4-128-230.4-256S396.8 128 524.8 128s230.4 89.6 230.4 217.6z m0 0\" fill=\"#3E3121\" p-id=\"4691\"></path><path d=\"M352 460.8c6.4 32 6.4 64-12.8 70.4-25.6 6.4-57.6-19.2-64-51.2-6.4-32 0-64 25.6-70.4 19.2-6.4 38.4 19.2 51.2 51.2z m0 0M780.8 480c6.4-32 0-64-25.6-70.4-19.2-6.4-44.8 19.2-51.2 51.2-6.4 32-12.8 64 12.8 70.4 19.2 6.4 57.6-19.2 64-51.2z m0 0\" fill=\"#F7D8B5\" p-id=\"4692\"></path><path d=\"M742.4 422.4c0 134.4-96 243.2-217.6 243.2S307.2 556.8 307.2 422.4c0-134.4 96-204.8 217.6-204.8s217.6 70.4 217.6 204.8z m0 0\" fill=\"#F7D8B5\" p-id=\"4693\"></path><path d=\"M473.6 211.2s25.6 89.6 243.2 147.2l25.6 25.6-12.8-96-268.8-128 12.8 51.2z m0 0\" fill=\"#3E3121\" p-id=\"4694\"></path><path d=\"M480 819.2l38.4-51.2 51.2 51.2 102.4-83.2-51.2-25.6-19.2-12.8-70.4 57.6h-12.8l-51.2-38.4-25.6-19.2-19.2 12.8-51.2 25.6z\" fill=\"#4B4C4B\" p-id=\"4695\"></path></svg>",
+                "agentToolIconSvg": "",
+                "useAgent": true,
+                "promptIncludeEssay":false,
+                "backgroundFileNameList":[],
+                "chatgptParameters":[1000,1,2],
+                "useRating": useMultiAgentsSingleWindowRating
+            },
+
+        ],
+        "scaffoldAgents": [
+            {
+                "agentDisplayName": "陈医生",
+                "agentName": `feedback_${patientAgentName}`, // 根据课程不同需要修改 eg feedback_lili
+                "agentRole": "feedback",
+                "model": "gpt-4o",
+                "agentDescription": "",
+                "agentAvatarSvg":"<svg t=\"1714450472298\" viewBox=\"0 0 1024 1024\"  xmlns=\"http://www.w3.org/2000/svg\" p-id=\"6234\" width=\"30\" height=\"30\">\n                    <path d=\"M378.253061 617.012245m-42.840816 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6235\"></path>\n                    <path d=\"M645.746939 617.012245m-42.840817 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6236\"></path>\n                    <path d=\"M509.910204 532.897959c-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.75102-15.673469-53.289796-33.959184-12.538776-17.763265-17.240816-39.706122-13.583673-61.12653l42.318367-237.714286c6.269388-35.526531 35.526531-63.216327 71.57551-67.395918 8.881633-1.044898 16.718367-2.089796 24.555103-3.657143l3.134693-0.522449c31.869388-5.22449 67.395918-11.493878 189.126531-11.493878 121.730612 0 157.779592 6.269388 189.126531 11.493878 8.359184 1.567347 17.240816 3.134694 28.212245 4.179592 35.526531 4.179592 65.306122 31.869388 71.57551 67.395918l41.795918 237.191837c3.657143 21.420408-1.044898 43.363265-13.583673 61.648979-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857z m2.089796-395.493877c-118.073469 0-152.032653 5.746939-182.334694 10.971428l-3.134694 0.522449c-8.359184 1.567347-16.718367 3.134694-27.167347 4.179592-17.240816 2.089796-31.869388 15.673469-35.004081 32.914286l-42.318368 237.714285c-2.089796 10.44898 0.522449 21.420408 6.791837 30.302041 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 6.269388-8.881633 8.881633-19.330612 6.791837-30.302041l-41.795919-237.714285c-3.134694-17.240816-17.763265-30.82449-35.004081-32.914286-12.016327-1.567347-21.420408-3.134694-30.302041-4.702041-30.302041-5.22449-64.261224-10.971429-182.857143-10.971428z\" fill=\"#333333\" p-id=\"6237\"></path><path d=\"M512 928.391837c-62.693878 0-133.746939-27.689796-195.395918-75.755102-55.379592-43.363265-97.697959-99.265306-120.163266-159.346939-58.514286-10.971429-102.4-65.306122-102.4-129.567347 0-66.35102 46.497959-122.253061 108.669388-130.612245 9.404082-1.044898 18.285714 4.179592 21.942857 12.538776 1.044898 2.612245 2.612245 5.22449 4.179592 7.836734 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 1.567347-2.089796 3.134694-4.702041 4.179592-7.836734 3.657143-8.881633 12.538776-14.106122 21.942857-12.538776 62.171429 8.359184 108.669388 64.261224 108.669388 130.612245 0 64.261224-43.885714 118.595918-102.4 129.567347-22.465306 59.559184-64.783673 115.983673-120.163266 159.346939-61.64898 48.065306-132.702041 75.755102-195.395918 75.755102zM194.873469 477.518367c-34.481633 10.971429-59.036735 45.97551-59.036734 86.204082 0 47.542857 33.959184 86.726531 77.322449 89.861224 8.359184 0.522449 15.673469 6.269388 18.285714 14.106123 18.808163 56.946939 57.991837 110.759184 110.759184 152.032653 54.334694 42.318367 115.983673 66.873469 169.795918 66.873469 53.289796 0 115.461224-24.555102 169.273469-66.873469 52.767347-41.273469 91.95102-95.085714 110.759184-152.032653 2.612245-7.836735 9.926531-13.583673 18.285714-14.106123 43.363265-3.134694 77.322449-42.318367 77.322449-89.861224 0-40.228571-24.555102-75.232653-59.036734-86.204082-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.228571-15.673469-52.767347-33.959184zM603.428571 334.889796h-182.857142c-11.493878 0-20.897959-9.404082-20.89796-20.897959s9.404082-20.897959 20.89796-20.897959h182.857142c11.493878 0 20.897959 9.404082 20.89796 20.897959s-9.404082 20.897959-20.89796 20.897959z\" fill=\"#333333\" p-id=\"6238\"></path><path d=\"M512 426.318367c-11.493878 0-20.897959-9.404082-20.897959-20.897959v-182.857143c0-11.493878 9.404082-20.897959 20.897959-20.897959s20.897959 9.404082 20.897959 20.897959v182.857143c0 11.493878-9.404082 20.897959-20.897959 20.897959z\" fill=\"#333333\" p-id=\"6239\"></path></svg>",
+                "agentToolIconSvg": "",
+                "useAgent": true,
+                "agentPromptTemplate": "",
+                "promptIncludeEssay": false,
+                "backgroundFileNameList": [],
+                "chatgptParameters": [1000, 1, 2],
+            }
+        ]
+    };
+
+
+    // 病人
+    var usePatientMultiAgentsSingleWindowTool = true;
+    var usePatientMultiAgentsSingleWindowRating = false;
+    var allowPatientMultiAgentsSingleWindowReminder = false;
+
+    var patientMultiAgentsSingleWindowConfig = {
+        // 此处的agents 表示可以聊天的agents， scaffold agents 表示可以触发scaffolding 的agents，
+        // 同一个agent 可以同时handle聊天和scaffold，需要在config里面重复写入
+        "agents": [
+            {
+                "agentDisplayName":"安德",
+                "agentName":`patient_${patientAgentName}`, // 根据课程不同需要修改 eg patient_lili
+                "agentRole":"patient",
+                "model":"gpt-4o",
+                "agentDescription":"",
+
+                "agentAvatarSvg": "<svg t=\"1711278978396\" viewBox=\"0 0 1024 1024\"  xmlns=\"http://www.w3.org/2000/svg\" p-id=\"4674\" width=\"30\" height=\"30\"><path d=\"M1024 512c0-70.4-12.8-134.4-38.4-198.4-25.6-64-64-115.2-108.8-160S774.4 70.4 716.8 44.8C646.4 12.8 582.4 0 512 0S377.6 12.8 313.6 38.4c-64 25.6-115.2 64-160 108.8C102.4 198.4 64 249.6 38.4 313.6 12.8 377.6 0 441.6 0 512s12.8 134.4 38.4 198.4c25.6 64 64 115.2 108.8 160s102.4 83.2 160 108.8c64 25.6 128 38.4 198.4 38.4s134.4-12.8 198.4-38.4c64-25.6 115.2-64 160-108.8s83.2-102.4 108.8-160c38.4-64 51.2-128 51.2-198.4z\" fill=\"#336FA4\" p-id=\"4675\"></path><path d=\"M601.6 723.2V640H441.6v76.8l89.6 38.4 70.4-32z m0 0\" fill=\"#F7D8B5\" p-id=\"4676\"></path><path d=\"M441.6 652.8c0 12.8 12.8 25.6 38.4 32 25.6 6.4 51.2 6.4 76.8 0 25.6-6.4 38.4-19.2 38.4-32s-12.8-25.6-38.4-32c-25.6-6.4-51.2-6.4-76.8 0-19.2 0-38.4 12.8-38.4 32z m0 0\" fill=\"#E9C8AF\" p-id=\"4677\"></path><path d=\"M755.2 345.6c0 128-102.4 256-230.4 256s-230.4-128-230.4-256S396.8 128 524.8 128s230.4 89.6 230.4 217.6z m0 0\" fill=\"#3E3121\" p-id=\"4678\"></path><path d=\"M352 460.8c6.4 32 6.4 64-12.8 70.4-25.6 6.4-57.6-19.2-64-51.2-6.4-32 0-64 25.6-70.4 19.2-6.4 38.4 19.2 51.2 51.2z m0 0M780.8 480c6.4-32 0-64-25.6-70.4-19.2-6.4-44.8 19.2-51.2 51.2-6.4 32-12.8 64 12.8 70.4 19.2 6.4 57.6-19.2 64-51.2z m0 0\" fill=\"#F7D8B5\" p-id=\"4679\"></path><path d=\"M742.4 422.4c0 134.4-96 243.2-217.6 243.2S307.2 556.8 307.2 422.4c0-134.4 96-204.8 217.6-204.8s217.6 70.4 217.6 204.8z m0 0\" fill=\"#F7D8B5\" p-id=\"4680\"></path><path d=\"M473.6 211.2s25.6 89.6 243.2 147.2l25.6 25.6-12.8-96-268.8-128 12.8 51.2z m0 0\" fill=\"#3E3121\" p-id=\"4681\"></path><path d=\"M672 736H384s-134.4 25.6-179.2 185.6c32 25.6 70.4 44.8 108.8 64 64 25.6 128 38.4 198.4 38.4s134.4-12.8 198.4-38.4c38.4-19.2 76.8-38.4 115.2-70.4-12.8-76.8-51.2-166.4-153.6-179.2zM825.6 915.2z\" fill=\"#FFFFFF\" p-id=\"4682\"></path><path d=\"M518.4 857.6s0 6.4 6.4 6.4h6.4l6.4-6.4s0-6.4-6.4-6.4h-6.4c-6.4 0-6.4 0-6.4 6.4z m0 0M518.4 902.4c0 6.4 6.4 6.4 6.4 6.4l6.4-6.4c0-6.4-6.4-6.4-6.4-6.4l-6.4 6.4z m0 0M518.4 947.2s0 6.4 6.4 6.4h6.4l6.4-6.4s0-6.4-6.4-6.4h-6.4c-6.4 0-6.4 6.4-6.4 6.4z m0 0M518.4 998.4s0 6.4 6.4 6.4h6.4l6.4-6.4s0-6.4-6.4-6.4h-6.4l-6.4 6.4z m0 0\" fill=\"#FFFFFF\" p-id=\"4683\"></path><path d=\"M275.2 966.4v-172.8l-25.6 25.6v128c6.4 6.4 19.2 12.8 25.6 19.2zM313.6 985.6l6.4-224c-6.4 6.4-19.2 12.8-25.6 19.2v192c6.4 6.4 12.8 6.4 19.2 12.8zM364.8 1004.8v-262.4s-6.4 0-25.6 6.4v243.2c6.4 6.4 19.2 6.4 25.6 12.8zM448 1017.6v-307.2h-25.6v307.2H448zM409.6 1011.2v-281.6h-12.8l-12.8 12.8v268.8h25.6zM492.8 1024v-262.4l-25.6-12.8V1024h25.6zM812.8 928v-64c-6.4-19.2-12.8-32-25.6-51.2v128c6.4-6.4 19.2-12.8 25.6-12.8zM537.6 1024v-256l-25.6-12.8V1024h25.6zM710.4 985.6c6.4 0 6.4-6.4 12.8-6.4v-224c-6.4-6.4-12.8-6.4-25.6-12.8v243.2h12.8zM761.6 953.6v-172.8c-6.4-6.4-12.8-12.8-25.6-19.2v204.8c12.8 0 19.2-6.4 25.6-12.8zM678.4 998.4v-262.4l-25.6-12.8v275.2c6.4 6.4 12.8 0 25.6 0zM627.2 1011.2v-262.4h-19.2v268.8c6.4-6.4 12.8-6.4 19.2-6.4zM582.4 1017.6v-300.8l-25.6 19.2V1024c12.8 0 19.2-6.4 25.6-6.4z\" fill=\"#CECECE\" p-id=\"4684\"></path><path d=\"M518.4 800c0 6.4 6.4 6.4 6.4 6.4l6.4-6.4c0-6.4-6.4-6.4-6.4-6.4s-6.4 0-6.4 6.4z m0 0M518.4 857.6s0 6.4 6.4 6.4h6.4l6.4-6.4s0-6.4-6.4-6.4h-6.4c-6.4 0-6.4 0-6.4 6.4z m0 0M518.4 902.4c0 6.4 6.4 6.4 6.4 6.4l6.4-6.4c0-6.4-6.4-6.4-6.4-6.4l-6.4 6.4z m0 0M518.4 947.2s0 6.4 6.4 6.4h6.4l6.4-6.4s0-6.4-6.4-6.4h-6.4c-6.4 0-6.4 6.4-6.4 6.4z m0 0M518.4 998.4s0 6.4 6.4 6.4h6.4l6.4-6.4s0-6.4-6.4-6.4h-6.4l-6.4 6.4z m0 0\" fill=\"#FFFFFF\" p-id=\"4685\"></path><path d=\"M230.4 934.4v-83.2l-19.2 38.4v25.6c0 12.8 6.4 19.2 19.2 19.2z\" fill=\"#CECECE\" p-id=\"4686\"></path><path d=\"M480 819.2l38.4-51.2 51.2 51.2 102.4-83.2-51.2-25.6-19.2-12.8-70.4 57.6h-12.8l-51.2-38.4-25.6-19.2-19.2 12.8-51.2 25.6z\" fill=\"#4B4C4B\" p-id=\"4687\"></path><path d=\"M518.4 800c0 6.4 6.4 6.4 6.4 6.4l6.4-6.4c0-6.4-6.4-6.4-6.4-6.4s-6.4 0-6.4 6.4z m0 0\" fill=\"#FFFFFF\" p-id=\"4688\"></path><path d=\"M601.6 723.2V640H441.6v76.8l89.6 38.4 70.4-32z m0 0\" fill=\"#F7D8B5\" p-id=\"4689\"></path><path d=\"M441.6 652.8c0 12.8 12.8 25.6 38.4 32 25.6 6.4 51.2 6.4 76.8 0 25.6-6.4 38.4-19.2 38.4-32s-12.8-25.6-38.4-32c-25.6-6.4-51.2-6.4-76.8 0-19.2 0-38.4 12.8-38.4 32z m0 0\" fill=\"#E9C8AF\" p-id=\"4690\"></path><path d=\"M755.2 345.6c0 128-102.4 256-230.4 256s-230.4-128-230.4-256S396.8 128 524.8 128s230.4 89.6 230.4 217.6z m0 0\" fill=\"#3E3121\" p-id=\"4691\"></path><path d=\"M352 460.8c6.4 32 6.4 64-12.8 70.4-25.6 6.4-57.6-19.2-64-51.2-6.4-32 0-64 25.6-70.4 19.2-6.4 38.4 19.2 51.2 51.2z m0 0M780.8 480c6.4-32 0-64-25.6-70.4-19.2-6.4-44.8 19.2-51.2 51.2-6.4 32-12.8 64 12.8 70.4 19.2 6.4 57.6-19.2 64-51.2z m0 0\" fill=\"#F7D8B5\" p-id=\"4692\"></path><path d=\"M742.4 422.4c0 134.4-96 243.2-217.6 243.2S307.2 556.8 307.2 422.4c0-134.4 96-204.8 217.6-204.8s217.6 70.4 217.6 204.8z m0 0\" fill=\"#F7D8B5\" p-id=\"4693\"></path><path d=\"M473.6 211.2s25.6 89.6 243.2 147.2l25.6 25.6-12.8-96-268.8-128 12.8 51.2z m0 0\" fill=\"#3E3121\" p-id=\"4694\"></path><path d=\"M480 819.2l38.4-51.2 51.2 51.2 102.4-83.2-51.2-25.6-19.2-12.8-70.4 57.6h-12.8l-51.2-38.4-25.6-19.2-19.2 12.8-51.2 25.6z\" fill=\"#4B4C4B\" p-id=\"4695\"></path></svg>",
+                "agentToolIconSvg": "",
+                "useAgent": true,
+                "promptIncludeEssay":false,
+                "backgroundFileNameList":[],
+                "chatgptParameters":[1000,1,2],
+                "useRating": useMultiAgentsSingleWindowRating
+            },
+
+        ],
+        "scaffoldAgents": [
+            {
+                "agentDisplayName": "陈医生",
+                "agentName": `feedback_${patientAgentName}`, // 根据课程不同需要修改 eg feedback_lili
+                "agentRole": "feedback",
+                "model": "gpt-4o",
+                "agentDescription": "",
+                "agentAvatarSvg":"<svg t=\"1714450472298\" viewBox=\"0 0 1024 1024\"  xmlns=\"http://www.w3.org/2000/svg\" p-id=\"6234\" width=\"30\" height=\"30\">\n                    <path d=\"M378.253061 617.012245m-42.840816 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6235\"></path>\n                    <path d=\"M645.746939 617.012245m-42.840817 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6236\"></path>\n                    <path d=\"M509.910204 532.897959c-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.75102-15.673469-53.289796-33.959184-12.538776-17.763265-17.240816-39.706122-13.583673-61.12653l42.318367-237.714286c6.269388-35.526531 35.526531-63.216327 71.57551-67.395918 8.881633-1.044898 16.718367-2.089796 24.555103-3.657143l3.134693-0.522449c31.869388-5.22449 67.395918-11.493878 189.126531-11.493878 121.730612 0 157.779592 6.269388 189.126531 11.493878 8.359184 1.567347 17.240816 3.134694 28.212245 4.179592 35.526531 4.179592 65.306122 31.869388 71.57551 67.395918l41.795918 237.191837c3.657143 21.420408-1.044898 43.363265-13.583673 61.648979-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857z m2.089796-395.493877c-118.073469 0-152.032653 5.746939-182.334694 10.971428l-3.134694 0.522449c-8.359184 1.567347-16.718367 3.134694-27.167347 4.179592-17.240816 2.089796-31.869388 15.673469-35.004081 32.914286l-42.318368 237.714285c-2.089796 10.44898 0.522449 21.420408 6.791837 30.302041 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 6.269388-8.881633 8.881633-19.330612 6.791837-30.302041l-41.795919-237.714285c-3.134694-17.240816-17.763265-30.82449-35.004081-32.914286-12.016327-1.567347-21.420408-3.134694-30.302041-4.702041-30.302041-5.22449-64.261224-10.971429-182.857143-10.971428z\" fill=\"#333333\" p-id=\"6237\"></path><path d=\"M512 928.391837c-62.693878 0-133.746939-27.689796-195.395918-75.755102-55.379592-43.363265-97.697959-99.265306-120.163266-159.346939-58.514286-10.971429-102.4-65.306122-102.4-129.567347 0-66.35102 46.497959-122.253061 108.669388-130.612245 9.404082-1.044898 18.285714 4.179592 21.942857 12.538776 1.044898 2.612245 2.612245 5.22449 4.179592 7.836734 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 1.567347-2.089796 3.134694-4.702041 4.179592-7.836734 3.657143-8.881633 12.538776-14.106122 21.942857-12.538776 62.171429 8.359184 108.669388 64.261224 108.669388 130.612245 0 64.261224-43.885714 118.595918-102.4 129.567347-22.465306 59.559184-64.783673 115.983673-120.163266 159.346939-61.64898 48.065306-132.702041 75.755102-195.395918 75.755102zM194.873469 477.518367c-34.481633 10.971429-59.036735 45.97551-59.036734 86.204082 0 47.542857 33.959184 86.726531 77.322449 89.861224 8.359184 0.522449 15.673469 6.269388 18.285714 14.106123 18.808163 56.946939 57.991837 110.759184 110.759184 152.032653 54.334694 42.318367 115.983673 66.873469 169.795918 66.873469 53.289796 0 115.461224-24.555102 169.273469-66.873469 52.767347-41.273469 91.95102-95.085714 110.759184-152.032653 2.612245-7.836735 9.926531-13.583673 18.285714-14.106123 43.363265-3.134694 77.322449-42.318367 77.322449-89.861224 0-40.228571-24.555102-75.232653-59.036734-86.204082-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.228571-15.673469-52.767347-33.959184zM603.428571 334.889796h-182.857142c-11.493878 0-20.897959-9.404082-20.89796-20.897959s9.404082-20.897959 20.89796-20.897959h182.857142c11.493878 0 20.897959 9.404082 20.89796 20.897959s-9.404082 20.897959-20.89796 20.897959z\" fill=\"#333333\" p-id=\"6238\"></path><path d=\"M512 426.318367c-11.493878 0-20.897959-9.404082-20.897959-20.897959v-182.857143c0-11.493878 9.404082-20.897959 20.897959-20.897959s20.897959 9.404082 20.897959 20.897959v182.857143c0 11.493878-9.404082 20.897959-20.897959 20.897959z\" fill=\"#333333\" p-id=\"6239\"></path></svg>",
+                "agentToolIconSvg": "",
+                "useAgent": true,
+                "agentPromptTemplate": "",
+                "promptIncludeEssay": false,
+                "backgroundFileNameList": [],
+                "chatgptParameters": [1000, 1, 2],
+            }
+        ]
+    };
+
+
+    //带教老师
+    var useMedicalScaffoldMultiAgentsSingleWindowTool = true;
+    var useMedicalScaffoldMultiAgentsSingleWindowRating = true;
+    var allowMedicalScaffoldMultiAgentsSingleWindowReminder = false;
+
+    var medicalScaffoldMultiAgentsSingleWindowConfig = {
+        // 此处的agents 表示可以聊天的agents， scaffold agents 表示可以触发scaffolding 的agents，
+        // 同一个agent 可以同时handle聊天和scaffold，需要在config里面重复写入
+        "agents": [
+            {
+                "agentDisplayName":"陈医生",
+                // "agentName":"teacher_lili_1",
+                "agentName": `teacher_${patientAgentName}_1`, // 根据课程不同需要修改 eg teacher_lili,// 根据课程不同需要修改 eg teacher_lili
+                "agentRole":"medicalteacher",
+                "model":"gpt-4o",
+                "agentDescription":"",
+
+                "agentAvatarSvg":"<svg t=\"1714450472298\" viewBox=\"0 0 1024 1024\"  xmlns=\"http://www.w3.org/2000/svg\" p-id=\"6234\" width=\"30\" height=\"30\">\n                    <path d=\"M378.253061 617.012245m-42.840816 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6235\"></path>\n                    <path d=\"M645.746939 617.012245m-42.840817 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6236\"></path>\n                    <path d=\"M509.910204 532.897959c-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.75102-15.673469-53.289796-33.959184-12.538776-17.763265-17.240816-39.706122-13.583673-61.12653l42.318367-237.714286c6.269388-35.526531 35.526531-63.216327 71.57551-67.395918 8.881633-1.044898 16.718367-2.089796 24.555103-3.657143l3.134693-0.522449c31.869388-5.22449 67.395918-11.493878 189.126531-11.493878 121.730612 0 157.779592 6.269388 189.126531 11.493878 8.359184 1.567347 17.240816 3.134694 28.212245 4.179592 35.526531 4.179592 65.306122 31.869388 71.57551 67.395918l41.795918 237.191837c3.657143 21.420408-1.044898 43.363265-13.583673 61.648979-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857z m2.089796-395.493877c-118.073469 0-152.032653 5.746939-182.334694 10.971428l-3.134694 0.522449c-8.359184 1.567347-16.718367 3.134694-27.167347 4.179592-17.240816 2.089796-31.869388 15.673469-35.004081 32.914286l-42.318368 237.714285c-2.089796 10.44898 0.522449 21.420408 6.791837 30.302041 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 6.269388-8.881633 8.881633-19.330612 6.791837-30.302041l-41.795919-237.714285c-3.134694-17.240816-17.763265-30.82449-35.004081-32.914286-12.016327-1.567347-21.420408-3.134694-30.302041-4.702041-30.302041-5.22449-64.261224-10.971429-182.857143-10.971428z\" fill=\"#333333\" p-id=\"6237\"></path><path d=\"M512 928.391837c-62.693878 0-133.746939-27.689796-195.395918-75.755102-55.379592-43.363265-97.697959-99.265306-120.163266-159.346939-58.514286-10.971429-102.4-65.306122-102.4-129.567347 0-66.35102 46.497959-122.253061 108.669388-130.612245 9.404082-1.044898 18.285714 4.179592 21.942857 12.538776 1.044898 2.612245 2.612245 5.22449 4.179592 7.836734 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 1.567347-2.089796 3.134694-4.702041 4.179592-7.836734 3.657143-8.881633 12.538776-14.106122 21.942857-12.538776 62.171429 8.359184 108.669388 64.261224 108.669388 130.612245 0 64.261224-43.885714 118.595918-102.4 129.567347-22.465306 59.559184-64.783673 115.983673-120.163266 159.346939-61.64898 48.065306-132.702041 75.755102-195.395918 75.755102zM194.873469 477.518367c-34.481633 10.971429-59.036735 45.97551-59.036734 86.204082 0 47.542857 33.959184 86.726531 77.322449 89.861224 8.359184 0.522449 15.673469 6.269388 18.285714 14.106123 18.808163 56.946939 57.991837 110.759184 110.759184 152.032653 54.334694 42.318367 115.983673 66.873469 169.795918 66.873469 53.289796 0 115.461224-24.555102 169.273469-66.873469 52.767347-41.273469 91.95102-95.085714 110.759184-152.032653 2.612245-7.836735 9.926531-13.583673 18.285714-14.106123 43.363265-3.134694 77.322449-42.318367 77.322449-89.861224 0-40.228571-24.555102-75.232653-59.036734-86.204082-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.228571-15.673469-52.767347-33.959184zM603.428571 334.889796h-182.857142c-11.493878 0-20.897959-9.404082-20.89796-20.897959s9.404082-20.897959 20.89796-20.897959h182.857142c11.493878 0 20.897959 9.404082 20.89796 20.897959s-9.404082 20.897959-20.89796 20.897959z\" fill=\"#333333\" p-id=\"6238\"></path><path d=\"M512 426.318367c-11.493878 0-20.897959-9.404082-20.897959-20.897959v-182.857143c0-11.493878 9.404082-20.897959 20.897959-20.897959s20.897959 9.404082 20.897959 20.897959v182.857143c0 11.493878-9.404082 20.897959-20.897959 20.897959z\" fill=\"#333333\" p-id=\"6239\"></path></svg>",
+                "agentToolIconSvg": "",
+
+                "useAgent": true,
+                "promptIncludeEssay":false,
+                "backgroundFileNameList":[],
+                "chatgptParameters":[1000,1,2],
+                "useRating": useMultiAgentsSingleWindowRating
+            },
+            {
+                "agentDisplayName":"陈医生",
+                "agentName":`teacher_${patientAgentName}_2`,
+                "agentRole":"medicalteacher",
+                "model":"gpt-4o",
+                "agentDescription":"",
+
+                "agentAvatarSvg":"<svg t=\"1714450472298\" viewBox=\"0 0 1024 1024\"  xmlns=\"http://www.w3.org/2000/svg\" p-id=\"6234\" width=\"30\" height=\"30\">\n                    <path d=\"M378.253061 617.012245m-42.840816 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6235\"></path>\n                    <path d=\"M645.746939 617.012245m-42.840817 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6236\"></path>\n                    <path d=\"M509.910204 532.897959c-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.75102-15.673469-53.289796-33.959184-12.538776-17.763265-17.240816-39.706122-13.583673-61.12653l42.318367-237.714286c6.269388-35.526531 35.526531-63.216327 71.57551-67.395918 8.881633-1.044898 16.718367-2.089796 24.555103-3.657143l3.134693-0.522449c31.869388-5.22449 67.395918-11.493878 189.126531-11.493878 121.730612 0 157.779592 6.269388 189.126531 11.493878 8.359184 1.567347 17.240816 3.134694 28.212245 4.179592 35.526531 4.179592 65.306122 31.869388 71.57551 67.395918l41.795918 237.191837c3.657143 21.420408-1.044898 43.363265-13.583673 61.648979-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857z m2.089796-395.493877c-118.073469 0-152.032653 5.746939-182.334694 10.971428l-3.134694 0.522449c-8.359184 1.567347-16.718367 3.134694-27.167347 4.179592-17.240816 2.089796-31.869388 15.673469-35.004081 32.914286l-42.318368 237.714285c-2.089796 10.44898 0.522449 21.420408 6.791837 30.302041 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 6.269388-8.881633 8.881633-19.330612 6.791837-30.302041l-41.795919-237.714285c-3.134694-17.240816-17.763265-30.82449-35.004081-32.914286-12.016327-1.567347-21.420408-3.134694-30.302041-4.702041-30.302041-5.22449-64.261224-10.971429-182.857143-10.971428z\" fill=\"#333333\" p-id=\"6237\"></path><path d=\"M512 928.391837c-62.693878 0-133.746939-27.689796-195.395918-75.755102-55.379592-43.363265-97.697959-99.265306-120.163266-159.346939-58.514286-10.971429-102.4-65.306122-102.4-129.567347 0-66.35102 46.497959-122.253061 108.669388-130.612245 9.404082-1.044898 18.285714 4.179592 21.942857 12.538776 1.044898 2.612245 2.612245 5.22449 4.179592 7.836734 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 1.567347-2.089796 3.134694-4.702041 4.179592-7.836734 3.657143-8.881633 12.538776-14.106122 21.942857-12.538776 62.171429 8.359184 108.669388 64.261224 108.669388 130.612245 0 64.261224-43.885714 118.595918-102.4 129.567347-22.465306 59.559184-64.783673 115.983673-120.163266 159.346939-61.64898 48.065306-132.702041 75.755102-195.395918 75.755102zM194.873469 477.518367c-34.481633 10.971429-59.036735 45.97551-59.036734 86.204082 0 47.542857 33.959184 86.726531 77.322449 89.861224 8.359184 0.522449 15.673469 6.269388 18.285714 14.106123 18.808163 56.946939 57.991837 110.759184 110.759184 152.032653 54.334694 42.318367 115.983673 66.873469 169.795918 66.873469 53.289796 0 115.461224-24.555102 169.273469-66.873469 52.767347-41.273469 91.95102-95.085714 110.759184-152.032653 2.612245-7.836735 9.926531-13.583673 18.285714-14.106123 43.363265-3.134694 77.322449-42.318367 77.322449-89.861224 0-40.228571-24.555102-75.232653-59.036734-86.204082-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.228571-15.673469-52.767347-33.959184zM603.428571 334.889796h-182.857142c-11.493878 0-20.897959-9.404082-20.89796-20.897959s9.404082-20.897959 20.89796-20.897959h182.857142c11.493878 0 20.897959 9.404082 20.89796 20.897959s-9.404082 20.897959-20.89796 20.897959z\" fill=\"#333333\" p-id=\"6238\"></path><path d=\"M512 426.318367c-11.493878 0-20.897959-9.404082-20.897959-20.897959v-182.857143c0-11.493878 9.404082-20.897959 20.897959-20.897959s20.897959 9.404082 20.897959 20.897959v182.857143c0 11.493878-9.404082 20.897959-20.897959 20.897959z\" fill=\"#333333\" p-id=\"6239\"></path></svg>",
+                "agentToolIconSvg": "",
+
+                "useAgent": true,
+                "promptIncludeEssay":false,
+                "backgroundFileNameList":[],
+                "chatgptParameters":[1000,1,2],
+                "useRating": useMultiAgentsSingleWindowRating
+            },
+            {
+                "agentDisplayName":"陈医生",
+                "agentName":`teacher_${patientAgentName}_3`,
+                "agentRole":"medicalteacher",
+                "model":"gpt-4o",
+                "agentDescription":"",
+
+                "agentAvatarSvg":"<svg t=\"1714450472298\" viewBox=\"0 0 1024 1024\"  xmlns=\"http://www.w3.org/2000/svg\" p-id=\"6234\" width=\"30\" height=\"30\">\n                    <path d=\"M378.253061 617.012245m-42.840816 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6235\"></path>\n                    <path d=\"M645.746939 617.012245m-42.840817 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6236\"></path>\n                    <path d=\"M509.910204 532.897959c-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.75102-15.673469-53.289796-33.959184-12.538776-17.763265-17.240816-39.706122-13.583673-61.12653l42.318367-237.714286c6.269388-35.526531 35.526531-63.216327 71.57551-67.395918 8.881633-1.044898 16.718367-2.089796 24.555103-3.657143l3.134693-0.522449c31.869388-5.22449 67.395918-11.493878 189.126531-11.493878 121.730612 0 157.779592 6.269388 189.126531 11.493878 8.359184 1.567347 17.240816 3.134694 28.212245 4.179592 35.526531 4.179592 65.306122 31.869388 71.57551 67.395918l41.795918 237.191837c3.657143 21.420408-1.044898 43.363265-13.583673 61.648979-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857z m2.089796-395.493877c-118.073469 0-152.032653 5.746939-182.334694 10.971428l-3.134694 0.522449c-8.359184 1.567347-16.718367 3.134694-27.167347 4.179592-17.240816 2.089796-31.869388 15.673469-35.004081 32.914286l-42.318368 237.714285c-2.089796 10.44898 0.522449 21.420408 6.791837 30.302041 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 6.269388-8.881633 8.881633-19.330612 6.791837-30.302041l-41.795919-237.714285c-3.134694-17.240816-17.763265-30.82449-35.004081-32.914286-12.016327-1.567347-21.420408-3.134694-30.302041-4.702041-30.302041-5.22449-64.261224-10.971429-182.857143-10.971428z\" fill=\"#333333\" p-id=\"6237\"></path><path d=\"M512 928.391837c-62.693878 0-133.746939-27.689796-195.395918-75.755102-55.379592-43.363265-97.697959-99.265306-120.163266-159.346939-58.514286-10.971429-102.4-65.306122-102.4-129.567347 0-66.35102 46.497959-122.253061 108.669388-130.612245 9.404082-1.044898 18.285714 4.179592 21.942857 12.538776 1.044898 2.612245 2.612245 5.22449 4.179592 7.836734 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 1.567347-2.089796 3.134694-4.702041 4.179592-7.836734 3.657143-8.881633 12.538776-14.106122 21.942857-12.538776 62.171429 8.359184 108.669388 64.261224 108.669388 130.612245 0 64.261224-43.885714 118.595918-102.4 129.567347-22.465306 59.559184-64.783673 115.983673-120.163266 159.346939-61.64898 48.065306-132.702041 75.755102-195.395918 75.755102zM194.873469 477.518367c-34.481633 10.971429-59.036735 45.97551-59.036734 86.204082 0 47.542857 33.959184 86.726531 77.322449 89.861224 8.359184 0.522449 15.673469 6.269388 18.285714 14.106123 18.808163 56.946939 57.991837 110.759184 110.759184 152.032653 54.334694 42.318367 115.983673 66.873469 169.795918 66.873469 53.289796 0 115.461224-24.555102 169.273469-66.873469 52.767347-41.273469 91.95102-95.085714 110.759184-152.032653 2.612245-7.836735 9.926531-13.583673 18.285714-14.106123 43.363265-3.134694 77.322449-42.318367 77.322449-89.861224 0-40.228571-24.555102-75.232653-59.036734-86.204082-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.228571-15.673469-52.767347-33.959184zM603.428571 334.889796h-182.857142c-11.493878 0-20.897959-9.404082-20.89796-20.897959s9.404082-20.897959 20.89796-20.897959h182.857142c11.493878 0 20.897959 9.404082 20.89796 20.897959s-9.404082 20.897959-20.89796 20.897959z\" fill=\"#333333\" p-id=\"6238\"></path><path d=\"M512 426.318367c-11.493878 0-20.897959-9.404082-20.897959-20.897959v-182.857143c0-11.493878 9.404082-20.897959 20.897959-20.897959s20.897959 9.404082 20.897959 20.897959v182.857143c0 11.493878-9.404082 20.897959-20.897959 20.897959z\" fill=\"#333333\" p-id=\"6239\"></path></svg>",
+                "agentToolIconSvg": "",
+
+                "useAgent": true,
+                "promptIncludeEssay":false,
+                "backgroundFileNameList":[],
+                "chatgptParameters":[1000,1,2],
+                "useRating": useMultiAgentsSingleWindowRating
+            },
+        ],
+        "scaffoldAgents": [
+            {
+                "agentDisplayName":"陈医生",
+                "agentName":`teacher_${patientAgentName}_1`,
+                "agentRole": "scaffold",
+                "model": "gpt-4o",
+                "agentDescription": "",
+                "agentAvatarSvg":"<svg t=\"1714450472298\" viewBox=\"0 0 1024 1024\"  xmlns=\"http://www.w3.org/2000/svg\" p-id=\"6234\" width=\"30\" height=\"30\">\n                    <path d=\"M378.253061 617.012245m-42.840816 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6235\"></path>\n                    <path d=\"M645.746939 617.012245m-42.840817 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6236\"></path>\n                    <path d=\"M509.910204 532.897959c-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.75102-15.673469-53.289796-33.959184-12.538776-17.763265-17.240816-39.706122-13.583673-61.12653l42.318367-237.714286c6.269388-35.526531 35.526531-63.216327 71.57551-67.395918 8.881633-1.044898 16.718367-2.089796 24.555103-3.657143l3.134693-0.522449c31.869388-5.22449 67.395918-11.493878 189.126531-11.493878 121.730612 0 157.779592 6.269388 189.126531 11.493878 8.359184 1.567347 17.240816 3.134694 28.212245 4.179592 35.526531 4.179592 65.306122 31.869388 71.57551 67.395918l41.795918 237.191837c3.657143 21.420408-1.044898 43.363265-13.583673 61.648979-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857z m2.089796-395.493877c-118.073469 0-152.032653 5.746939-182.334694 10.971428l-3.134694 0.522449c-8.359184 1.567347-16.718367 3.134694-27.167347 4.179592-17.240816 2.089796-31.869388 15.673469-35.004081 32.914286l-42.318368 237.714285c-2.089796 10.44898 0.522449 21.420408 6.791837 30.302041 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 6.269388-8.881633 8.881633-19.330612 6.791837-30.302041l-41.795919-237.714285c-3.134694-17.240816-17.763265-30.82449-35.004081-32.914286-12.016327-1.567347-21.420408-3.134694-30.302041-4.702041-30.302041-5.22449-64.261224-10.971429-182.857143-10.971428z\" fill=\"#333333\" p-id=\"6237\"></path><path d=\"M512 928.391837c-62.693878 0-133.746939-27.689796-195.395918-75.755102-55.379592-43.363265-97.697959-99.265306-120.163266-159.346939-58.514286-10.971429-102.4-65.306122-102.4-129.567347 0-66.35102 46.497959-122.253061 108.669388-130.612245 9.404082-1.044898 18.285714 4.179592 21.942857 12.538776 1.044898 2.612245 2.612245 5.22449 4.179592 7.836734 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 1.567347-2.089796 3.134694-4.702041 4.179592-7.836734 3.657143-8.881633 12.538776-14.106122 21.942857-12.538776 62.171429 8.359184 108.669388 64.261224 108.669388 130.612245 0 64.261224-43.885714 118.595918-102.4 129.567347-22.465306 59.559184-64.783673 115.983673-120.163266 159.346939-61.64898 48.065306-132.702041 75.755102-195.395918 75.755102zM194.873469 477.518367c-34.481633 10.971429-59.036735 45.97551-59.036734 86.204082 0 47.542857 33.959184 86.726531 77.322449 89.861224 8.359184 0.522449 15.673469 6.269388 18.285714 14.106123 18.808163 56.946939 57.991837 110.759184 110.759184 152.032653 54.334694 42.318367 115.983673 66.873469 169.795918 66.873469 53.289796 0 115.461224-24.555102 169.273469-66.873469 52.767347-41.273469 91.95102-95.085714 110.759184-152.032653 2.612245-7.836735 9.926531-13.583673 18.285714-14.106123 43.363265-3.134694 77.322449-42.318367 77.322449-89.861224 0-40.228571-24.555102-75.232653-59.036734-86.204082-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.228571-15.673469-52.767347-33.959184zM603.428571 334.889796h-182.857142c-11.493878 0-20.897959-9.404082-20.89796-20.897959s9.404082-20.897959 20.89796-20.897959h182.857142c11.493878 0 20.897959 9.404082 20.89796 20.897959s-9.404082 20.897959-20.89796 20.897959z\" fill=\"#333333\" p-id=\"6238\"></path><path d=\"M512 426.318367c-11.493878 0-20.897959-9.404082-20.897959-20.897959v-182.857143c0-11.493878 9.404082-20.897959 20.897959-20.897959s20.897959 9.404082 20.897959 20.897959v182.857143c0 11.493878-9.404082 20.897959-20.897959 20.897959z\" fill=\"#333333\" p-id=\"6239\"></path></svg>",
+                "agentToolIconSvg": "",
+                "useAgent": true,
+                "agentPromptTemplate": "",
+                "promptIncludeEssay": false,
+                "backgroundFileNameList": [],
+                "chatgptParameters": [1000, 1, 2],
+            },
+            {
+                "agentDisplayName":"陈医生",
+                "agentName":`teacher_${patientAgentName}_2`,
+                "agentRole": "scaffold",
+                "model": "gpt-4o",
+                "agentDescription": "",
+                "agentAvatarSvg":"<svg t=\"1714450472298\" viewBox=\"0 0 1024 1024\"  xmlns=\"http://www.w3.org/2000/svg\" p-id=\"6234\" width=\"30\" height=\"30\">\n                    <path d=\"M378.253061 617.012245m-42.840816 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6235\"></path>\n                    <path d=\"M645.746939 617.012245m-42.840817 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6236\"></path>\n                    <path d=\"M509.910204 532.897959c-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.75102-15.673469-53.289796-33.959184-12.538776-17.763265-17.240816-39.706122-13.583673-61.12653l42.318367-237.714286c6.269388-35.526531 35.526531-63.216327 71.57551-67.395918 8.881633-1.044898 16.718367-2.089796 24.555103-3.657143l3.134693-0.522449c31.869388-5.22449 67.395918-11.493878 189.126531-11.493878 121.730612 0 157.779592 6.269388 189.126531 11.493878 8.359184 1.567347 17.240816 3.134694 28.212245 4.179592 35.526531 4.179592 65.306122 31.869388 71.57551 67.395918l41.795918 237.191837c3.657143 21.420408-1.044898 43.363265-13.583673 61.648979-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857z m2.089796-395.493877c-118.073469 0-152.032653 5.746939-182.334694 10.971428l-3.134694 0.522449c-8.359184 1.567347-16.718367 3.134694-27.167347 4.179592-17.240816 2.089796-31.869388 15.673469-35.004081 32.914286l-42.318368 237.714285c-2.089796 10.44898 0.522449 21.420408 6.791837 30.302041 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 6.269388-8.881633 8.881633-19.330612 6.791837-30.302041l-41.795919-237.714285c-3.134694-17.240816-17.763265-30.82449-35.004081-32.914286-12.016327-1.567347-21.420408-3.134694-30.302041-4.702041-30.302041-5.22449-64.261224-10.971429-182.857143-10.971428z\" fill=\"#333333\" p-id=\"6237\"></path><path d=\"M512 928.391837c-62.693878 0-133.746939-27.689796-195.395918-75.755102-55.379592-43.363265-97.697959-99.265306-120.163266-159.346939-58.514286-10.971429-102.4-65.306122-102.4-129.567347 0-66.35102 46.497959-122.253061 108.669388-130.612245 9.404082-1.044898 18.285714 4.179592 21.942857 12.538776 1.044898 2.612245 2.612245 5.22449 4.179592 7.836734 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 1.567347-2.089796 3.134694-4.702041 4.179592-7.836734 3.657143-8.881633 12.538776-14.106122 21.942857-12.538776 62.171429 8.359184 108.669388 64.261224 108.669388 130.612245 0 64.261224-43.885714 118.595918-102.4 129.567347-22.465306 59.559184-64.783673 115.983673-120.163266 159.346939-61.64898 48.065306-132.702041 75.755102-195.395918 75.755102zM194.873469 477.518367c-34.481633 10.971429-59.036735 45.97551-59.036734 86.204082 0 47.542857 33.959184 86.726531 77.322449 89.861224 8.359184 0.522449 15.673469 6.269388 18.285714 14.106123 18.808163 56.946939 57.991837 110.759184 110.759184 152.032653 54.334694 42.318367 115.983673 66.873469 169.795918 66.873469 53.289796 0 115.461224-24.555102 169.273469-66.873469 52.767347-41.273469 91.95102-95.085714 110.759184-152.032653 2.612245-7.836735 9.926531-13.583673 18.285714-14.106123 43.363265-3.134694 77.322449-42.318367 77.322449-89.861224 0-40.228571-24.555102-75.232653-59.036734-86.204082-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.228571-15.673469-52.767347-33.959184zM603.428571 334.889796h-182.857142c-11.493878 0-20.897959-9.404082-20.89796-20.897959s9.404082-20.897959 20.89796-20.897959h182.857142c11.493878 0 20.897959 9.404082 20.89796 20.897959s-9.404082 20.897959-20.89796 20.897959z\" fill=\"#333333\" p-id=\"6238\"></path><path d=\"M512 426.318367c-11.493878 0-20.897959-9.404082-20.897959-20.897959v-182.857143c0-11.493878 9.404082-20.897959 20.897959-20.897959s20.897959 9.404082 20.897959 20.897959v182.857143c0 11.493878-9.404082 20.897959-20.897959 20.897959z\" fill=\"#333333\" p-id=\"6239\"></path></svg>",
+                "agentToolIconSvg": "",
+                "useAgent": true,
+                "agentPromptTemplate": "",
+                "promptIncludeEssay": false,
+                "backgroundFileNameList": [],
+                "chatgptParameters": [1000, 1, 2],
+            },
+            {
+                "agentDisplayName":"陈医生",
+                "agentName":`teacher_${patientAgentName}_3`,
+                "agentRole": "scaffold",
+                "model": "gpt-4o",
+                "agentDescription": "",
+                "agentAvatarSvg":"<svg t=\"1714450472298\" viewBox=\"0 0 1024 1024\"  xmlns=\"http://www.w3.org/2000/svg\" p-id=\"6234\" width=\"30\" height=\"30\">\n                    <path d=\"M378.253061 617.012245m-42.840816 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6235\"></path>\n                    <path d=\"M645.746939 617.012245m-42.840817 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6236\"></path>\n                    <path d=\"M509.910204 532.897959c-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.75102-15.673469-53.289796-33.959184-12.538776-17.763265-17.240816-39.706122-13.583673-61.12653l42.318367-237.714286c6.269388-35.526531 35.526531-63.216327 71.57551-67.395918 8.881633-1.044898 16.718367-2.089796 24.555103-3.657143l3.134693-0.522449c31.869388-5.22449 67.395918-11.493878 189.126531-11.493878 121.730612 0 157.779592 6.269388 189.126531 11.493878 8.359184 1.567347 17.240816 3.134694 28.212245 4.179592 35.526531 4.179592 65.306122 31.869388 71.57551 67.395918l41.795918 237.191837c3.657143 21.420408-1.044898 43.363265-13.583673 61.648979-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857z m2.089796-395.493877c-118.073469 0-152.032653 5.746939-182.334694 10.971428l-3.134694 0.522449c-8.359184 1.567347-16.718367 3.134694-27.167347 4.179592-17.240816 2.089796-31.869388 15.673469-35.004081 32.914286l-42.318368 237.714285c-2.089796 10.44898 0.522449 21.420408 6.791837 30.302041 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 6.269388-8.881633 8.881633-19.330612 6.791837-30.302041l-41.795919-237.714285c-3.134694-17.240816-17.763265-30.82449-35.004081-32.914286-12.016327-1.567347-21.420408-3.134694-30.302041-4.702041-30.302041-5.22449-64.261224-10.971429-182.857143-10.971428z\" fill=\"#333333\" p-id=\"6237\"></path><path d=\"M512 928.391837c-62.693878 0-133.746939-27.689796-195.395918-75.755102-55.379592-43.363265-97.697959-99.265306-120.163266-159.346939-58.514286-10.971429-102.4-65.306122-102.4-129.567347 0-66.35102 46.497959-122.253061 108.669388-130.612245 9.404082-1.044898 18.285714 4.179592 21.942857 12.538776 1.044898 2.612245 2.612245 5.22449 4.179592 7.836734 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 1.567347-2.089796 3.134694-4.702041 4.179592-7.836734 3.657143-8.881633 12.538776-14.106122 21.942857-12.538776 62.171429 8.359184 108.669388 64.261224 108.669388 130.612245 0 64.261224-43.885714 118.595918-102.4 129.567347-22.465306 59.559184-64.783673 115.983673-120.163266 159.346939-61.64898 48.065306-132.702041 75.755102-195.395918 75.755102zM194.873469 477.518367c-34.481633 10.971429-59.036735 45.97551-59.036734 86.204082 0 47.542857 33.959184 86.726531 77.322449 89.861224 8.359184 0.522449 15.673469 6.269388 18.285714 14.106123 18.808163 56.946939 57.991837 110.759184 110.759184 152.032653 54.334694 42.318367 115.983673 66.873469 169.795918 66.873469 53.289796 0 115.461224-24.555102 169.273469-66.873469 52.767347-41.273469 91.95102-95.085714 110.759184-152.032653 2.612245-7.836735 9.926531-13.583673 18.285714-14.106123 43.363265-3.134694 77.322449-42.318367 77.322449-89.861224 0-40.228571-24.555102-75.232653-59.036734-86.204082-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.228571-15.673469-52.767347-33.959184zM603.428571 334.889796h-182.857142c-11.493878 0-20.897959-9.404082-20.89796-20.897959s9.404082-20.897959 20.89796-20.897959h182.857142c11.493878 0 20.897959 9.404082 20.89796 20.897959s-9.404082 20.897959-20.89796 20.897959z\" fill=\"#333333\" p-id=\"6238\"></path><path d=\"M512 426.318367c-11.493878 0-20.897959-9.404082-20.897959-20.897959v-182.857143c0-11.493878 9.404082-20.897959 20.897959-20.897959s20.897959 9.404082 20.897959 20.897959v182.857143c0 11.493878-9.404082 20.897959-20.897959 20.897959z\" fill=\"#333333\" p-id=\"6239\"></path></svg>",
+                "agentToolIconSvg": "",
+                "useAgent": true,
+                "agentPromptTemplate": "",
+                "promptIncludeEssay": false,
+                "backgroundFileNameList": [],
+                "chatgptParameters": [1000, 1, 2],
+            },
+            {
+                "agentDisplayName":"陈医生",
+                "agentName":`teacher_${patientAgentName}_1`,
+                "agentRole": "assessment",
+                "model": "gpt-4o",
+                "agentDescription": "",
+                "agentAvatarSvg":"<svg t=\"1714450472298\" viewBox=\"0 0 1024 1024\"  xmlns=\"http://www.w3.org/2000/svg\" p-id=\"6234\" width=\"30\" height=\"30\">\n                    <path d=\"M378.253061 617.012245m-42.840816 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6235\"></path>\n                    <path d=\"M645.746939 617.012245m-42.840817 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6236\"></path>\n                    <path d=\"M509.910204 532.897959c-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.75102-15.673469-53.289796-33.959184-12.538776-17.763265-17.240816-39.706122-13.583673-61.12653l42.318367-237.714286c6.269388-35.526531 35.526531-63.216327 71.57551-67.395918 8.881633-1.044898 16.718367-2.089796 24.555103-3.657143l3.134693-0.522449c31.869388-5.22449 67.395918-11.493878 189.126531-11.493878 121.730612 0 157.779592 6.269388 189.126531 11.493878 8.359184 1.567347 17.240816 3.134694 28.212245 4.179592 35.526531 4.179592 65.306122 31.869388 71.57551 67.395918l41.795918 237.191837c3.657143 21.420408-1.044898 43.363265-13.583673 61.648979-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857z m2.089796-395.493877c-118.073469 0-152.032653 5.746939-182.334694 10.971428l-3.134694 0.522449c-8.359184 1.567347-16.718367 3.134694-27.167347 4.179592-17.240816 2.089796-31.869388 15.673469-35.004081 32.914286l-42.318368 237.714285c-2.089796 10.44898 0.522449 21.420408 6.791837 30.302041 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 6.269388-8.881633 8.881633-19.330612 6.791837-30.302041l-41.795919-237.714285c-3.134694-17.240816-17.763265-30.82449-35.004081-32.914286-12.016327-1.567347-21.420408-3.134694-30.302041-4.702041-30.302041-5.22449-64.261224-10.971429-182.857143-10.971428z\" fill=\"#333333\" p-id=\"6237\"></path><path d=\"M512 928.391837c-62.693878 0-133.746939-27.689796-195.395918-75.755102-55.379592-43.363265-97.697959-99.265306-120.163266-159.346939-58.514286-10.971429-102.4-65.306122-102.4-129.567347 0-66.35102 46.497959-122.253061 108.669388-130.612245 9.404082-1.044898 18.285714 4.179592 21.942857 12.538776 1.044898 2.612245 2.612245 5.22449 4.179592 7.836734 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 1.567347-2.089796 3.134694-4.702041 4.179592-7.836734 3.657143-8.881633 12.538776-14.106122 21.942857-12.538776 62.171429 8.359184 108.669388 64.261224 108.669388 130.612245 0 64.261224-43.885714 118.595918-102.4 129.567347-22.465306 59.559184-64.783673 115.983673-120.163266 159.346939-61.64898 48.065306-132.702041 75.755102-195.395918 75.755102zM194.873469 477.518367c-34.481633 10.971429-59.036735 45.97551-59.036734 86.204082 0 47.542857 33.959184 86.726531 77.322449 89.861224 8.359184 0.522449 15.673469 6.269388 18.285714 14.106123 18.808163 56.946939 57.991837 110.759184 110.759184 152.032653 54.334694 42.318367 115.983673 66.873469 169.795918 66.873469 53.289796 0 115.461224-24.555102 169.273469-66.873469 52.767347-41.273469 91.95102-95.085714 110.759184-152.032653 2.612245-7.836735 9.926531-13.583673 18.285714-14.106123 43.363265-3.134694 77.322449-42.318367 77.322449-89.861224 0-40.228571-24.555102-75.232653-59.036734-86.204082-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.228571-15.673469-52.767347-33.959184zM603.428571 334.889796h-182.857142c-11.493878 0-20.897959-9.404082-20.89796-20.897959s9.404082-20.897959 20.89796-20.897959h182.857142c11.493878 0 20.897959 9.404082 20.89796 20.897959s-9.404082 20.897959-20.89796 20.897959z\" fill=\"#333333\" p-id=\"6238\"></path><path d=\"M512 426.318367c-11.493878 0-20.897959-9.404082-20.897959-20.897959v-182.857143c0-11.493878 9.404082-20.897959 20.897959-20.897959s20.897959 9.404082 20.897959 20.897959v182.857143c0 11.493878-9.404082 20.897959-20.897959 20.897959z\" fill=\"#333333\" p-id=\"6239\"></path></svg>",
+                "agentToolIconSvg": "",
+                "useAgent": true,
+                "agentPromptTemplate": "",
+                "promptIncludeEssay": false,
+                "backgroundFileNameList": [],
+                "chatgptParameters": [1000, 1, 2],
+            },
+            {
+                "agentDisplayName":"陈医生",
+                "agentName":`teacher_${patientAgentName}_2`,
+                "agentRole": "assessment",
+                "model": "gpt-4o",
+                "agentDescription": "",
+                "agentAvatarSvg":"<svg t=\"1714450472298\" viewBox=\"0 0 1024 1024\"  xmlns=\"http://www.w3.org/2000/svg\" p-id=\"6234\" width=\"30\" height=\"30\">\n                    <path d=\"M378.253061 617.012245m-42.840816 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6235\"></path>\n                    <path d=\"M645.746939 617.012245m-42.840817 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6236\"></path>\n                    <path d=\"M509.910204 532.897959c-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.75102-15.673469-53.289796-33.959184-12.538776-17.763265-17.240816-39.706122-13.583673-61.12653l42.318367-237.714286c6.269388-35.526531 35.526531-63.216327 71.57551-67.395918 8.881633-1.044898 16.718367-2.089796 24.555103-3.657143l3.134693-0.522449c31.869388-5.22449 67.395918-11.493878 189.126531-11.493878 121.730612 0 157.779592 6.269388 189.126531 11.493878 8.359184 1.567347 17.240816 3.134694 28.212245 4.179592 35.526531 4.179592 65.306122 31.869388 71.57551 67.395918l41.795918 237.191837c3.657143 21.420408-1.044898 43.363265-13.583673 61.648979-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857z m2.089796-395.493877c-118.073469 0-152.032653 5.746939-182.334694 10.971428l-3.134694 0.522449c-8.359184 1.567347-16.718367 3.134694-27.167347 4.179592-17.240816 2.089796-31.869388 15.673469-35.004081 32.914286l-42.318368 237.714285c-2.089796 10.44898 0.522449 21.420408 6.791837 30.302041 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 6.269388-8.881633 8.881633-19.330612 6.791837-30.302041l-41.795919-237.714285c-3.134694-17.240816-17.763265-30.82449-35.004081-32.914286-12.016327-1.567347-21.420408-3.134694-30.302041-4.702041-30.302041-5.22449-64.261224-10.971429-182.857143-10.971428z\" fill=\"#333333\" p-id=\"6237\"></path><path d=\"M512 928.391837c-62.693878 0-133.746939-27.689796-195.395918-75.755102-55.379592-43.363265-97.697959-99.265306-120.163266-159.346939-58.514286-10.971429-102.4-65.306122-102.4-129.567347 0-66.35102 46.497959-122.253061 108.669388-130.612245 9.404082-1.044898 18.285714 4.179592 21.942857 12.538776 1.044898 2.612245 2.612245 5.22449 4.179592 7.836734 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 1.567347-2.089796 3.134694-4.702041 4.179592-7.836734 3.657143-8.881633 12.538776-14.106122 21.942857-12.538776 62.171429 8.359184 108.669388 64.261224 108.669388 130.612245 0 64.261224-43.885714 118.595918-102.4 129.567347-22.465306 59.559184-64.783673 115.983673-120.163266 159.346939-61.64898 48.065306-132.702041 75.755102-195.395918 75.755102zM194.873469 477.518367c-34.481633 10.971429-59.036735 45.97551-59.036734 86.204082 0 47.542857 33.959184 86.726531 77.322449 89.861224 8.359184 0.522449 15.673469 6.269388 18.285714 14.106123 18.808163 56.946939 57.991837 110.759184 110.759184 152.032653 54.334694 42.318367 115.983673 66.873469 169.795918 66.873469 53.289796 0 115.461224-24.555102 169.273469-66.873469 52.767347-41.273469 91.95102-95.085714 110.759184-152.032653 2.612245-7.836735 9.926531-13.583673 18.285714-14.106123 43.363265-3.134694 77.322449-42.318367 77.322449-89.861224 0-40.228571-24.555102-75.232653-59.036734-86.204082-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.228571-15.673469-52.767347-33.959184zM603.428571 334.889796h-182.857142c-11.493878 0-20.897959-9.404082-20.89796-20.897959s9.404082-20.897959 20.89796-20.897959h182.857142c11.493878 0 20.897959 9.404082 20.89796 20.897959s-9.404082 20.897959-20.89796 20.897959z\" fill=\"#333333\" p-id=\"6238\"></path><path d=\"M512 426.318367c-11.493878 0-20.897959-9.404082-20.897959-20.897959v-182.857143c0-11.493878 9.404082-20.897959 20.897959-20.897959s20.897959 9.404082 20.897959 20.897959v182.857143c0 11.493878-9.404082 20.897959-20.897959 20.897959z\" fill=\"#333333\" p-id=\"6239\"></path></svg>",
+                "agentToolIconSvg": "",
+                "useAgent": true,
+                "agentPromptTemplate": "",
+                "promptIncludeEssay": false,
+                "backgroundFileNameList": [],
+                "chatgptParameters": [1000, 1, 2],
+
+            },                {
+                "agentDisplayName":"陈医生",
+                "agentName":`teacher_${patientAgentName}_3`,
+                "agentRole": "assessment",
+                "model": "gpt-4o",
+                "agentDescription": "",
+                "agentAvatarSvg":"<svg t=\"1714450472298\" viewBox=\"0 0 1024 1024\"  xmlns=\"http://www.w3.org/2000/svg\" p-id=\"6234\" width=\"30\" height=\"30\">\n                    <path d=\"M378.253061 617.012245m-42.840816 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6235\"></path>\n                    <path d=\"M645.746939 617.012245m-42.840817 0a42.840816 42.840816 0 1 0 85.681633 0 42.840816 42.840816 0 1 0-85.681633 0Z\" fill=\"#333333\" p-id=\"6236\"></path>\n                    <path d=\"M509.910204 532.897959c-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.75102-15.673469-53.289796-33.959184-12.538776-17.763265-17.240816-39.706122-13.583673-61.12653l42.318367-237.714286c6.269388-35.526531 35.526531-63.216327 71.57551-67.395918 8.881633-1.044898 16.718367-2.089796 24.555103-3.657143l3.134693-0.522449c31.869388-5.22449 67.395918-11.493878 189.126531-11.493878 121.730612 0 157.779592 6.269388 189.126531 11.493878 8.359184 1.567347 17.240816 3.134694 28.212245 4.179592 35.526531 4.179592 65.306122 31.869388 71.57551 67.395918l41.795918 237.191837c3.657143 21.420408-1.044898 43.363265-13.583673 61.648979-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857z m2.089796-395.493877c-118.073469 0-152.032653 5.746939-182.334694 10.971428l-3.134694 0.522449c-8.359184 1.567347-16.718367 3.134694-27.167347 4.179592-17.240816 2.089796-31.869388 15.673469-35.004081 32.914286l-42.318368 237.714285c-2.089796 10.44898 0.522449 21.420408 6.791837 30.302041 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 6.269388-8.881633 8.881633-19.330612 6.791837-30.302041l-41.795919-237.714285c-3.134694-17.240816-17.763265-30.82449-35.004081-32.914286-12.016327-1.567347-21.420408-3.134694-30.302041-4.702041-30.302041-5.22449-64.261224-10.971429-182.857143-10.971428z\" fill=\"#333333\" p-id=\"6237\"></path><path d=\"M512 928.391837c-62.693878 0-133.746939-27.689796-195.395918-75.755102-55.379592-43.363265-97.697959-99.265306-120.163266-159.346939-58.514286-10.971429-102.4-65.306122-102.4-129.567347 0-66.35102 46.497959-122.253061 108.669388-130.612245 9.404082-1.044898 18.285714 4.179592 21.942857 12.538776 1.044898 2.612245 2.612245 5.22449 4.179592 7.836734 6.269388 8.881633 15.15102 14.628571 26.122449 16.718368 44.408163 7.836735 136.881633 20.897959 254.955102 20.897959 118.595918 0 213.159184-13.061224 259.134694-20.897959 10.44898-2.089796 19.853061-7.836735 26.122449-16.718368 1.567347-2.089796 3.134694-4.702041 4.179592-7.836734 3.657143-8.881633 12.538776-14.106122 21.942857-12.538776 62.171429 8.359184 108.669388 64.261224 108.669388 130.612245 0 64.261224-43.885714 118.595918-102.4 129.567347-22.465306 59.559184-64.783673 115.983673-120.163266 159.346939-61.64898 48.065306-132.702041 75.755102-195.395918 75.755102zM194.873469 477.518367c-34.481633 10.971429-59.036735 45.97551-59.036734 86.204082 0 47.542857 33.959184 86.726531 77.322449 89.861224 8.359184 0.522449 15.673469 6.269388 18.285714 14.106123 18.808163 56.946939 57.991837 110.759184 110.759184 152.032653 54.334694 42.318367 115.983673 66.873469 169.795918 66.873469 53.289796 0 115.461224-24.555102 169.273469-66.873469 52.767347-41.273469 91.95102-95.085714 110.759184-152.032653 2.612245-7.836735 9.926531-13.583673 18.285714-14.106123 43.363265-3.134694 77.322449-42.318367 77.322449-89.861224 0-40.228571-24.555102-75.232653-59.036734-86.204082-12.538776 17.763265-31.346939 29.779592-53.289796 33.436735-47.020408 8.359184-144.195918 21.942857-265.926531 21.942857-121.208163 0-216.293878-13.583673-261.746939-21.420408-21.420408-3.657143-40.228571-15.673469-52.767347-33.959184zM603.428571 334.889796h-182.857142c-11.493878 0-20.897959-9.404082-20.89796-20.897959s9.404082-20.897959 20.89796-20.897959h182.857142c11.493878 0 20.897959 9.404082 20.89796 20.897959s-9.404082 20.897959-20.89796 20.897959z\" fill=\"#333333\" p-id=\"6238\"></path><path d=\"M512 426.318367c-11.493878 0-20.897959-9.404082-20.897959-20.897959v-182.857143c0-11.493878 9.404082-20.897959 20.897959-20.897959s20.897959 9.404082 20.897959 20.897959v182.857143c0 11.493878-9.404082 20.897959-20.897959 20.897959z\" fill=\"#333333\" p-id=\"6239\"></path></svg>",
+                "agentToolIconSvg": "",
+                "useAgent": true,
+                "agentPromptTemplate": "",
+                "promptIncludeEssay": false,
+                "backgroundFileNameList": [],
+                "chatgptParameters": [1000, 1, 2],
+
+            },
+        ]
+    };
+
+    //体格检查
+    var useTigeCheckMultiAgentsSingleWindowTool = true;
+    var useTigeCheckMultiAgentsSingleWindowRating = false;
+    var allowTigeCheckMultiAgentsSingleWindowReminder = false;
+
+    var tigeCheckMultiAgentsSingleWindowConfig = {
+        // 此处的agents 表示可以聊天的agents， scaffold agents 表示可以触发scaffolding 的agents，
+        // 同一个agent 可以同时handle聊天和scaffold，需要在config里面重复写入
+        "agents": [
+            {
+                "agentDisplayName":"报告员",
+                "agentName":`tg_reporter_${patientAgentName}`,
+                "agentRole":"reporter",
+                "model":"gpt-4o",
+                "agentDescription":"",
+
+                "agentAvatarSvg":'<svg t="1750585538544"  viewBox="0 0 1024 1024" version="1.1"  p-id="6759" width="30" height="30"><path d="M445.44 327.68c-27.648 0-50.176 22.528-50.176 50.176h33.792c0-9.216 7.168-16.384 16.384-16.384s16.384 7.168 16.384 16.384h33.792c0-27.648-22.528-50.176-50.176-50.176zM578.56 327.68c-27.648 0-50.176 22.528-50.176 50.176h33.792c0-9.216 7.168-16.384 16.384-16.384s16.384 7.168 16.384 16.384h33.792c0-27.648-22.528-50.176-50.176-50.176zM512 779.264c-36.864 0-66.56 29.696-66.56 66.56s29.696 66.56 66.56 66.56 66.56-29.696 66.56-66.56-29.696-66.56-66.56-66.56z m0 100.352c-18.432 0-33.792-15.36-33.792-33.792s15.36-33.792 33.792-33.792 33.792 15.36 33.792 33.792-15.36 33.792-33.792 33.792z" p-id="6760"></path><path d="M913.408 979.968V762.88C913.408 624.64 800.768 512 662.528 512h-18.432c6.144-5.12 11.264-11.264 16.384-16.384h18.432c46.08 0 83.968-37.888 83.968-83.968v-29.696c20.48-13.312 33.792-36.864 33.792-62.464 0-26.624-13.312-49.152-33.792-62.464C760.832 120.832 649.216 10.24 512 10.24S263.168 120.832 261.12 257.024c-20.48 13.312-33.792 36.864-33.792 62.464 0 41.984 33.792 74.752 75.776 74.752h11.264c8.192 46.08 31.744 87.04 65.536 116.736h-18.432c-138.24 0-250.88 112.64-250.88 250.88v217.088H10.24V1013.76H1013.76v-33.792h-100.352z m-184.32-568.32c0 25.6-19.456 46.08-43.008 49.152 11.264-20.48 19.456-41.984 23.552-66.56h11.264c3.072 0 5.12-1.024 8.192-1.024v18.432z m33.792-92.16c0 23.552-18.432 41.984-41.984 41.984h-8.192v-83.968h8.192c23.552 0 41.984 19.456 41.984 41.984z m-451.584 41.984h-8.192c-23.552 0-41.984-18.432-41.984-41.984s18.432-41.984 41.984-41.984h8.192v83.968z m-8.192-116.736c-3.072 0-5.12 0-7.168 1.024 7.168-112.64 101.376-201.728 216.064-201.728S720.896 133.12 729.088 244.736c-2.048 0-5.12-1.024-7.168-1.024h-11.264C693.248 149.504 611.328 76.8 512 76.8s-181.248 72.704-197.632 166.912h-11.264z m375.808 32.768c-120.832-4.096-200.704-53.248-200.704-100.352 0-9.216-7.168-16.384-16.384-16.384s-16.384 7.168-16.384 16.384c0 41.984-43.008 76.8-99.328 82.944 9.216-83.968 79.872-149.504 165.888-149.504 92.16 0 166.912 74.752 166.912 166.912z m-333.824 83.968v-67.584c52.224-4.096 96.256-29.696 118.784-64.512 34.816 46.08 116.736 78.848 216.064 81.92v50.176c0 37.888-12.288 72.704-33.792 100.352H512v33.792h100.352c-9.216 7.168-19.456 13.312-30.72 18.432a171.008 171.008 0 0 1-138.24 0c-58.368-26.624-98.304-84.992-98.304-152.576zM460.8 555.008c16.384 4.096 33.792 7.168 51.2 7.168s34.816-3.072 51.2-7.168l-51.2 103.424-51.2-103.424z m24.576 123.904h-29.696L389.12 544.768h29.696l66.56 134.144z m120.832-133.12h29.696l-66.56 134.144h-29.696l66.56-134.144zM194.56 762.88v217.088h-50.176V762.88c0-116.736 92.16-211.968 206.848-217.088l66.56 133.12H277.504c-46.08 0-82.944 37.888-82.944 83.968z m602.112 217.088H227.328V762.88c0-27.648 22.528-50.176 50.176-50.176h467.968c27.648 0 50.176 22.528 50.176 50.176v217.088z m82.944 0H829.44V762.88c0-46.08-37.888-83.968-83.968-83.968H606.208l66.56-133.12c114.688 5.12 206.848 100.352 206.848 217.088v217.088z" p-id="6761"></path><path d="M729.088 829.44h33.792v116.736h-33.792zM729.088 762.88h33.792v33.792h-33.792zM879.616 160.768h33.792V194.56h-33.792zM879.616 227.328h33.792v33.792h-33.792zM879.616 294.912h33.792v33.792h-33.792zM110.592 361.472h33.792v33.792h-33.792zM110.592 428.032h33.792v33.792h-33.792zM110.592 495.616h33.792v33.792h-33.792z" p-id="6762"></path></svg>',
+                "agentToolIconSvg": "",
+
+                "useAgent": true,
+                "promptIncludeEssay":true,
+                "backgroundFileNameList":[],
+                "chatgptParameters":[1000,1,2],
+                "useRating": useMultiAgentsSingleWindowRating
+            },
+            // {
+            //     "agentDisplayName":"English Grammar Tutor",
+            //     "agentName":"english_grammar_tutor",
+            //     "agentRole":"tutor",
+            //     "model":"gpt-4o",
+            //     "agentDescription":"",
+            //
+            //     "agentAvatarSvg": "<svg fill=\"#000000\" width=\"32\" height=\"32\" viewBox=\"0 0 24 24\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\"><title>chatgpt icon</title><path d=\"M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z\"/></svg>",
+            //     "agentToolIconSvg": "",
+            //
+            //     "useAgent": true,
+            //     "promptIncludeEssay":true,
+            //     "backgroundFileNameList":[],
+            //     "chatgptParameters":[1000,1,2],
+            //     "useRating": useMultiAgentsSingleWindowRating
+            // }
+        ],
+    };
+
+    //辅助检查
+    var useAssistCheckMultiAgentsSingleWindowTool = true;
+    var useAssistCheckMultiAgentsSingleWindowRating = false;
+    var allowAssistCheckMultiAgentsSingleWindowReminder = false;
+
+    var assistCheckMultiAgentsSingleWindowConfig = {
+        // 此处的agents 表示可以聊天的agents， scaffold agents 表示可以触发scaffolding 的agents，
+        // 同一个agent 可以同时handle聊天和scaffold，需要在config里面重复写入
+        "agents": [
+            {
+                "agentDisplayName":"报告员",
+                "agentName":`fz_reporter_${patientAgentName}`,
+                "agentRole":"reporter",
+                "model":"gpt-4o",
+                "agentDescription":"",
+
+                "agentAvatarSvg":'<svg t="1750585538544"  viewBox="0 0 1024 1024" version="1.1"  p-id="6759" width="30" height="30"><path d="M445.44 327.68c-27.648 0-50.176 22.528-50.176 50.176h33.792c0-9.216 7.168-16.384 16.384-16.384s16.384 7.168 16.384 16.384h33.792c0-27.648-22.528-50.176-50.176-50.176zM578.56 327.68c-27.648 0-50.176 22.528-50.176 50.176h33.792c0-9.216 7.168-16.384 16.384-16.384s16.384 7.168 16.384 16.384h33.792c0-27.648-22.528-50.176-50.176-50.176zM512 779.264c-36.864 0-66.56 29.696-66.56 66.56s29.696 66.56 66.56 66.56 66.56-29.696 66.56-66.56-29.696-66.56-66.56-66.56z m0 100.352c-18.432 0-33.792-15.36-33.792-33.792s15.36-33.792 33.792-33.792 33.792 15.36 33.792 33.792-15.36 33.792-33.792 33.792z" p-id="6760"></path><path d="M913.408 979.968V762.88C913.408 624.64 800.768 512 662.528 512h-18.432c6.144-5.12 11.264-11.264 16.384-16.384h18.432c46.08 0 83.968-37.888 83.968-83.968v-29.696c20.48-13.312 33.792-36.864 33.792-62.464 0-26.624-13.312-49.152-33.792-62.464C760.832 120.832 649.216 10.24 512 10.24S263.168 120.832 261.12 257.024c-20.48 13.312-33.792 36.864-33.792 62.464 0 41.984 33.792 74.752 75.776 74.752h11.264c8.192 46.08 31.744 87.04 65.536 116.736h-18.432c-138.24 0-250.88 112.64-250.88 250.88v217.088H10.24V1013.76H1013.76v-33.792h-100.352z m-184.32-568.32c0 25.6-19.456 46.08-43.008 49.152 11.264-20.48 19.456-41.984 23.552-66.56h11.264c3.072 0 5.12-1.024 8.192-1.024v18.432z m33.792-92.16c0 23.552-18.432 41.984-41.984 41.984h-8.192v-83.968h8.192c23.552 0 41.984 19.456 41.984 41.984z m-451.584 41.984h-8.192c-23.552 0-41.984-18.432-41.984-41.984s18.432-41.984 41.984-41.984h8.192v83.968z m-8.192-116.736c-3.072 0-5.12 0-7.168 1.024 7.168-112.64 101.376-201.728 216.064-201.728S720.896 133.12 729.088 244.736c-2.048 0-5.12-1.024-7.168-1.024h-11.264C693.248 149.504 611.328 76.8 512 76.8s-181.248 72.704-197.632 166.912h-11.264z m375.808 32.768c-120.832-4.096-200.704-53.248-200.704-100.352 0-9.216-7.168-16.384-16.384-16.384s-16.384 7.168-16.384 16.384c0 41.984-43.008 76.8-99.328 82.944 9.216-83.968 79.872-149.504 165.888-149.504 92.16 0 166.912 74.752 166.912 166.912z m-333.824 83.968v-67.584c52.224-4.096 96.256-29.696 118.784-64.512 34.816 46.08 116.736 78.848 216.064 81.92v50.176c0 37.888-12.288 72.704-33.792 100.352H512v33.792h100.352c-9.216 7.168-19.456 13.312-30.72 18.432a171.008 171.008 0 0 1-138.24 0c-58.368-26.624-98.304-84.992-98.304-152.576zM460.8 555.008c16.384 4.096 33.792 7.168 51.2 7.168s34.816-3.072 51.2-7.168l-51.2 103.424-51.2-103.424z m24.576 123.904h-29.696L389.12 544.768h29.696l66.56 134.144z m120.832-133.12h29.696l-66.56 134.144h-29.696l66.56-134.144zM194.56 762.88v217.088h-50.176V762.88c0-116.736 92.16-211.968 206.848-217.088l66.56 133.12H277.504c-46.08 0-82.944 37.888-82.944 83.968z m602.112 217.088H227.328V762.88c0-27.648 22.528-50.176 50.176-50.176h467.968c27.648 0 50.176 22.528 50.176 50.176v217.088z m82.944 0H829.44V762.88c0-46.08-37.888-83.968-83.968-83.968H606.208l66.56-133.12c114.688 5.12 206.848 100.352 206.848 217.088v217.088z" p-id="6761"></path><path d="M729.088 829.44h33.792v116.736h-33.792zM729.088 762.88h33.792v33.792h-33.792zM879.616 160.768h33.792V194.56h-33.792zM879.616 227.328h33.792v33.792h-33.792zM879.616 294.912h33.792v33.792h-33.792zM110.592 361.472h33.792v33.792h-33.792zM110.592 428.032h33.792v33.792h-33.792zM110.592 495.616h33.792v33.792h-33.792z" p-id="6762"></path></svg>',
+                "agentToolIconSvg": "",
+
+                "useAgent": true,
+                "promptIncludeEssay":true,
+                "backgroundFileNameList":[],
+                "chatgptParameters":[1000,1,2],
+                "useRating": useMultiAgentsSingleWindowRating
+            },
+            // {
+            //     "agentDisplayName":"English Grammar Tutor",
+            //     "agentName":"english_grammar_tutor",
+            //     "agentRole":"tutor",
+            //     "model":"gpt-4o",
+            //     "agentDescription":"",
+            //
+            //     "agentAvatarSvg": "<svg fill=\"#000000\" width=\"32\" height=\"32\" viewBox=\"0 0 24 24\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\"><title>chatgpt icon</title><path d=\"M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z\"/></svg>",
+            //     "agentToolIconSvg": "",
+            //
+            //     "useAgent": true,
+            //     "promptIncludeEssay":true,
+            //     "backgroundFileNameList":[],
+            //     "chatgptParameters":[1000,1,2],
+            //     "useRating": useMultiAgentsSingleWindowRating
+            // }
+        ],
+    };
+
+    var useMultiAgentsMultiWindowsTool = false;
+    var useMultiAgentsMultiWindowsRating = false;
+    // 字数限制 写到单独的 study 工具里面
+    // var wordCountLimit = 300;
+    // var allowPaste = false;
+    // var allowCopy = true;
+    // 测试多窗口，每个窗口一个agent
+
+
+    var multiAgentsMultiWindowsConfig = [
+        {
+            "agentDisplayName": "贝可可",
+            "agentName": "mayor_beranda",
+            "agentRole": "mayor",
+            "model":"gpt-4o",
+            "agentDescription": "You are the mayor of Beranda. Please answer all the questions.",
+
+            "agentAvatarSvg": "<svg t=\"1720921759115\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" p-id=\"3165\" width=\"35\" height=\"35\"><path d=\"M486.1 488.4c107.5 0 195-86 195-191.7 0-105.7-87.5-191.7-195-191.7s-195 86-195 191.7c0 105.7 87.5 191.7 195 191.7z m0-349.5c88.5 0 160.5 70.8 160.5 157.8s-72 157.8-160.5 157.8-160.5-70.8-160.5-157.8c0-87 72-157.8 160.5-157.8z m0 261.4c58.2 0 105.4-46.4 105.5-103.7 0-9.4-7.7-17-17.3-17-9.5 0-17.3 7.6-17.3 17 0 38.5-31.8 69.7-70.9 69.7-39.2 0-70.9-31.2-70.9-69.7 0-9.4-7.7-17-17.3-17-9.5 0-17.3 7.6-17.3 17 0.1 57.3 47.3 103.7 105.5 103.7zM692 508.7H280.5c-60.3 0.1-109.1 48.1-109.2 107.3v198.7c0 9.4 7.7 17 17.3 17 9.5 0 17.3-7.6 17.3-17V616c0-40.5 33.5-73.4 74.7-73.5H692c41.2 0 74.7 32.9 74.7 73.5v198.7c0 4.5 1.8 8.8 5 12 3.2 3.2 7.6 5 12.2 5 9.5 0 17.2-7.6 17.2-17V616c0-59.2-48.9-107.3-109.1-107.3z m-188.7 69.5c-2.1-7.2-8.9-12.2-16.5-12.2s-14.4 4.9-16.5 12.1l-53 176.4c-1.8 5.9-0.2 12.2 4.2 16.6l53 53.6c3.2 3.3 7.7 5.1 12.4 5.1 4.5 0 8.8-1.7 12-4.8l53-50.5c4.6-4.4 6.3-10.9 4.6-16.9l-53.2-179.4zM487.2 789l-34-34.4 33.4-111.4 33.7 114.1-33.1 31.7z\" fill=\"#6B6B6B\" p-id=\"3166\"></path></svg>",
+            "agentToolIconSvg": "<svg t=\"1713954810237\" class=\"icon\" viewBox=\"0 0 1024 1024\" xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><title>assistant mayor icon</title>\n            <path d=\"M511.83 795.59l-46.4-80.82 93.2 0.23z\" fill=\"#2c2c2c\" p-id=\"3341\" data-spm-anchor-id=\"a313x.search_index.0.i1.46d93a810kQjDt\" className=\"selected\"></path>\n            <path d=\"M511.83 556.45l-46.4 158.37 93.2-0.53z\" fill=\"#2c2c2c\" p-id=\"3342\" data-spm-anchor-id=\"a313x.search_index.0.i0.46d93a810kQjDt\" className=\"selected\"></path>\n            <path d=\"M723.88 929.64H300.17c-50.9 0-98.87-19.94-135.08-56.15-36.21-36.21-56.15-84.18-56.15-135.08 0-50.9 19.94-98.87 56.15-135.08 36.21-36.21 84.18-56.15 135.08-56.15h423.71c50.9 0 98.87 19.94 135.08 56.15 36.21 36.21 56.15 84.18 56.15 135.08 0 50.9-19.94 98.87-56.15 135.08-36.2 36.21-84.18 56.15-135.08 56.15zM300.17 607.18c-72.36 0-131.23 58.87-131.23 131.23 0 72.36 58.87 131.23 131.23 131.23h423.71c72.36 0 131.23-58.87 131.23-131.23 0-72.36-58.87-131.23-131.23-131.23H300.17zM512.03 513.91C396.77 513.91 303 420.14 303 304.88S396.77 95.85 512.03 95.85c50.32 0 177.71 0.24 178.99 0.25l29.92 0.06 0.02 29.92c0 1.31 0.1 131.34 0.1 178.81 0 115.25-93.77 209.02-209.03 209.02z m0-358.06C429.85 155.85 363 222.7 363 304.88s66.85 149.03 149.03 149.03 149.03-66.86 149.03-149.03c0-33.29-0.05-107.23-0.08-148.84-41.08-0.08-113.83-0.19-148.95-0.19z\" p-id=\"3343\"></path>\n        </svg>",
+            "useAgent": true,
+            "promptIncludeEssay": false,
+            "backgroundFileNameList": [],
+            "chatgptParameters": [1000, 1, 2],
+        },
+        {
+            "agentDisplayName":"思思",
+            "agentName":"peer_ss",
+            "agentRole":"peer",
+            "model":"gpt-4o",
+            "agentDescription":"You are a peer. Please answer all the questions.",
+
+            "agentAvatarSvg": "<svg t=\"1720933456267\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" p-id=\"6373\" width=\"35\" height=\"35\"><path d=\"M682.666667 1002.666667H213.333333V789.333333a170.666667 170.666667 0 0 1 170.666667-170.666666 85.333333 85.333333 0 0 0 85.333333 85.333333c23.68 0 42.666667-28.586667 42.666667-64 0 35.413333 18.986667 64 42.666667 64a85.333333 85.333333 0 0 0 85.333333-85.333333 170.666667 170.666667 0 0 1 170.666667 170.666666v213.333334z\" fill=\"#FFCA6B\" p-id=\"6374\"></path><path d=\"M576 618.666667h64a85.333333 85.333333 0 0 1-85.333333 85.333333c-23.68 0-42.666667-28.586667-42.666667-64a64 64 0 0 0 64-64zM512 640c0 35.413333-18.986667 64-42.666667 64a85.333333 85.333333 0 0 1-85.333333-85.333333h64v-42.666667a64 64 0 0 0 64 64z\" fill=\"#F3596B\" p-id=\"6375\"></path><path d=\"M341.333333 362.666667a172.8 172.8 0 0 0 1.28 21.12L341.333333 384h-21.333333a42.666667 42.666667 0 0 1 0-85.333333h21.333333zM448 576v-55.04a171.712 171.712 0 0 0 128 0V576a64 64 0 0 1-128 0zM746.666667 341.333333a42.794667 42.794667 0 0 1-42.666667 42.666667h-21.333333l-1.28-0.213333A172.8 172.8 0 0 0 682.666667 362.666667v-64h21.333333a42.794667 42.794667 0 0 1 42.666667 42.666666z\" fill=\"#F2CAC1\" p-id=\"6376\"></path><path d=\"M576 520.96a171.712 171.712 0 0 1-128 0 170.666667 170.666667 0 0 1-105.386667-137.173333A172.8 172.8 0 0 1 341.333333 362.666667v-85.333334h21.333334c106.666667 0 149.333333-149.333333 149.333333-149.333333s42.666667 149.333333 149.333333 149.333333h21.333334v85.333334a170.453333 170.453333 0 0 1-106.666667 158.293333z\" fill=\"#F2CAC1\" p-id=\"6377\"></path><path d=\"M682.666667 384s213.333333 0 213.333333 213.333333c0 0-213.333333 0-213.333333-213.333333zM128 597.333333c0-213.333333 213.333333-213.333333 213.333333-213.333333C341.333333 597.333333 128 597.333333 128 597.333333zM704 213.333333v64h-42.666667c-106.666667 0-149.333333-149.333333-149.333333-149.333333s-42.666667 149.333333-149.333333 149.333333h-42.666667v-64a192 192 0 0 1 384 0z\" fill=\"#7C8691\" p-id=\"6378\" data-spm-anchor-id=\"a313x.search_index.0.i1.49713a812B2MlJ\" class=\"selected\"></path><path d=\"M661.333333 853.333333h42.666667v149.333334h-42.666667zM320 853.333333h42.666667v149.333334h-42.666667zM490.666667 789.333333h42.666666v42.666667h-42.666666zM490.666667 874.666667h42.666666v42.666666h-42.666666z\" fill=\"#2A3244\" p-id=\"6379\"></path><path d=\"M810.666667 1024H213.333333a21.333333 21.333333 0 0 1-21.333333-21.333333V789.333333a192.234667 192.234667 0 0 1 192-192h42.666667v-85.333333h42.666666v106.666667a21.333333 21.333333 0 0 1-21.333333 21.333333h-64a149.504 149.504 0 0 0-149.333333 149.333333v192h554.666666v-192a149.504 149.504 0 0 0-149.333333-149.333333h-64a21.333333 21.333333 0 0 1-21.333333-21.333333v-106.666667h42.666666v85.333333h42.666667a192.234667 192.234667 0 0 1 192 192v213.333334a21.333333 21.333333 0 0 1-21.333333 21.333333zM704 298.666667h-21.333333v-85.333334a170.666667 170.666667 0 0 0-341.333334 0v85.333334h-21.333333a21.333333 21.333333 0 0 1-21.333333-21.333334v-64a213.333333 213.333333 0 0 1 426.666666 0v64a21.333333 21.333333 0 0 1-21.333333 21.333334z\" fill=\"#2A3244\" p-id=\"6380\"></path><path d=\"M512 554.666667a192.234667 192.234667 0 0 1-192-192v-85.333334a21.333333 21.333333 0 0 1 21.333333-21.333333h21.333334c89.6 0 128.448-132.522667 128.832-133.866667A21.333333 21.333333 0 0 1 512 106.666667a21.333333 21.333333 0 0 1 20.501333 15.445333C532.885333 123.456 572.16 256 661.333333 256h21.333334a21.333333 21.333333 0 0 1 21.333333 21.333333v85.333334a192.234667 192.234667 0 0 1-192 192z m-149.333333-256v64a149.333333 149.333333 0 0 0 298.666666 0v-64c-78.016 0-125.12-65.322667-149.333333-113.770667C487.786667 233.344 440.682667 298.666667 362.666667 298.666667z\" fill=\"#2A3244\" p-id=\"6381\"></path><path d=\"M704 405.333333h-21.333333v-42.666666h21.333333a21.333333 21.333333 0 0 0 0-42.666667h-21.333333v-42.666667h21.333333a64 64 0 0 1 0 128zM341.333333 405.333333h-21.333333a64 64 0 0 1 0-128h21.333333v42.666667h-21.333333a21.333333 21.333333 0 0 0 0 42.666667h21.333333z\" fill=\"#2A3244\" p-id=\"6382\"></path><path d=\"M896 618.666667c-2.346667 0-234.666667-2.688-234.666667-234.666667a21.333333 21.333333 0 0 1 21.333334-21.333333c2.346667 0 234.666667 2.688 234.666666 234.666666a21.333333 21.333333 0 0 1-21.333333 21.333334z m-191.061333-211.669334c11.349333 132.757333 120.661333 161.258667 168.789333 167.338667-11.349333-132.736-120.661333-161.258667-168.789333-167.338667zM128 618.666667a21.333333 21.333333 0 0 1-21.333333-21.333334c0-231.978667 232.32-234.666667 234.666666-234.666666a21.333333 21.333333 0 0 1 21.333334 21.333333C362.666667 615.978667 130.346667 618.666667 128 618.666667z m191.04-211.584c-48.106667 6.272-157.312 35.114667-168.746667 167.168 48.106667-6.293333 157.312-35.136 168.746667-167.168zM512 661.333333a85.333333 85.333333 0 0 1-85.333333-85.333333h42.666666a42.666667 42.666667 0 0 0 85.333334 0h42.666666a85.333333 85.333333 0 0 1-85.333333 85.333333z\" fill=\"#2A3244\" p-id=\"6383\"></path><path d=\"M554.666667 725.333333c-35.882667 0-64-37.482667-64-85.333333h42.666666c0 26.048 12.629333 42.666667 21.333334 42.666667a64 64 0 0 0 64-64h42.666666a106.794667 106.794667 0 0 1-106.666666 106.666666z\" fill=\"#2A3244\" p-id=\"6384\"></path><path d=\"M469.333333 725.333333a106.794667 106.794667 0 0 1-106.666666-106.666666h42.666666a64 64 0 0 0 64 64c8.704 0 21.333333-16.618667 21.333334-42.666667h42.666666c0 47.850667-28.117333 85.333333-64 85.333333z\" fill=\"#2A3244\" p-id=\"6385\"></path></svg>",
+            "agentToolIconSvg": "<svg t=\"1721528326870\" class=\"icon\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" p-id=\"7439\" width=\"16\" height=\"16\">\n<path d=\"M191.978264 413.657237a489.852064 489.852064 0 0 0 219.704269 50.204458h2.629758a152.047786 152.047786 0 0 0 97.540089 39.685428 152.047786 152.047786 0 0 0 98.018226-39.685428h1.912551A486.983238 486.983238 0 0 0 831.009289 413.657237a23.906885 23.906885 0 0 0 5.498583-37.055671c-40.163566-41.837048-116.904665-213.010341-129.336245-248.631599a21.038058 21.038058 0 0 0-1.195345-3.586033 213.488479 213.488479 0 0 0-388.008736 0v2.868826C305.057828 163.591225 227.599522 334.764518 185.523406 376.601566a23.906885 23.906885 0 0 0-6.454859 19.842714 23.906885 23.906885 0 0 0 12.909717 17.212957z m393.746389 8.845548v1.673482a110.688875 110.688875 0 0 1-71.720654 32.274294c-66.939277 0-131.248796-88.455473-155.633818-174.281189 38.968222 5.259515 152.525923 14.105062 204.882001-49.965388a157.068232 157.068232 0 0 0 111.884219 27.731986 331.827558 331.827558 0 0 1-85.825715 161.610539z m133.161347-153.24313A939.062425 939.062425 0 0 0 783.195519 384.729907a439.647607 439.647607 0 0 1-129.097176 29.883606 397.332421 397.332421 0 0 0 64.787657-145.353858z m-146.310134-89.17268a23.906885 23.906885 0 0 0-21.277127-6.693927 23.906885 23.906885 0 0 0-17.212957 13.865993c-28.688261 68.612759-173.803051 51.877939-200.339692 42.554254a25.341298 25.341298 0 0 0-9.323685-1.434413c18.408301-39.924497 32.513363-73.633204 36.577533-85.347578A167.348192 167.348192 0 0 1 663.661097 143.509442c3.586033 10.040892 13.865993 35.14312 27.971055 66.22207a111.645151 111.645151 0 0 1-119.056286-29.644537z m-203.208518 234.765607a446.819672 446.819672 0 0 1-129.575314-30.122675A880.490558 880.490558 0 0 0 305.057828 269.259655a401.63566 401.63566 0 0 0 64.30952 145.592927zM654.576481 805.012938a31.318019 31.318019 0 1 0 31.318018-31.318019 31.318019 31.318019 0 0 0-31.318018 31.318019zM761.918392 805.012938a23.906885 23.906885 0 1 0 23.906885-23.906885 23.906885 23.906885 0 0 0-23.906885 23.906885z\" fill=\"#2c2c2c\" p-id=\"7440\"></path><path d=\"M132.689191 828.441684H558.470805a23.906885 23.906885 0 0 0 0-47.813769H159.70397c20.320852-126.22835 77.936444-211.814997 171.173294-254.60832a259.389697 259.389697 0 0 0 180.975116 78.65365A258.91156 258.91156 0 0 0 692.827496 526.019595c99.930777 47.813769 158.741713 141.050619 174.998395 281.6231a23.906885 23.906885 0 0 0 23.906884 20.798989h2.629758a23.906885 23.906885 0 0 0 20.798989-25.819435c-19.364576-165.67471-92.758712-275.168241-218.508925-324.894561a23.906885 23.906885 0 0 0-25.580366 5.737652 218.508925 218.508925 0 0 1-158.502645 75.545755A218.030787 218.030787 0 0 1 352.871597 483.226271a23.906885 23.906885 0 0 0-23.906884-5.020445C202.019156 527.214939 128.62502 636.70847 109.499513 802.38318a23.906885 23.906885 0 0 0 23.906884 26.058504zM902.729942 961.363962H121.213886a31.318019 31.318019 0 1 0 0 62.636038H902.729942a31.318019 31.318019 0 0 0 0-62.636038z\" fill=\"#2c2c2c\" p-id=\"7441\">\n</path></svg>",
+            "useAgent": false,
+            "promptIncludeEssay":false,
+            "backgroundFileNameList":[],
+            "chatgptParameters":[1000, 1, 2],
+
+            "useRating": true,
+        }
+    ];
+
+
+    var backgroundDocVOList = [
+        {
+            url: "https://example.com/ai-learning-analytics",
+            documentContent: `Artificial intelligence (AI) has transformed the educational landscape, enabling more personalized and data-driven learning experiences.
+              One of the most impactful applications of AI in education is learning analytics, which involves collecting and analyzing data on learners' behaviors,
+              performance, and engagement. By leveraging learning analytics, educators can identify trends, make data-informed decisions, and provide timely
+              interventions to support students who are struggling.
+
+              For instance, AI can track student progress in real time, enabling teachers to understand how students are interacting with educational content.
+              These insights help in tailoring learning materials to meet individual needs, thereby promoting more effective learning outcomes. As AI continues
+              to evolve, the integration of learning analytics will likely become a cornerstone of modern educational practices, creating opportunities for more
+              adaptive and personalized learning environments.`
+        },
+        {
+            url: "https://example.com/ai-self-regulated-learning",
+            documentContent: `Self-regulated learning (SRL) is a critical skill for students in the 21st century, enabling them to take control of their own learning by setting
+              goals, monitoring progress, and reflecting on outcomes. AI tools are playing an increasingly important role in supporting SRL by offering personalized
+              feedback and learning pathways tailored to students' individual needs.
+
+              For example, AI-powered platforms can assess how well a student understands a concept and recommend resources to help them improve. These systems can
+              also provide learners with timely reminders and suggestions on how to better manage their study schedules. By facilitating self-regulated learning,
+              AI helps students develop lifelong learning skills, enhancing their ability to learn autonomously in both academic and professional contexts.`
+
+        },
+        {
+            url: "https://example.com/ai-personalized-learning",
+            documentContent: `The future of education is increasingly being shaped by AI, particularly in the area of personalized learning. Through technologies like learning
+                      analytics and adaptive learning systems, AI can create highly customized educational experiences for students. Instead of a one-size-fits-all approach,
+                      AI enables instruction that adjusts in real time to the needs of each learner.
+
+                      In the context of personalized learning, AI systems can identify students' strengths and weaknesses, adapting lesson plans to maximize engagement and
+                      mastery. Moreover, AI tools help educators monitor students' self-regulated learning behaviors, providing insights into how learners set goals,
+                      stay on task, and manage their own learning strategies. As these AI-driven systems become more sophisticated, the potential for truly personalized,
+                      self-paced learning will expand, making education more accessible and effective for all students.`
+        }
+    ];
+
+    // ===============================================
+    // var patientRoleDescription="You are a patient and please answer questions based on the provided text.";
+
+
+    var chatgptBackgroundFileNameList = []; // add pdf file names here    TODO 使其可以支持docx 和pdf
+    var chatgptRoleDescription = "你是一位乐于助人的助手，可以根据提供的文本回答问题，你回答的格式是纯文本，不能有任何markdown格式。"
+    var CollaborateGPTRoleDescription = "You are an experienced assistant for essay writing. The graduate student is working on an essay writing task. You should not write or finish essays for students. Instead, you should help students by only answering their questions, regarding the essay task, e.g. if they are not sure of the meaning of a term or concept, organizing their arguments, citing properly. Maintain a supportive and encouraging tone throughout interactions, you should motivate students, especially when they encounter challenges in their writing process. Integrate advice on the essay structure, argument development, grammar mistakes and proofreading techniques. Keep your responses succinct.";
+
+    var chatgptRole = "assistant";
+    var chatgptPromptIncludeEssay = true;
+    // var includeSurveyToChatgptPrompt = []; // [1, 2, 3]
+    var chatgptParameters = [1000, 1, 2]; //  response max token, n, temperature/10
+    var chatgptType = "chat";
+
+
+    var useChecklistTool = false;
+    var useChecklistToolGrammar = false;
+    var useChecklistToolAcademic = false;
+    var useChecklistToolOriginality = false;
+    var useChecklistToolClassification = false;
+    var useDictionaryTool = false;
+    var dictionarySourceLanguage = "zh-cn";
+    var dictionaryTargetLanguage = "en";
+    var useTeacherChat = false;
+    var useTimerTool = true;
+    var useVideoRecordingTool = false;
+
+    var useConsultationTableTool = true;
+
+    var toolsLanguage = "zh";
+
+    var accessOtherCourseIdList = [];
+
+    //----------------------------------更新工具 2.5.1
+    var toolsDisplayTime = { //如果是 null 就不做修改，如果是有数值，则根据数值做修改,
+        // annotation: [0, -1], //seconds，此配置表示从0 秒开始使用， 到-1 秒隐藏。 -1 表示永远不隐藏
+        // annotationSearch: "",
+        // scaffolds: "",
+        // gptScaffolds: "",
+        // essayWriting: [180, -1],
+        // essayProductVisual: "",
+        // zoteroNotes: "",
+        // processVisual: "",
+        // consultationSubmit: "",
+        // collaborateWriting: "",
+        // mathEditor: "",
+        // planner: "",
+        // checklist: "",
+        // chatgpt: "",
+        // multiAgentsSingleWindow: [0, -1],
+        // dictionary: "",
+        // teacherChat: "",
+        // timer: "",
+        // popupQuestionnaire: "",
+    }
+
+    var allowGptScaffoldsChat = false;
+    var allowGptScaffoldsChatMultiAgents = false;
+    var gptScaffoldAgent = {
+        "agentDisplayName": "Instructor",
+        "agentName": "cella3_scaffold_chat",
+        "agentRole": "scaffold",
+        "model": "gpt-4o",
+        "agentDescription": "",
+        "agentAvatarSvg": "<svg fill=\"#000000\" width=\"32\" height=\"32\" viewBox=\"0 0 24 24\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\"><title>chatgpt icon</title><path d=\"M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z\"/></svg>",
+        "agentToolIconSvg": "",
+        "useAgent": true,
+        "agentPromptTemplate": "",
+        "promptIncludeEssay": true,
+        "agentBackgroundFileNameList": [],
+        "agentParameters": [1000, 1, 2],
+        "useRating": true,
+        // "hasDefaultScaffolds": true,
+        "triggerConfigs": {
+            "triggerRule": "timeRangeTriggers",
+            "timeRangeTriggers": [
+                {triggerMinute: 1, beginMinute: 0, endMinute: 7, checkSrlProcess: "CMTC1",}, // 如果有多个SRL process可以使用;;; 分割, 例如CMTR2;;;CMTR1;;;CMTR1>CMTR2
+                {triggerMinute: 4, beginMinute: 14, endMinute: 21, checkSrlProcess: "OT2",},
+                {triggerMinute: 7, beginMinute: 28, endMinute: 35, checkSrlProcess: "CMTR1/CMTR2",}
+            ],
+            "fixedMessageTriggers": [
+                {triggerMinute: 5, message: "This is test fixed message1"},
+                {triggerMinute: 20, message: "This is test fixed message2"},
+                {triggerMinute: 35, message: "This is test fixed message3"}
+            ],
+            "defaultTriggers": [ // default 中的 message 需要和前面配置的 message数量一致
+                {triggerMinute: 5, message: "default1"},
+                {triggerMinute: 15, message: "default2"},
+                {triggerMinute: 25, message: "default3"}
+            ]
+        }
+    };
+
+    /*var gptScaffoldReturnMessages = [
+        {
+            triggerMinute: 5, message: "This is test fixed message1"
+        },
+        {
+            triggerMinute: 20, message: "This is test fixed message2"
+        },
+        {
+            triggerMinute: 35, message: "This is test fixed message3"
+        }
+    ];*/
+    // var hasDefaultScaffolds = true;
+    var hasDefaultScaffoldsPrompt = false; //只在Oulu study 使用
+
+    //For NHB paper only
+    let nhbTaskConfig = "gpt-only"; // gpt-only, search-only, gpt-search, search-gpt
+    const task1Minutes = 2;
+    const task2Minutes = 2;
+
+    const toolList1 = [];
+
+    // var studyName = "cella_oulu_task2_ai_in_edu_groupB"; //change to "uniSA" if needed
+    var studyName = "cella_ru_s2_essay1"; //change to "uniSA" if needed
+    function loadScript(url) {
+        let currentDate = new Date();
+
+        // Get the year, month, and day from the date object
+        let year = currentDate.getFullYear();
+        let month = currentDate.getMonth() + 1; // Month is 0-indexed
+        let day = currentDate.getDate();
+
+        // Pad the month and day with leading zeros if they are less than 10
+        month = month < 10 ? '0' + month : month;
+        day = day < 10 ? '0' + day : day;
+
+        // Concatenate the year, month, and day to form the desired format
+        let formattedDate = year.toString() + month.toString() + day.toString();
+
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = url + "?v=" + formattedDate;
+        // var script = document.createElement("script");
+        // script.type = "text/javascript";
+        // script.src = url;
+        script.defer = true;
+        script.async = false;
+        document.head.appendChild(script);
+    }
+    function getURLParameters(url) {
+        var params = {};
+        var parser = document.createElement('a');
+        parser.href = url;
+        var query = parser.search.substring(1);
+        var vars = query.split('&');
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split('=');
+            params[pair[0]] = decodeURIComponent(pair[1]);
+        }
+        return params; // string 类型
+    }
+    // let navTagA = document.querySelector("#page-navbar>nav>ol>li>a"); //this element saves the courseId in Moodle webpage
+    const ol = document.querySelector("#page-navbar>nav>ol.breadcrumb");
+    var currentCourseId = 101; // test toefl to set 1
+    if (ol) {
+        const liList = ol.querySelectorAll('li');
+        if (liList.length >= 2) {
+            const secondLastLi = liList[liList.length - 2];
+            const a = secondLastLi.querySelector('a');
+            if (a) {
+                // console.log(a.href); // 这里就是你想要的 url
+                currentCourseId = getURLParameters(a.href).id;
+                a.onclick = "return false;";
+            }
+        }
+    }
+</script>
+<script>
+    // script usage  在这里读取相应的script
+
+
+    loadScript("/flora/js/text.js");
+    loadScript("/flora/js/i18n_function.js");
+    loadScript("/flora/js/generateToolsHtml.js");
+    loadScript("/flora/js/tools_00common.js");
+    loadScript("/flora/js/tools_00common_chat.js");
+    // // if(useTimerTool) 不确定timer是否需要按需加载
+    loadScript("/flora/js/tools_08timer.js");
+
+
+    if(useAnnotationTool) loadScript("/flora/js/tools_01annotation.js");
+    if(useScaffoldTool) loadScript("/flora/js/tools_02scaffolding.js");
+    if(useWriteEssayTool) loadScript("/flora/js/tools_03essay_writing.js");
+
+    if(usePlannerTool) loadScript("/flora/js/tools_04planner.js");
+    if(useChatgptTool) loadScript("/flora/js/tools_05chatgpt.js");
+    // if(typeof useChatgptAssistantTool !== 'undefined' && useChatgptAssistantTool) loadScript("/flora/js/tools_05_1chatgpt_assistant.js");
+    // if(typeof useToeflAssistantTool!=='undefined' && useToeflAssistantTool) loadScript("/flora/js/tools_14toefl_assistant.js");
+    // if(typeof useChatgptAssistantTeacherTool !=='undefined' && useChatgptAssistantTeacherTool) loadScript("/flora/js/tools_05_2chatgpt_assistant_teacher.js");
+    if(useChecklistTool) loadScript("/flora/js/tools_06checklist.js");
+    if(useVideoRecordingTool) {
+        loadScript("/flora/js/MediaStreamRecorder.js");
+        loadScript("/flora/js/tools_09record_video.js");
+    }
+
+    if(typeof useConsultationSubmitTool !== 'undefined' && useConsultationSubmitTool) {
+        loadScript("/flora/js/tools_13consultation_submit.js");
+    }
+    if (typeof useConsultationTableTool !== 'undefined' && useConsultationTableTool) {
+        loadScript("/flora/js/tools_05_3consultation_table.js");
+    }
+
+    if (typeof useMultiAgentsMultiWindowsTool !== 'undefined' && useMultiAgentsMultiWindowsTool) {
+        loadScript("/flora/js/tools_15multi_agents_multi_windows.js");
+    }
+    if (typeof useMultiAgentsSingleWindowTool !== 'undefined' && useMultiAgentsSingleWindowTool) {
+        loadScript("/flora/js/tools_15multi_agents_single_window.js");
+    }
+    if (typeof usePatientMultiAgentsSingleWindowTool !== 'undefined' && usePatientMultiAgentsSingleWindowTool) {
+        loadScript("/flora/js/tools_15multi_agents_single_window_patient.js");
+    }
+    if (typeof useMedicalScaffoldMultiAgentsSingleWindowTool !== 'undefined' && useMedicalScaffoldMultiAgentsSingleWindowTool) {
+        loadScript("/flora/js/tools_15multi_agents_single_window_medical_scaffold.js");
+    }
+    if (typeof useTigeCheckMultiAgentsSingleWindowTool !== 'undefined' && useTigeCheckMultiAgentsSingleWindowTool) {
+        loadScript("/flora/js/tools_15multi_agents_single_window_tige_check.js");
+    }
+    if (typeof useAssistCheckMultiAgentsSingleWindowTool !== 'undefined' && useAssistCheckMultiAgentsSingleWindowTool) {
+        loadScript("/flora/js/tools_15multi_agents_single_window_assist_check.js");
+    }
+
+    if(useDictionaryTool) loadScript("/flora/js/tools_10dictionary.js");
+    if(useTeacherChat) loadScript("/flora/js/tools_11teacherchat.js");
+    if (useCollaborativeWriteEssayTool) loadScript("/flora/js/tools_12collaboratewrite.js");
+    if (useZoteroNotesTool) loadScript("/flora/js/tools_16zoteronotes.js");
+    if (useProcessVisualTool) loadScript("/flora/js/tools_17process_visual.js");
+    if (useEssayProductAnalysisTool) loadScript("/flora/js/tools_17essay_product_visual.js");
+    if (useGPTScaffoldTool) loadScript("/flora/js/tools_07gpt_scaffolding.js");
+    if (useMathEditorTool) loadScript("/flora/js/tools_16matheditor.js");
+
+    // loadScript("/flora/js/tools_20submit_dialogue_label.js");
+    // loadScript("/flora/js/tools_21jimmie_study.js");
+    loadScript("/flora/js/setupInstrumentationTools.js");
+    loadScript("/flora/js/tools_22medical_study.js")
+
+
+</script>
+<!--    <script async src="https://cse.google.com/cse.js?cx=07c7c130962f14f5f"> </script>-->
+
+
+<!--end_PLUGINS_GENERICO_TEMPLATE_BODY-->

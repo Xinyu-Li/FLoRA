@@ -11,7 +11,8 @@ function render() {
                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-circle" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/></svg>
                    </div>
                    <input type="text" class="form-control" id="assistantPanelInput" placeholder="${chatgptPanelInputPlaceholder}" aria-label="Input group example" aria-describedby="btnGroupAddonAssistantChatgpt">
-                   <button type="button" class="btn btn-outline-primary" id="assistantSendQuestionBtn">${chatgptSendBtnText}</button>
+                   <button type="button" class="btn btn-outline-primary me-2" id="assistantSendQuestionBtn">${chatgptSendBtnText}</button>
+                   <button type="button" class="btn btn-outline-danger" id="endChatWithAssistant">结束问诊</button>
                </div>
            </div>
         </div>`;
@@ -27,6 +28,8 @@ let assistantPanelInput = document.querySelector("#assistantPanelInput");
 let assistantSendQuestionBtn = document.querySelector("#assistantSendQuestionBtn");
 let assistantTextarea = document.querySelector("#assistant-textarea");
 
+let endChatWithAssistant = document.querySelector("#endChatWithAssistant");
+
 //This 4 variables are only used for tool open/close event
 let assistantClickTargetObject = "NO_TARGET_OBJECT";
 let assistantPageEvent = "NO_PAGE_EVENT";
@@ -39,6 +42,16 @@ var chatgptAssistantRound = 0;
 
 var chatHistoryLength = 0;
 
+var consultationFinished = false;
+
+if (localStorage.getItem(userId + "-" + currentCourseId + "-chatgptAssistantFinished") === null) {
+    localStorage.setItem(userId + "-" + currentCourseId + "-chatgptAssistantFinished", "false");
+    consultationFinished = false;
+}
+else{
+    consultationFinished = localStorage.getItem(userId + "-" + currentCourseId + "-chatgptAssistantFinished") === "true";
+}
+
 if(localStorage.getItem(userId + "-" + currentCourseId + "-chatgptAssistantRound") === null){
     // localStorage.setItem("chatgptAssistantRound", "0"); // 记得改回0
     localStorage.setItem(userId + "-" + currentCourseId + "-chatgptAssistantRound", "0");
@@ -48,75 +61,74 @@ else {
     chatgptAssistantRound = parseInt(localStorage.getItem(userId + "-" + currentCourseId + "-chatgptAssistantRound"));
 }
 
-
-function getDoctorScaffold(){
-
-    let notificationText = "带教医生有话对你说，请点击右侧红色的new message跟资深医生陈医生对话"
-    const now = new Date();
-    const timestamp = now.toLocaleTimeString();
-
-    // if mainEditor not exist essay is ""
-    let essayContent = "";
-
-    if (typeof mainEditor === 'undefined' || mainEditor === null){
-        essayContent = "";
-    }
-    else {
-        essayContent = mainEditor.getText();
-    }
-
-    let chatgptData = {
-        question: "",
-        userId: userId,
-        courseId: currentCourseId,
-        essay: essayContent,
-        questionId: "",
-        includeEssay: chatgptPromptIncludeEssay,
-        chatgptRoleDescription: scaffoldRoleDescription,
-        chatgptRole: "scaffold",
-        backgroundFileNameList: chatgptBackgroundFileNameList,
-        chatgptParameters: chatgptParameters,
-        roundNumber: chatgptAssistantRound,
-        type: "teacher_"+medicalConsultAssistantTeacherType
-    }
-
-    $.ajax({
-        url: apiBaseUrl + "/chatgpt",
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(chatgptData),
-        dataType: 'json',
-        success: function(data, status) {
-            if (status === "success") {
-                // console.log(data);
-                const timestamp = new Date(parseInt(data.data.chatgptResponseTime, 10)).toLocaleTimeString();
-                let resContent = data.data.chatgptAnswer; //.replace("\n", "<br>"); //answer = answer.replace("\n", "<br>")
-                if (resContent === "gpt-error") {
-                    resContent = "There is an error from Chatgpt, Please re-send your question.";
-                }
-                let notificationHtml = generateChatgptDoctorScaffoldHtml(notificationText, timestamp);
-                $(assistantTextarea).append(notificationHtml);
-                $(assistantTextarea).scrollTop(assistantTextarea.scrollHeight);
-                localStorage.setItem(userId + "-" + currentCourseId + "-chatgptAssistantTeacherRound", "0");
-                chatgptAssistantTeacherRound = 0;
-                let questionId = data.data.questionId;
-                let replyHtml = generateChatgptAssistantTeacherAnswerHtml(resContent, timestamp, questionId,data.data.id,useChatgptAssistantTeacherRating,chatgptAssistantTeacherRound+1);
-                $(assistantTeacherTextarea).append(replyHtml);
-                $(assistantTeacherTextarea).scrollTop(assistantTeacherTextarea.scrollHeight);
-                chatgptAssistantTeacherRound += 1;
-                showChatgptAssistantTeacherBtn.querySelector("span").classList.remove("d-none");
-                let showChatgptScaffoldBtnTop = showChatgptAssistantTeacherBtn.getBoundingClientRect().top - 60;
-                showChatgptAssistantTeacherBtn.querySelector("span").style.top = showChatgptScaffoldBtnTop + "px";
-                assistantTeacherPanelInput.disabled=false;
-                assistantTeacherSendQuestionBtn.classList.remove("disabled");
-                assistantTeacherPanelInput.placeholder = chatgptPanelInputPlaceholder;
-            } else {
-                alert("An error occurred while processing your question.");
-            }
-        }
-    });
-}
-
+// 2024 version beijing medical
+// function getDoctorScaffold(){
+//
+//     let notificationText = "带教医生有话对你说，请点击右侧红色的new message跟资深医生陈医生对话"
+//     const now = new Date();
+//     const timestamp = now.toLocaleTimeString();
+//
+//     // if mainEditor not exist essay is ""
+//     let essayContent = "";
+//
+//     if (typeof mainEditor === 'undefined' || mainEditor === null){
+//         essayContent = "";
+//     }
+//     else {
+//         essayContent = mainEditor.getText();
+//     }
+//
+//     let chatgptData = {
+//         question: "",
+//         userId: userId,
+//         courseId: currentCourseId,
+//         essay: essayContent,
+//         questionId: "",
+//         includeEssay: chatgptPromptIncludeEssay,
+//         chatgptRoleDescription: scaffoldRoleDescription,
+//         chatgptRole: "scaffold",
+//         backgroundFileNameList: chatgptBackgroundFileNameList,
+//         chatgptParameters: chatgptParameters,
+//         roundNumber: chatgptAssistantRound,
+//         type: "teacher_"+medicalConsultAssistantTeacherType
+//     }
+//
+//     $.ajax({
+//         url: apiBaseUrl + "/chatgpt",
+//         type: 'POST',
+//         contentType: 'application/json',
+//         data: JSON.stringify(chatgptData),
+//         dataType: 'json',
+//         success: function(data, status) {
+//             if (status === "success") {
+//                 // console.log(data);
+//                 const timestamp = new Date(parseInt(data.data.chatgptResponseTime, 10)).toLocaleTimeString();
+//                 let resContent = data.data.chatgptAnswer; //.replace("\n", "<br>"); //answer = answer.replace("\n", "<br>")
+//                 if (resContent === "gpt-error") {
+//                     resContent = "There is an error from Chatgpt, Please re-send your question.";
+//                 }
+//                 let notificationHtml = generateChatgptDoctorScaffoldHtml(notificationText, timestamp);
+//                 $(assistantTextarea).append(notificationHtml);
+//                 $(assistantTextarea).scrollTop(assistantTextarea.scrollHeight);
+//                 localStorage.setItem(userId + "-" + currentCourseId + "-chatgptAssistantTeacherRound", "0");
+//                 chatgptAssistantTeacherRound = 0;
+//                 let questionId = data.data.questionId;
+//                 let replyHtml = generateChatgptAssistantTeacherAnswerHtml(resContent, timestamp, questionId,data.data.id,useChatgptAssistantTeacherRating,chatgptAssistantTeacherRound+1);
+//                 $(assistantTeacherTextarea).append(replyHtml);
+//                 $(assistantTeacherTextarea).scrollTop(assistantTeacherTextarea.scrollHeight);
+//                 chatgptAssistantTeacherRound += 1;
+//                 showChatgptAssistantTeacherBtn.querySelector("span").classList.remove("d-none");
+//                 let showChatgptScaffoldBtnTop = showChatgptAssistantTeacherBtn.getBoundingClientRect().top - 60;
+//                 showChatgptAssistantTeacherBtn.querySelector("span").style.top = showChatgptScaffoldBtnTop + "px";
+//                 assistantTeacherPanelInput.disabled=false;
+//                 assistantTeacherSendQuestionBtn.classList.remove("disabled");
+//                 assistantTeacherPanelInput.placeholder = chatgptPanelInputPlaceholder;
+//             } else {
+//                 alert("An error occurred while processing your question.");
+//             }
+//         }
+//     });
+// }
 
 function askAssistantQuestion() {
     const question = assistantPanelInput.value;
@@ -148,26 +160,19 @@ function askAssistantQuestion() {
 
         // 重新发送GPT请求的时候，需要提供prompt id, 此id 可以在 generateChatgptAnswerHtml() 方法中找到
         // if mainEditor not exist essay is ""
-        let essayContent = "";
-
-        if (typeof mainEditor === 'undefined' || mainEditor === null){
-            essayContent = "";
-        }
-        else {
-            essayContent = mainEditor.getText();
-        }
+        let essayContent = mainEditor?.getText() ?? "";
         let chatgptData = {
             question: question,
             userId: userId,
             courseId: currentCourseId,
             essay: essayContent,
             questionId: "",
-            includeEssay: chatgptPromptIncludeEssay,
+            includeEssay: false,
             chatgptRoleDescription: patientRoleDescription,
             chatgptRole: "patient",
             backgroundFileNameList: chatgptBackgroundFileNameList,
             chatgptParameters: chatgptParameters,
-            type: "patient_"+medicalConsultAssistanceType
+            agentName: "patient_"+medicalConsultAssistanceType
         }
 
         $.ajax({
@@ -204,11 +209,11 @@ function askAssistantQuestion() {
                     chatHistoryLength +=1;
                     localStorage.setItem(userId + "-" + currentCourseId + "-chatgptAssistantRound", chatgptAssistantRound.toString());
                     // when chatgptAssistantRound reach 20 and 40, show the doctor scaffold
-                    if (useDoctorScaffold){
-                        if((chatgptAssistantRound >= 20 && chatgptAssistantRound < 40) || chatgptAssistantRound >= 40){
-                            getDoctorScaffold();
-                        }
-                    }
+                    // if (useDoctorScaffold){
+                    //     if((chatgptAssistantRound >= 20 && chatgptAssistantRound < 40) || chatgptAssistantRound >= 40){
+                    //         getDoctorScaffold();
+                    //     }
+                    // }
                 } else {
                     // Remove the processing sign
                     $(processingMessage).remove();
@@ -293,6 +298,12 @@ function loadAssistantChatHistory() {
                 //     $(assistantTextarea).append(generateChatgptDoctorScaffoldHtml(chat.chatgptAnswer, new Date(parseInt(chat.chatgptResponseTime, 10)).toLocaleTimeString()));
                 // }
             });
+            feedback_chat_history = chat_history.filter(chat => chat.chatgptRole === "feedback");
+            feedback_chat_history.forEach(chat => {
+                $(assistantTextarea).append(generateChatgptAssistantTeacherAnswerHtml(chat.chatgptAnswer, new Date(parseInt(chat.chatgptResponseTime, 10)).toLocaleTimeString(), chat.questionId,chat.id,useChatgptAssistantTeacherRating,chatgptAssistantRound+1));
+
+            });
+
             if(useChatgptAssistantRating){
                 setupRateThumb();
                 setupStarRating();
@@ -303,14 +314,89 @@ function loadAssistantChatHistory() {
     });
 }
 
-// function createProcessingMessage() {
-//     const timestamp = new Date().toLocaleTimeString();
-//     const processingMessage = document.createElement("div");  // 此处必须要有一个dom 对象
-//     processingMessage.innerHTML = generateAnswerHtml("Processing", timestamp, "");
-//     return processingMessage;
-// }
+function createProcessingMessage() {
+    const timestamp = new Date().toLocaleTimeString();
+    const processingMessage = document.createElement("div");  // 此处必须要有一个dom 对象
+    processingMessage.innerHTML = generateAnswerHtml("Processing", timestamp, "");
+    return processingMessage;
+}
+
+
+function getFeedbackOfChat(){
+    // Show a processing sign
+    const processingMessage = createProcessingMessage();
+    $(assistantTextarea).append(processingMessage);
+    $(assistantTextarea).scrollTop(assistantTextarea.scrollHeight);
+    // if mainEditor not exist essay is ""
+    let essayContent = "";
+    if (mainEditor === null || mainEditor === 'undefined'){
+        essayContent = "";
+    }
+    else {
+        essayContent = mainEditor.getText();
+        // console.log(essayContent)
+    }
+    // 从localstorage中获取对话轮数
+    let rounds = parseInt(localStorage.getItem(userId + "-" + currentCourseId + "-chatgptAssistantRound"));
+    let chatgptData = {
+        question: "",
+        userId: userId,
+        courseId: currentCourseId,
+        essay: essayContent,
+        questionId: "",
+        includeEssay: false,
+        chatgptRoleDescription: assessmentRoleDescription,
+        chatgptRole: "feedback",
+        backgroundFileNameList: chatgptBackgroundFileNameList,
+        chatgptParameters: chatgptParameters,
+        roundNumber: rounds,
+        agentName: "feedback_"+medicalConsultAssistanceType
+    }
+
+    $.ajax({
+        url: apiBaseUrl + "/chatgpt",
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(chatgptData),
+        dataType: 'json',
+        success: function(data, status) {
+            if (status === "success") {
+                $(processingMessage).remove();
+                const timestamp = new Date(parseInt(data.data.chatgptResponseTime, 10)).toLocaleTimeString();
+                let resContent = data.data.chatgptAnswer; //.replace("\n", "<br>"); //answer = answer.replace("\n", "<br>")
+                if (resContent === "gpt-error") {
+                    resContent = "There is an error from Chatgpt, Please re-send your consultation.";
+                }
+                let replyHtml = generateChatgptAssistantTeacherAnswerHtml(resContent, timestamp, data.data.questionId,data.data.id,useChatgptAssistantTeacherRating,chatgptAssistantRound+1);
+                $(assistantTextarea).append(replyHtml);
+                $(assistantTextarea).scrollTop(assistantTextarea.scrollHeight);
+            } else {
+                alert("An error occurred while processing your consultation.");
+            }
+        }
+    });
+}
 
 function setupAssistantTool() {
+
+    if (consultationFinished) {
+        assistantPanelInput.disabled=true;
+        assistantSendQuestionBtn.classList.add("disabled");
+        assistantPanelInput.placeholder = "问诊已结束";
+        // endChatWithAssistant.classList.add("disabled"); // 注释掉，可能结束问诊时会有gpt-error，需要再次结束。
+    }
+
+    endChatWithAssistant.onclick = function(e) {
+        stopEventPropagation(e);
+        consultationFinished = true;
+        localStorage.setItem(userId + "-" + currentCourseId + "-chatgptAssistantFinished", "true");
+        assistantPanelInput.disabled=true;
+        assistantSendQuestionBtn.classList.add("disabled");
+        assistantPanelInput.placeholder = "问诊已结束";
+        sendEventMessage("", getCurrentTimestamp(), "CHATGPT_ASSISTANT", "MOUSE_CLICK","END_CHAT_WITH_ASSISTANT", "CHATGPT_ASSISTANT", "END_CHAT_WITH_ASSISTANT", "END_CHAT_WITH_ASSISTANT", "", e);
+        // 将对话记录
+        getFeedbackOfChat()
+    }
 
     collapseChatgptAssistant.onclick = function(e) {
         stopEventPropagation(e);
@@ -392,7 +478,7 @@ showChatgptAssistantBtn.onclick = function(e) {
     }
     else {
         collapseChatgptAssistant.classList.toggle("in-tools");
-        toolsAndEssayToggle(collapseChatgptAssistant);
+        // toolsAndEssayToggle(collapseChatgptAssistant);
         assistantClickTargetObject = "SHOW_CHATGPT_ASSISTANT_BTN";
         assistantPageEvent = "MOUSE_CLICK";
     }

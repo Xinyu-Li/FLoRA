@@ -31,4 +31,5 @@ public class CollaborateChatgptRequest {
     private Integer roundNumber;
 
     private String padId;
+    private String toolsLanguage;
 }

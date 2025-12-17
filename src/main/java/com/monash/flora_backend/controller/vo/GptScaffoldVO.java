@@ -2,6 +2,8 @@ package com.monash.flora_backend.controller.vo;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author Administrator
  * @date 1/15/2024
@@ -24,4 +26,9 @@ public class GptScaffoldVO {
     private String gptRole;
     private String prompt;
     private Integer gptScaffoldNumber;
+    private List<UserChatgptLogVO> userChatgptLogVOList;
+
+    private String threadId;
+    private String assistantName;
+    private String assistantId;
 }

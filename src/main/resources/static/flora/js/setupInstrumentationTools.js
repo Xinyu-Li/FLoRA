@@ -1,4 +1,4 @@
-
+let intervalId;
 function loadAll() {
     let plannerElementsJson = localStorage.getItem(userId + "myPlannerElementsJson");
     let displayPlanDivInnerHtml = localStorage.getItem(userId + "myDisplayPlanDivInnerHtml");
@@ -64,10 +64,10 @@ $(document).ready(function () {
         $.when(myTimerAjax).done(function() {
             setupExtraBodyEvent();
             //setup all instrumentation tools except timer
-            if(useWriteEssayTool) {                
+            if(useWriteEssayTool) {
                 setupEssayWritingMain("writeEssayToolbarMain", "writeEssayEditorMain");
                 loadEssay();
-                console.log("loading current essay");
+                // console.log("loading current essay");
             }
             // console.log("useScaffoldTool:" + useScaffoldTool);
             // console.log(getLastname().toLowerCase());
@@ -83,6 +83,11 @@ $(document).ready(function () {
                 loadGPTScaffolds();
             }
 
+            if (typeof useChatWithScaffoldTool !== 'undefined' && useChatWithScaffoldTool) {
+                setupGptChatWithScaffoldsTool();
+                loadGptChatWithScaffolds();
+            }
+
             // let lastname = getLastname().toLowerCase();
             // if (typeof feedbackToolGroupSetup !== "undefined" && feedbackToolGroupSetup != null && feedbackToolGroupSetup[lastname] != null) {
             //     useChatgptTool = feedbackToolGroupSetup[lastname][0];
@@ -96,11 +101,18 @@ $(document).ready(function () {
                 setupMainHighlightAreaEvent();
                 setupAnnotationSearchPanel();
                 loadAnnotation();
-            }   
+            }
 
             if (typeof loadRelatedEssay !== 'undefined' && loadRelatedEssay) {
                 if (typeof relatedCourseIdMap !== 'undefined' && relatedCourseIdMap[currentCourseId] !== undefined) {
                     loadRelatedCourseEssay();
+                }
+            }
+
+            if (isStage2 || isStage3){ // only for 2025 medical
+                if (typeof relatedCourseIdMap !== 'undefined' && relatedCourseIdMap[currentCourseId] !== undefined) {
+                    loadRelatedCourseEssay();
+                    loadAndFillRelatedConsultTable();
                 }
             }
 
@@ -122,35 +134,6 @@ $(document).ready(function () {
                     loadRelatedCourseEssay();
                 }
             }
-            // if agents中有mayor，且useSustainableEducationMayorTool为true，则加载可持续教育市长工具
-            // if (typeof agents !== 'undefined' && "Mayor" in agents && agents.Mayor.useSustainableEducationMayorTool) {
-            //     setupAssistantMayorTool();
-            //     loadAssistantMayorChatHistory();
-            // }
-            // // Peer,Professor,Environmentalist,Tutor
-            // if(typeof agents !== 'undefined' && "Peer" in agents && agents.Peer.useSustainableEducationPeerTool) {
-            //     setupAssistantPeerTool();
-            //     loadAssistantPeerChatHistory();
-            // }
-            // if(typeof agents !== 'undefined' && "Professor" in agents && agents.Professor.useSustainableEducationProfessorTool) {
-            //     setupAssistantProfessorTool();
-            //     loadAssistantProfessorChatHistory();
-            // }
-            // if(typeof agents !== 'undefined' && "Environmentalist" in agents && agents.Environmentalist.useSustainableEducationEnvironmentalistTool) {
-            //     setupAssistantEnvironmentalistTool();
-            //     loadAssistantEnvironmentalistChatHistory();
-            // }
-            // if(typeof agents !== 'undefined' && "Tutor" in agents && agents.Tutor.useSustainableEducationTutorTool) {
-            //     setupAssistantTutorTool();
-            //     loadAssistantTutorChatHistory();
-            //
-            // }
-            //
-            // if(typeof agents !== 'undefined' && "Whaler" in agents && agents.Whaler.useSustainableEducationWhalerTool) {
-            //     setupAssistantWhalerTool();
-            //     loadAssistantWhalerChatHistory();
-            // }
-
 
             if(typeof useChatgptAssistantTeacherTool !== 'undefined' && useChatgptAssistantTeacherTool){
                 setupAssistantTeacherTool();
@@ -172,23 +155,28 @@ $(document).ready(function () {
                 loadPlanner();
             }
             // console.log("load tools");
-            //getEtherpadName()
+
             if (typeof useCollaborativeWriteEssayTool !== 'undefined' && useCollaborativeWriteEssayTool) {
+                //getEtherpadName();
+                setupCollaborateWriteMain("collaborateWriteToolbarMain", "collaborateWriteEditorMain");
 
-                 function createPadConnected(){
-                    console.log("Wait for Etherpad to be connected and create pad");
-                    console.log("Inside createPadConnected, userEtherpadPadID: ", userEtherpadPadID);
-                    if (!etherpad_connection | userEtherpadPadID==null){
-                        setTimeout(createPadConnected,30000);
-                        getEtherpadName();
-                    }
-                    else{
-                        console.log("Etherpad has been connected and create pad!")
-                    }
-
-                 }
-                 createPadConnected();
-                 //createIframePad(userEtherpadPadID)
+                // function createPadConnected(){
+                //     // console.log("Wait for Etherpad to be connected and create pad");
+                //     // console.log("Inside createPadConnected, userEtherpadPadID: ", userEtherpadPadID);
+                //     if (!etherpad_connection | userEtherpadPadID==null ){
+                //         getEtherpadName();
+                //         setTimeout(createPadConnected,5000);
+                //     }
+                //     else{
+                //         console.log("Etherpad has been connected and create pad!");
+                //         //initializePad(userEtherpadPadID,username);
+                //         intervalId = setInterval(() => {
+                //             run_initializePad(userEtherpadPadID, username);
+                //         }, 1000);
+                //     }
+                // }
+                // createPadConnected();
+                //createIframePad(userEtherpadPadID)
                 //reloadDocumentCookie();
 
                 //var iframe = document.getElementById('epframecollapseCollaborateWrite');
@@ -198,23 +186,27 @@ $(document).ready(function () {
 //                    reloadDocumentCookie();
 //                    setupCollaborateWriteMain("collaborateWriteToolbarMain", "collaborateWriteEditorMain");
 //                };collaborateWriteEditorMain
-                function setEtherpadCookie(){
-                    console.log("wait for collaborateWriteDocument available and setEtherpadCookie!")
-                    let collaborateWriteWindow = window.frames["epframecollapseCollaborateWrite"];
-                    if (collaborateWriteWindow){
-                        let collaborateWriteDocument = collaborateWriteWindow.document;
-                        if (collaborateWriteDocument) {
-                            console.log("collaborateWriteDocument available and setEtherpadCookie!");
-                            reloadDocumentCookie();
-                        } else {
-                            setTimeout(setEtherpadCookie, 10000); // Pass the function reference correctly
-                        }
-                    }
-                    else {
-                            setTimeout(setEtherpadCookie, 10000); // Pass the function reference correctly
-                    }
-                }
-                setEtherpadCookie();
+//                 function setEtherpadCookie(){
+//                     console.log("wait for collaborateWriteDocument available and setEtherpadCookie!")
+//                     let collaborateWriteWindow = window.frames["epframecollapseCollaborateWrite"];
+//                     if (collaborateWriteWindow && collaborateWriteWindow.document){
+//                         //let collaborateWriteDocument = collaborateWriteWindow.document;
+//                         console.log("collaborateWriteDocument available and setEtherpadCookie!");
+//                         setSessionCookie(userEtherpadSessionID,"/");
+//                         // reloadDocumentCookie();
+//                     }
+//                     else {
+//                         setTimeout(setEtherpadCookie, 1000); // Pass the function reference correctly
+//                     }
+//                 }
+//                 setEtherpadCookie();
+                // Wait for the iframe to load fully before running the function
+                //document.getElementById("epframecollapseCollaborateWrite").addEventListener("load", setEtherpadCookie);
+                //setupCollaborateWriteMain("collaborateWriteToolbarMain", "collaborateWriteEditorMain");
+
+
+
+
 //                setTimeout(function () {
 //                    reloadDocumentCookie();
 //                    //setupCollaborateWriteMain("collaborateWriteToolbarMain", "collaborateWriteEditorMain");
@@ -233,6 +225,9 @@ $(document).ready(function () {
             }
             if (typeof useConsultationSubmitTool !== 'undefined' && useConsultationSubmitTool){
                 setupConsultationSubmitTool();
+            }
+            if (typeof useConsultationTableTool !== 'undefined' && useConsultationTableTool) {
+                setupConsultationTableTool();
             }
             /*if (agents.Mayor.useSustainableEducationMayorTool){
                 setupAssistantMayorTool();
@@ -263,6 +258,37 @@ $(document).ready(function () {
                 setupMultiAgentsSingleWindowTool();
                 loadMultiAgentsSingleWindowChatHistory();
             }
+            if (typeof usePatientMultiAgentsSingleWindowTool !== 'undefined' && usePatientMultiAgentsSingleWindowTool) {
+                setupPatientMultiAgentsSingleWindowTool();
+                loadPatientMultiAgentsSingleWindowChatHistory();
+            }
+
+            if (typeof useMedicalScaffoldMultiAgentsSingleWindowTool !== 'undefined' && useMedicalScaffoldMultiAgentsSingleWindowTool) {
+                setupMedicalScaffoldMultiAgentsSingleWindowTool();
+                loadMedicalScaffoldMultiAgentsSingleWindowChatHistory();
+            }
+            if (typeof useTigeCheckMultiAgentsSingleWindowTool !== 'undefined' && useTigeCheckMultiAgentsSingleWindowTool) {
+                setupTigeCheckMultiAgentsSingleWindowTool();
+                loadTigeCheckMultiAgentsSingleWindowChatHistory();
+            }
+            if (typeof useAssistCheckMultiAgentsSingleWindowTool !== 'undefined' && useAssistCheckMultiAgentsSingleWindowTool) {
+                setupAssistCheckMultiAgentsSingleWindowTool();
+                loadAssistCheckMultiAgentsSingleWindowChatHistory();
+            }
+
+            // 区域与国别
+            if(typeof useTitleAssistMultiAgentsSingleWindowTool !== 'undefined' && useTitleAssistMultiAgentsSingleWindowTool) {
+                setupTitleAssistMultiAgentsSingleWindowTool();
+                loadTitleAssistMultiAgentsSingleWindowChatHistory();
+            }
+            if (typeof useWritingAssistMultiAgentsSingleWindowTool !== 'undefined' && useWritingAssistMultiAgentsSingleWindowTool) {
+                setupWritingAssistMultiAgentsSingleWindowTool();
+                loadWritingAssistMultiAgentsSingleWindowChatHistory();
+            }
+            if (typeof useAssessmentAssistMultiAgentsSingleWindowTool !== 'undefined' && useAssessmentAssistMultiAgentsSingleWindowTool) {
+                setupAssessmentAssistMultiAgentsSingleWindowTool();
+                loadAssessmentAssistMultiAgentsSingleWindowChatHistory();
+            }
 
             // zoteroNotesTool
             if (typeof useZoteroNotesTool !== 'undefined' && useZoteroNotesTool) {
@@ -274,7 +300,9 @@ $(document).ready(function () {
                 setupProcessVisualTool();
                 // loadProcessVisualTool();
             }
-
+            if (typeof usePopupQuestionnaire !== 'undefined' && usePopupQuestionnaire) {
+                setupPopupQuestionnaireTool()
+            }
 
             // loadEssay();
             // loadGPTScaffolds();

@@ -30,6 +30,17 @@ public class UserChatgptLogVO {
     private String chatgptWholeResponse;
     private String chatgptWholePrompt;
 
-    private String type;
+    private Long topicId;
+    private String topicName;
+    private String hidden;
+    private int questionVersion;
+    private String threadShowing;
 
+    private String assistantName; // type
+    private String responseType;
+    private String apiModel;
+    private String apiObject;
+    private String threadId; // ChatGPT Assistant Thread ID
+    private String runId;
+    private String assistantId;
 }

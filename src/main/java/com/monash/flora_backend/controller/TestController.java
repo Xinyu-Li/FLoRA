@@ -4,11 +4,12 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONArray;
 import com.monash.flora_backend.config.cache.IGlobalCache;
 import com.monash.flora_backend.constant.MyConstant;
+import com.monash.flora_backend.controller.req.ChatgptRequest;
 import com.monash.flora_backend.controller.req.CollaborateChatgptRequest;
-import com.monash.flora_backend.controller.vo.*;
-import com.monash.flora_backend.dao.customize_entity.MdlQuestionnaireAllResponse;
+import com.monash.flora_backend.controller.vo.CollaborativePadVO;
+import com.monash.flora_backend.controller.vo.EssayVO;
+import com.monash.flora_backend.controller.vo.UserChatgptLogVO;
 import com.monash.flora_backend.dao.customize_entity.MdlQuestionnaireResponseBaseResult;
-import com.monash.flora_backend.dao.entity.*;
 import com.monash.flora_backend.service.*;
 import com.monash.flora_backend.service_func.ActionAndProcessService;
 import com.monash.flora_backend.service_func.UserDataManagementService;
@@ -23,9 +24,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.util.*;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 
 /**
  * ClassName: TestController
@@ -59,7 +59,7 @@ public class TestController {
 
     private final ActionAndProcessService actionAndProcessService;
     private final UserDataManagementService userDataManagementService;
-
+    private final IPopupQuestionnaireService popupQuestionnaireService;
 
     static String chatgptID = "";
 
@@ -72,7 +72,6 @@ public class TestController {
         userDataManagementService.clearAllUserLog(userId);
         return JSONResult.ok();
     }
-
 
     /**
      * 学生聊天窗口是由js文件创建的，所以此页面只做测试用
@@ -167,6 +166,11 @@ public class TestController {
         return "index_revision4";
     }
 
+    @GetMapping("/index-test-v2-4-1-nhb")
+    public String testV24_1_nhb() {
+        return "index_test_v2_4_1_nhb";
+    }
+
     @GetMapping("/test-tony")
     public String testTony() {
         return "test_tony";
@@ -181,10 +185,35 @@ public class TestController {
         return "test_oulu";
     }
 
+    @GetMapping("/test-zijian")
+    public String testZijian() {return "test_zijian";}
+
     @GetMapping("/index-test-v2-4-1")
     public String testV24_1() {
         return "index_test_v2_4_1";
     }
+    @GetMapping("/index-test-v2-5-1")
+    public String testV25_1() {
+        return "index_test_v2_5_1";
+    }
+    @GetMapping("/index-test-v2-6-1")
+    public String testV26_1() {
+        return "index_test_v2_6_1";
+    }
+    @GetMapping("/index-test-lin")
+    public String test_lin() {
+        return "index_test_lin";
+    }
+    @GetMapping("/index-test-zijian")
+    public String test_Medicalzijian() {
+        return "index_test_zijian";
+    }
+
+    @GetMapping("/index-test-zijian2")
+    public String test_Medicalzijian2() {return "index_test_zijian2";}
+
+    @GetMapping("/index-test-zijian3")
+    public String test_Medicalzijian3() {return "index_test_zijian3";}
 //    @PostMapping("/dictionary")
 //    @ResponseBody
 //    public JSONResult dictionaryQuery(@RequestBody Map<String, List> data) {
@@ -204,38 +233,7 @@ public class TestController {
 //        return JSONResult.ok(dictionaryVO.getData());
 //    }
 
-    @GetMapping("/test-real-time-process/{courseId}/{userId}/{modelType}")
-    @ResponseBody
-    public JSONResult testRealTimeProcess(@PathVariable("userId") Long userId, @PathVariable("courseId") String courseId, @PathVariable("modelType") String modelType) {
-        Map<String, String> currentPreviousCourseMap = Map.ofEntries(
-                Map.entry("101", "98") // Cell task 2 and task 1
-        );
 
-        TraceDataRealTimeSrlCategoryVO traceDataRealTimeSrlCategoryVO = new TraceDataRealTimeSrlCategoryVO();
-        String previousCourseId = currentPreviousCourseMap.get(courseId);
-
-
-        List<TraceDataRealTimeProcess> currentResultList = actionAndProcessService.getRealTimeSimplifiedTraceDataLabelled(userId, courseId, modelType);
-
-        log.info("-------result size:{}", currentResultList.size());
-        currentResultList.forEach(result -> log.info("----------result:{}", result.toString()));
-        Map<String, Double> currentLabelDurationMap = new HashMap<>();
-        List<ProcessDurationVO> currentDurationVOList = actionAndProcessService.calculateRealTimeProcessDurations(currentResultList, true, currentLabelDurationMap);
-
-        log.info("-------durationVOList size:{}", currentDurationVOList.size());
-        currentDurationVOList.forEach(durationVO -> log.info("----------durationVO:{}", durationVO.toString()));
-        traceDataRealTimeSrlCategoryVO.setCurrentDurationVOList(currentDurationVOList);
-        if (!StrUtil.isEmpty(previousCourseId)) {
-            List<TraceDataRealTimeProcess> previousResultList = actionAndProcessService.getRealTimeSimplifiedTraceDataLabelled(userId, previousCourseId, modelType);
-            Map<String, Double> previousLabelDurationMap = new HashMap<>();
-            List<ProcessDurationVO> previousDurationVOList = actionAndProcessService.calculateRealTimeProcessDurations(previousResultList, true, previousLabelDurationMap);
-            traceDataRealTimeSrlCategoryVO.setPreviousDurationVOList(previousDurationVOList);
-        } else {
-            traceDataRealTimeSrlCategoryVO.setPreviousDurationVOList(new ArrayList<>());
-        }
-
-        return JSONResult.ok(traceDataRealTimeSrlCategoryVO);
-    }
 
     @PostMapping("/collaborate-write")
     @ResponseBody
@@ -245,15 +243,16 @@ public class TestController {
         log.error("--------------------------------" + userName);
         //TODO 临时措施，之后需要更改
         //String userGroup = RandomUtil.randomString("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", 10);
-        String url = "http://localhost/etherpad";
+        String url = MyConstant.ETHERPAD_API_URL;
         String apiKey = MyConstant.ETHERPAD_API_KEY;  //etherpad apikey
         try {
             // Ensure chatgptID is initialized
             if (chatgptID == null || chatgptID.isEmpty()) {
                 chatgptID = iCollaborateService.collaborativeInit(url, apiKey);
-                log.info("Created a new chatgptID"+chatgptID);
+
+                log.info("Created a new chatgptID" + chatgptID);
             }
-            log.info("chatgptID"+chatgptID);
+            log.info("chatgptID" + chatgptID);
 
              //Retrieve group information
 //            MdlGroups groupInfo = iMdlGroupsService.findGroupByUserIdAndCourseId(userId, Long.parseLong(courseId));
@@ -271,6 +270,7 @@ public class TestController {
             // Return the result
             return JSONResult.ok(collaborativePadVO);
         } catch (Exception e) {
+            e.printStackTrace();
             return JSONResult.errorMsg("An error occurred while creating the collaborative pad.");
         }
 //        if (Objects.equals(chatgptID, "")) {
@@ -282,6 +282,102 @@ public class TestController {
 //        return JSONResult.ok(collaborativePadVO);
     }
 
+//    @PostMapping("/questionnaire-create")
+//    @ResponseBody
+//    public JSONResult questionnaireCreate(@RequestParam("userId") long userId,
+//                                          @RequestParam("courseId") long courseId,
+//                                          @RequestParam("savetime") String savetime,
+//                                          @RequestParam("questionnaireContent") String questionnaireContent,
+//                                          @RequestParam("username") String username,
+//                                          @RequestParam("triggerProcess") String triggerProcess,
+//                                          @RequestParam("SRLProcessLength") int SRLProcessLength) {
+//        log.warn(triggerProcess);
+//        Map<String, String> response = new HashMap<>();
+//        // 根据SRLProcess的length决定是否生成question
+//        // todo 暂时去掉检测，测试用
+////        if (SRLProcessLength != popupQuestionnaireService.getSRLProcessLength()) {
+//            PopupQuestionnaire popupQuestionnaire = new PopupQuestionnaire();
+//            popupQuestionnaire.setQuestionContent(questionnaireContent);
+//            popupQuestionnaire.setSaveTime(savetime);
+//            popupQuestionnaire.setUsername(username);
+//            popupQuestionnaire.setUserId(userId);
+//            popupQuestionnaire.setCourseId(courseId);
+//            popupQuestionnaire.setTriggerProcess(triggerProcess);
+//            int order = popupQuestionnaireService.saveNewQuestion(popupQuestionnaire);
+//            if (SRLProcessLength >= -1) {
+//                popupQuestionnaireService.setSRLProcessLength(SRLProcessLength, userId, courseId);
+//            }
+//            response.put("qorder", String.valueOf(order));
+//            return JSONResult.ok(response);
+////        } else {
+////            response.put("info", "already genertated for this SRL process map");
+////            return JSONResult.ok(response);
+////        }
+//    }
+//    @PostMapping("/questionnaire-answer")
+//    @ResponseBody
+//    public JSONResult questionnaireAnwser(@RequestParam("userId") long userId,
+//                                          @RequestParam("courseId") long courseId,
+//                                          @RequestParam("qorder") int qorder,
+//                                          @RequestParam("answerJson") String answerJson,
+//                                          @RequestParam("answerTime") String answerTime) {
+////        log.warn("questionnaire-answer");
+////        popupQuestionnaireService.save();
+//        popupQuestionnaireService.updateAnswer(userId, courseId, qorder, answerJson, answerTime);
+//        return JSONResult.ok();
+//    }
+//
+//    @GetMapping("/srlprocesslist/{userId}/{currentCourseId}")
+//    @ResponseBody
+//    public JSONResult testGetSRLProcessList(@PathVariable("userId") Long userId, @PathVariable("currentCourseId") Long currentCourseId){
+//        //todo: 还没弄完，现在只是stub
+//        int previousSRLProcessLength = popupQuestionnaireService.getSRLProcessLength(userId, currentCourseId);
+//
+//        JSONObject array = new JSONObject();
+//        String[] strings = {"CMCTR2", "CSAR2", "OS3", "OA2", "OT2", "CMTR2"};
+////        String[] strings = {"CMCTR2", "CSAR2", "OS3", "OA2", "OT2"};
+//        array.set("previousSRLProcessLength", previousSRLProcessLength);
+//        array.set("SRLProcessList", Arrays.asList(strings));
+//        return JSONResult.ok(array);
+//    }
+
+//    @GetMapping("/srlprocesslist/{userId}/{currentCourseId}/{start}/{end}")
+//    @ResponseBody
+//    public JSONResult testGetSRLProcessList(@PathVariable("userId") Long userId, @PathVariable("currentCourseId") Long currentCourseId, @PathVariable("start") Long startSecnods,  @PathVariable("end") Long endSecnods){
+//        //todo: 还没弄完，现在只是stub
+//
+//        int previousSRLProcessLength = popupQuestionnaireService.getSRLProcessLength(userId, currentCourseId);
+//
+//        JSONObject array = new JSONObject();
+//        String[] strings = {"CMCTR2", "CSAR2", "OS3", "OA2", "OT2", "CMTR2"};
+////        String[] strings = {"CMCTR2", "CSAR2", "OS3", "OA2", "OT2"};
+//        array.set("previousSRLProcessLength", previousSRLProcessLength);
+//        array.set("SRLProcessList", Arrays.asList(strings));
+//        return JSONResult.ok(array);
+//    }
+//
+//    @GetMapping("/load-popup-questionnaire/{userId}/{courseId}")
+//    @ResponseBody
+//    public JSONResult loadPopupQuestionnaire(@PathVariable("userId") long userId, @PathVariable("courseId") long courseId){
+//        return JSONResult.ok(popupQuestionnaireService.getPopupQuestionnaireByUserId(userId, courseId));
+//    }
+
+//    @PostMapping("/update-question-setting")
+//    @ResponseBody
+//    public JSONResult updateQuestionSetting(@RequestParam("userId") long userId, @RequestParam("questionSettingJson") String questionSettingJson) {
+//        iGlobalCache.set("questionSetting_" + userId, questionSettingJson);
+//    }
+//    @PostMapping("/get-question-setting")
+//    @ResponseBody
+//    public JSONResult getQuestionSetting(@RequestParam("userId") long userId, @RequestParam("questionSettingJson") String questionSettingJson) {
+//        if (!iGlobalCache.hasKey("questionSetting_" + userId)) {
+//            iGlobalCache.set("questionSetting_" + userId, questionSettingJson);
+//            return JSONResult.ok(questionSettingJson);
+//        }
+//        else {
+//            return JSONResult.ok(iGlobalCache.get("questionSetting_" + userId));
+//        }
+//    }
 
     @PostMapping("/collaborate-get-userColor")
     @ResponseBody
@@ -358,46 +454,22 @@ public class TestController {
 //            }
 
         String essay = collabChatgptRequest.getIncludeEssay() ? checkChatgptRequestEssay(collabChatgptRequest.getEssay(), collabChatgptRequest.getUserId(), collabChatgptRequest.getCourseId()) : "";
-
-
+        collabChatgptRequest.setEssay(essay);
+        ChatgptRequest chatgptRequest = MyBeanCopyUtils.copyBean(collabChatgptRequest, ChatgptRequest.class);
         //        String userQuestions, String chatgptRoleDescription, String questionId, String essay,
 //                List<String> backgroundFileNameList, Long userId, String courseId,
 //                String chatgptRole, List<Integer> chatgptParameters, String type, Integer roundNumber
         if (type == -1) {
             // 组内用户正常聊天，仅发送给gpt不获取结果
             //iUserChatgptLogService.getChatgptResponse(question, userId, essay, "");
-            iUserChatgptLogService.getChatgptResponse(
-                    collabChatgptRequest.getQuestion(),
-                    collabChatgptRequest.getExtraPrompt(),
-                    collabChatgptRequest.getChatgptRoleDescription(),
-                    collabChatgptRequest.getQuestionId(),
-                    essay,
-                    collabChatgptRequest.getBackgroundFileNameList(),
-                    collabChatgptRequest.getUserId(),
-                    collabChatgptRequest.getCourseId(),
-                    collabChatgptRequest.getChatgptRole(),
-                    collabChatgptRequest.getChatgptParameters(),
-                    collabChatgptRequest.getAgentName(),
-                    collabChatgptRequest.getRoundNumber());
 
-        }
-        else {
+            iUserChatgptLogService.getChatgptResponse(chatgptRequest);
+
+        } else {
             UserChatgptLogVO result;
 
             log.info("@GPT getting response!");
-            result = iUserChatgptLogService.getChatgptResponse(
-                    collabChatgptRequest.getQuestion(),
-                    collabChatgptRequest.getExtraPrompt(),
-                    collabChatgptRequest.getChatgptRoleDescription(),
-                    collabChatgptRequest.getQuestionId(),
-                    essay,
-                    collabChatgptRequest.getBackgroundFileNameList(),
-                    collabChatgptRequest.getUserId(),
-                    collabChatgptRequest.getCourseId(),
-                    collabChatgptRequest.getChatgptRole(),
-                    collabChatgptRequest.getChatgptParameters(),
-                    collabChatgptRequest.getAgentName(),
-                    collabChatgptRequest.getRoundNumber());
+            result = iUserChatgptLogService.getChatgptResponse(chatgptRequest);
 
             log.info(result.toString());
             return JSONResult.ok(result);
@@ -598,160 +670,160 @@ public class TestController {
      * @param userId
      * @return
      */
-    @GetMapping("/get-questionnaire-all-response")
-    @ResponseBody
-    public JSONResult getQuestionnaireAllResponse(Long courseId, String questionnaireName, Long userId) {
-
-        log.info("courseId: " + courseId + ", QuestionnaireName: " + questionnaireName + ", userId: " + userId);
-
-        String userQuestionnaireKey = userId + "_" + courseId + "_" + questionnaireName;
-        log.info("Getting questionnaire response -> userQuestionnaireKey:" + userQuestionnaireKey);
-
-//        iGlobalCache.del(userQuestionnaireKey);
-//        log.info("******Deleted questionnaire response -> userQuestionnaireKey:" + userQuestionnaireKey);
-
-        if (iGlobalCache.hasKey(userQuestionnaireKey)) {
-            log.info("******userQuestionnaireKey Exits!" + userQuestionnaireKey);
-
-            Map<Object, Object> userResponseDictionary = iGlobalCache.hmget(userQuestionnaireKey);
-            // if userId in the redis but no response, read database and save it to redis
-            if (userResponseDictionary == null || userResponseDictionary.isEmpty()) {
-                log.info("******userResponseDictionary.isEmpty()!");
-                log.info(userQuestionnaireKey + "has no response in redis!");
-                List<MdlQuestionnaireAllResponse> user_response_list = iMdlQuestionnaireService.getQuestionnaireUserResponse(questionnaireName, courseId, userId);
-                log.info("######user_response_list: " + user_response_list);
-                if (user_response_list == null || user_response_list.isEmpty()) {
-                    log.info(userId + " has no response for questionnaire " + questionnaireName + "in course " + courseId);
-                   // return JSONResult.ok(Collections.emptyList());
-                    return new JSONResult(200, "Never answered the qesutionnaire", Collections.emptyList());
-                } else {
-                    log.info("user_response_list: " + user_response_list);
-                    Map<Long, List<MdlQuestionnaireResponseCompeteVO>> questionnaire_rep_map = new HashMap<>();
-                    Map<Long, List<String>> qs_pair_byRespId = new HashMap<>();
-                    for (MdlQuestionnaireAllResponse resp : user_response_list) {
-                        Long curResponseId = resp.getResponseId();
-                        log.info("resp.getQuestionnaireName(): "+ resp.getQuestionnaireName());
-                        MdlQuestionnaireResponseCompeteVO questionnaireResponseVO = MyBeanCopyUtils.copyBean(resp, MdlQuestionnaireResponseCompeteVO.class);
-                        questionnaireResponseVO.setQuestionnaireName(resp.getQuestionnaireName());
-                        questionnaireResponseVO.setUserId(resp.getUserId());
-
-                        if (resp.getSelected()) {
-                            questionnaire_rep_map.putIfAbsent(curResponseId, new ArrayList<>());
-                            questionnaire_rep_map.get(curResponseId).add(questionnaireResponseVO);
-
-                            String qst_answer = resp.getQuestionName() + " -> " + resp.getChoiceContent();;
-                            qs_pair_byRespId.putIfAbsent(curResponseId, new ArrayList<>());
-                            qs_pair_byRespId.get(curResponseId).add(qst_answer);
-//                            String qst_answer = resp.getQuestionName() + " -> " + resp.getChoiceContent();
-//                            if (!resp.getDependency().equals("none")) {
-//                                if (qs_pair_byRespId.get(curResponseId).contains(resp.getDependency())) {
-//                                    questionnaire_rep_map.putIfAbsent(curResponseId, new ArrayList<>());
-//                                    questionnaire_rep_map.get(curResponseId).add(questionnaireResponseVO);
-//                                    qs_pair_byRespId.get(curResponseId).add(qst_answer);
-//                                }
-//                            } else {
-//                                qs_pair_byRespId.putIfAbsent(curResponseId, new ArrayList<>());
-//                                qs_pair_byRespId.get(curResponseId).add(qst_answer);
-//                                questionnaire_rep_map.putIfAbsent(curResponseId, new ArrayList<>());
-//                                questionnaire_rep_map.get(curResponseId).add(questionnaireResponseVO);
-//                            }
-                        }
-                    }
-                    Map<String, Object> Map4StoreRedis = new HashMap<>();
-                    for (Map.Entry<Long, List<MdlQuestionnaireResponseCompeteVO>> userResponseEntry : questionnaire_rep_map.entrySet()) {
-                        Long temp_respId = userResponseEntry.getKey();
-                        List<MdlQuestionnaireResponseCompeteVO> responses = userResponseEntry.getValue();
-
-                        responses.removeIf(response ->
-                                !response.getDependency().equals("none") &&
-                                        !response.getDependency().isEmpty() &&
-                                        !qs_pair_byRespId.get(temp_respId).contains(response.getDependency())
-                        );
-
-
-                        // Sort using streams
-                        List<MdlQuestionnaireResponseCompeteVO> sortedResponses = responses.stream()
-                                .sorted(Comparator.comparingInt(MdlQuestionnaireResponseCompeteVO::getQuestionPosition))
-                                .collect(Collectors.toList());
-
-                        Map4StoreRedis.put(String.valueOf(temp_respId), sortedResponses);
-                    }
-                    iGlobalCache.hmset(userQuestionnaireKey, Map4StoreRedis);
-                    return JSONResult.ok(questionnaire_rep_map);
-                }
-            }
-            log.info("Retrieved user_response from redis by key "+userQuestionnaireKey + ": " + userResponseDictionary);
-            return JSONResult.ok(userResponseDictionary);
-        }
-        else {
-
-            List<MdlQuestionnaireAllResponse> user_response_list = iMdlQuestionnaireService.getQuestionnaireUserResponse(questionnaireName, courseId, userId);
-            log.info("MdlQuestionnaireAllResponse read from database: " + user_response_list);
-            if (user_response_list == null || user_response_list.isEmpty()) {
-                log.info(userId + " has no response for questionnaire " + questionnaireName + "in course " + courseId);
-                return new JSONResult(200, "Never answered the qesutionnaire", Collections.emptyList());
-            }
-            else {
-                Map<Long, List<MdlQuestionnaireResponseCompeteVO>> questionnaire_rep_map = new HashMap<>();
-                Map<Long, List<String>> qs_pair_byRespId = new HashMap<>();
-                for (MdlQuestionnaireAllResponse resp : user_response_list) {
-                    Long curResponseId = resp.getResponseId();
-                    MdlQuestionnaireResponseCompeteVO questionnaireResponseVO = MyBeanCopyUtils.copyBean(resp, MdlQuestionnaireResponseCompeteVO.class);
-//                    questionnaireResponseVO.setQuestionnaireName(resp.getQuestionnaireName());
-//                    questionnaireResponseVO.setUserId(resp.getUserId());
-
-                    if (resp.getSelected()) {
-
-                        questionnaire_rep_map.putIfAbsent(curResponseId, new ArrayList<>());
-                        questionnaire_rep_map.get(curResponseId).add(questionnaireResponseVO);
-
-                        String qst_answer = resp.getQuestionName() + " -> " + resp.getChoiceContent();
-                        qs_pair_byRespId.putIfAbsent(curResponseId, new ArrayList<>());
-                        qs_pair_byRespId.get(curResponseId).add(qst_answer);
-//                        if (!resp.getDependency().equals("none")) {
-//                            if (qs_pair_byRespId.get(curResponseId).contains(resp.getDependency())) {
-//                                //questionnaire_rep_map.putIfAbsent(curResponseId, new ArrayList<>());
-//                                questionnaire_rep_map.get(curResponseId).add(questionnaireResponseVO);
-//                                qs_pair_byRespId.get(curResponseId).add(qst_answer);
-//                                log.info("getDependencyis not none, questionnaireResponseVO is "+questionnaireResponseVO);
-//                            }
-//                        }
-//                        else {
-//                            qs_pair_byRespId.putIfAbsent(curResponseId, new ArrayList<>());
-//                            qs_pair_byRespId.get(curResponseId).add(qst_answer);
+//    @GetMapping("/get-questionnaire-all-response")
+//    @ResponseBody
+//    public JSONResult getQuestionnaireAllResponse(Long courseId, String questionnaireName, Long userId) {
 //
+//        log.info("courseId: " + courseId + ", QuestionnaireName: " + questionnaireName + ", userId: " + userId);
+//
+//        String userQuestionnaireKey = userId + "_" + courseId + "_" + questionnaireName;
+//        log.info("Getting questionnaire response -> userQuestionnaireKey:" + userQuestionnaireKey);
+//
+////        iGlobalCache.del(userQuestionnaireKey);
+////        log.info("******Deleted questionnaire response -> userQuestionnaireKey:" + userQuestionnaireKey);
+//
+//        if (iGlobalCache.hasKey(userQuestionnaireKey)) {
+//            log.info("******userQuestionnaireKey Exits!" + userQuestionnaireKey);
+//
+//            Map<Object, Object> userResponseDictionary = iGlobalCache.hmget(userQuestionnaireKey);
+//            // if userId in the redis but no response, read database and save it to redis
+//            if (userResponseDictionary == null || userResponseDictionary.isEmpty()) {
+//                log.info("******userResponseDictionary.isEmpty()!");
+//                log.info(userQuestionnaireKey + "has no response in redis!");
+//                List<MdlQuestionnaireAllResponse> user_response_list = iMdlQuestionnaireService.getQuestionnaireUserResponse(questionnaireName, courseId, userId);
+//                log.info("######user_response_list: " + user_response_list);
+//                if (user_response_list == null || user_response_list.isEmpty()) {
+//                    log.info(userId + " has no response for questionnaire " + questionnaireName + "in course " + courseId);
+//                   // return JSONResult.ok(Collections.emptyList());
+//                    return new JSONResult(200, "Never answered the qesutionnaire", Collections.emptyList());
+//                } else {
+//                    log.info("user_response_list: " + user_response_list);
+//                    Map<Long, List<MdlQuestionnaireResponseCompeteVO>> questionnaire_rep_map = new HashMap<>();
+//                    Map<Long, List<String>> qs_pair_byRespId = new HashMap<>();
+//                    for (MdlQuestionnaireAllResponse resp : user_response_list) {
+//                        Long curResponseId = resp.getResponseId();
+//                        log.info("resp.getQuestionnaireName(): "+ resp.getQuestionnaireName());
+//                        MdlQuestionnaireResponseCompeteVO questionnaireResponseVO = MyBeanCopyUtils.copyBean(resp, MdlQuestionnaireResponseCompeteVO.class);
+//                        questionnaireResponseVO.setQuestionnaireName(resp.getQuestionnaireName());
+//                        questionnaireResponseVO.setUserId(resp.getUserId());
+//
+//                        if (resp.getSelected()) {
 //                            questionnaire_rep_map.putIfAbsent(curResponseId, new ArrayList<>());
 //                            questionnaire_rep_map.get(curResponseId).add(questionnaireResponseVO);
+//
+//                            String qst_answer = resp.getQuestionName() + " -> " + resp.getChoiceContent();;
+//                            qs_pair_byRespId.putIfAbsent(curResponseId, new ArrayList<>());
+//                            qs_pair_byRespId.get(curResponseId).add(qst_answer);
+////                            String qst_answer = resp.getQuestionName() + " -> " + resp.getChoiceContent();
+////                            if (!resp.getDependency().equals("none")) {
+////                                if (qs_pair_byRespId.get(curResponseId).contains(resp.getDependency())) {
+////                                    questionnaire_rep_map.putIfAbsent(curResponseId, new ArrayList<>());
+////                                    questionnaire_rep_map.get(curResponseId).add(questionnaireResponseVO);
+////                                    qs_pair_byRespId.get(curResponseId).add(qst_answer);
+////                                }
+////                            } else {
+////                                qs_pair_byRespId.putIfAbsent(curResponseId, new ArrayList<>());
+////                                qs_pair_byRespId.get(curResponseId).add(qst_answer);
+////                                questionnaire_rep_map.putIfAbsent(curResponseId, new ArrayList<>());
+////                                questionnaire_rep_map.get(curResponseId).add(questionnaireResponseVO);
+////                            }
 //                        }
-                    }
-                }
-                log.info("questionnaire_rep_map after for loop read: "+ questionnaire_rep_map);
-                log.info("qs_pair_byRespId after read : "+qs_pair_byRespId);
-
-                Map<String, Object> Map4StoreRedis = new HashMap<>();
-                for (Map.Entry<Long, List<MdlQuestionnaireResponseCompeteVO>> userResponseEntry : questionnaire_rep_map.entrySet()) {
-                    Long temp_respId = userResponseEntry.getKey();
-                    List<MdlQuestionnaireResponseCompeteVO> responses = userResponseEntry.getValue();
-                    // Check if the dependency is not in qs_pair_byRespId.get(temp_respId)
-                    // Remove the response from the list
-                    responses.removeIf(response ->
-                            !response.getDependency().equals("none") &&
-                                    !response.getDependency().isEmpty() &&
-                                    !qs_pair_byRespId.get(temp_respId).contains(response.getDependency())
-                    );
-
-                    // Sort using streams
-                    List<MdlQuestionnaireResponseCompeteVO> sortedResponses = responses.stream()
-                            .sorted(Comparator.comparingInt(MdlQuestionnaireResponseCompeteVO::getQuestionPosition))
-                            .collect(Collectors.toList());
-
-                    Map4StoreRedis.put(String.valueOf(temp_respId), sortedResponses);
-                }
-                log.info("questionnaire_rep_map: " + questionnaire_rep_map);
-                iGlobalCache.hmset(userQuestionnaireKey, Map4StoreRedis);
-                return JSONResult.ok(questionnaire_rep_map);
-            }
-        }
-    }
+//                    }
+//                    Map<String, Object> Map4StoreRedis = new HashMap<>();
+//                    for (Map.Entry<Long, List<MdlQuestionnaireResponseCompeteVO>> userResponseEntry : questionnaire_rep_map.entrySet()) {
+//                        Long temp_respId = userResponseEntry.getKey();
+//                        List<MdlQuestionnaireResponseCompeteVO> responses = userResponseEntry.getValue();
+//
+//                        responses.removeIf(response ->
+//                                !response.getDependency().equals("none") &&
+//                                        !response.getDependency().isEmpty() &&
+//                                        !qs_pair_byRespId.get(temp_respId).contains(response.getDependency())
+//                        );
+//
+//
+//                        // Sort using streams
+//                        List<MdlQuestionnaireResponseCompeteVO> sortedResponses = responses.stream()
+//                                .sorted(Comparator.comparingInt(MdlQuestionnaireResponseCompeteVO::getQuestionPosition))
+//                                .collect(Collectors.toList());
+//
+//                        Map4StoreRedis.put(String.valueOf(temp_respId), sortedResponses);
+//                    }
+//                    iGlobalCache.hmset(userQuestionnaireKey, Map4StoreRedis, MyConstant.REDIS_EXPIRE_SECONDS);
+//                    return JSONResult.ok(questionnaire_rep_map);
+//                }
+//            }
+//            log.info("Retrieved user_response from redis by key "+userQuestionnaireKey + ": " + userResponseDictionary);
+//            return JSONResult.ok(userResponseDictionary);
+//        }
+//        else {
+//
+//            List<MdlQuestionnaireAllResponse> user_response_list = iMdlQuestionnaireService.getQuestionnaireUserResponse(questionnaireName, courseId, userId);
+//            log.info("MdlQuestionnaireAllResponse read from database: " + user_response_list);
+//            if (user_response_list == null || user_response_list.isEmpty()) {
+//                log.info(userId + " has no response for questionnaire " + questionnaireName + "in course " + courseId);
+//                return new JSONResult(200, "Never answered the qesutionnaire", Collections.emptyList());
+//            }
+//            else {
+//                Map<Long, List<MdlQuestionnaireResponseCompeteVO>> questionnaire_rep_map = new HashMap<>();
+//                Map<Long, List<String>> qs_pair_byRespId = new HashMap<>();
+//                for (MdlQuestionnaireAllResponse resp : user_response_list) {
+//                    Long curResponseId = resp.getResponseId();
+//                    MdlQuestionnaireResponseCompeteVO questionnaireResponseVO = MyBeanCopyUtils.copyBean(resp, MdlQuestionnaireResponseCompeteVO.class);
+////                    questionnaireResponseVO.setQuestionnaireName(resp.getQuestionnaireName());
+////                    questionnaireResponseVO.setUserId(resp.getUserId());
+//
+//                    if (resp.getSelected()) {
+//
+//                        questionnaire_rep_map.putIfAbsent(curResponseId, new ArrayList<>());
+//                        questionnaire_rep_map.get(curResponseId).add(questionnaireResponseVO);
+//
+//                        String qst_answer = resp.getQuestionName() + " -> " + resp.getChoiceContent();
+//                        qs_pair_byRespId.putIfAbsent(curResponseId, new ArrayList<>());
+//                        qs_pair_byRespId.get(curResponseId).add(qst_answer);
+////                        if (!resp.getDependency().equals("none")) {
+////                            if (qs_pair_byRespId.get(curResponseId).contains(resp.getDependency())) {
+////                                //questionnaire_rep_map.putIfAbsent(curResponseId, new ArrayList<>());
+////                                questionnaire_rep_map.get(curResponseId).add(questionnaireResponseVO);
+////                                qs_pair_byRespId.get(curResponseId).add(qst_answer);
+////                                log.info("getDependencyis not none, questionnaireResponseVO is "+questionnaireResponseVO);
+////                            }
+////                        }
+////                        else {
+////                            qs_pair_byRespId.putIfAbsent(curResponseId, new ArrayList<>());
+////                            qs_pair_byRespId.get(curResponseId).add(qst_answer);
+////
+////                            questionnaire_rep_map.putIfAbsent(curResponseId, new ArrayList<>());
+////                            questionnaire_rep_map.get(curResponseId).add(questionnaireResponseVO);
+////                        }
+//                    }
+//                }
+//                log.info("questionnaire_rep_map after for loop read: "+ questionnaire_rep_map);
+//                log.info("qs_pair_byRespId after read : "+qs_pair_byRespId);
+//
+//                Map<String, Object> Map4StoreRedis = new HashMap<>();
+//                for (Map.Entry<Long, List<MdlQuestionnaireResponseCompeteVO>> userResponseEntry : questionnaire_rep_map.entrySet()) {
+//                    Long temp_respId = userResponseEntry.getKey();
+//                    List<MdlQuestionnaireResponseCompeteVO> responses = userResponseEntry.getValue();
+//                    // Check if the dependency is not in qs_pair_byRespId.get(temp_respId)
+//                    // Remove the response from the list
+//                    responses.removeIf(response ->
+//                            !response.getDependency().equals("none") &&
+//                                    !response.getDependency().isEmpty() &&
+//                                    !qs_pair_byRespId.get(temp_respId).contains(response.getDependency())
+//                    );
+//
+//                    // Sort using streams
+//                    List<MdlQuestionnaireResponseCompeteVO> sortedResponses = responses.stream()
+//                            .sorted(Comparator.comparingInt(MdlQuestionnaireResponseCompeteVO::getQuestionPosition))
+//                            .collect(Collectors.toList());
+//
+//                    Map4StoreRedis.put(String.valueOf(temp_respId), sortedResponses);
+//                }
+//                log.info("questionnaire_rep_map: " + questionnaire_rep_map);
+//                iGlobalCache.hmset(userQuestionnaireKey, Map4StoreRedis, MyConstant.REDIS_EXPIRE_SECONDS);
+//                return JSONResult.ok(questionnaire_rep_map);
+//            }
+//        }
+//    }
 
 }

@@ -63,7 +63,7 @@
 
 <script>
   /*使用此代码使页面link 无效*/
-  window.onload = function(){
+  window.addEventListener('load', function(){
     //let baseUrl = "http://localhost:8088";
     let baseUrl = "https://study.floralearn.cn";
     let courseId = 4; //local: 2, cloud: 4
@@ -160,7 +160,7 @@
       usernameLabel .innerText = "学号";
 
     }
-  };
+  });
 
 
 </script>

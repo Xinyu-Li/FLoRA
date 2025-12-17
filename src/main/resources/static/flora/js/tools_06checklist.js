@@ -273,11 +273,12 @@ function highlightSentenceWord(sentence, word, color, num) {
             // console.log("------------word:" + word);
             // console.log(typeof word);
             // console.log(word.length);
+            const customAttributes = { 'background': color, 'data-sentence': sentence };
             const ops = [
                 { 'retain': index },
                 { 'retain': word.length, 'attributes': customAttributes },
             ];
-            // mainEditor.updateContents(ops);
+            mainEditor.updateContents(ops);
             mainEditor.formatText(index, word.length, customAttributes);
 
         }
@@ -364,6 +365,11 @@ const highlightAcademicWritingResultFunc = highlightAcademicWritingResult2;
 
 function highlightOriginalityResult() {
     let originalityResult = checklistResultMap.get("originality");
+    console.log("highlightOriginalityResult:", originalityResult);
+    // originalityResult['scaffolding'] = ['scaffolding can play a huge role in teaching with the help of AI'];
+    // originalityResult['teachers'] = ['teachers can arrange those students who have the same interests'];
+    // originalityResult['role'] = ['AI will play a crucial role in education too'];
+
     if (originalityResult !== null) {
         restoreEssayContent();
         Object.keys(originalityResult).forEach((key) => {
@@ -382,7 +388,16 @@ function highlightIntegrationResult() {
         let writingInfo = eval(integrationResult);
         for (const value of writingInfo) {
             const sentence = value[0];
-            const level = value[1];
+            let level = value[1];
+
+            if (level.toLowerCase() === 'remember' || level.toLowerCase() === 'understanding') {
+                level = 'Low';
+            } else if (level.toLowerCase() === 'apply' || level.toLowerCase() === 'analyse') {
+                level = 'Medium';
+            } else if (level.toLowerCase() === 'evaluate' || level.toLowerCase() === 'create') {
+                level = 'High';
+            }
+
             const color = highlightColorMap.integration.get(level);
             highlightSentence(sentence, color);
         }
@@ -488,7 +503,15 @@ function generateOriginalitySentenceResult(sentenceResult) {
 
 function generateIntegrationSentenceResult(sentenceResult) {
     const sentenceText = sentenceResult[0];
-    const level = sentenceResult[1];
+    let level = sentenceResult[1];
+    if (level.toLowerCase() === 'remember' || level.toLowerCase() === 'understanding') {
+        level = 'Low';
+    } else if (level.toLowerCase() === 'apply' || level.toLowerCase() === 'analyse') {
+        level = 'Medium';
+    } else if (level.toLowerCase() === 'evaluate' || level.toLowerCase() === 'create') {
+        level = 'High';
+    }
+
     const levelString = levelStringMap.get(level);
     const levelColor = levelMap.get(level);
     let sentenceHTML = `
@@ -501,10 +524,12 @@ function generateIntegrationSentenceResult(sentenceResult) {
 }
 
 function showBasicWritingResult(result) {
+    console.log("showBasicWritingResult:", result);
     basicWritingPane.innerHTML = "";
     if (result) {
         Object.keys(result).forEach((key) => {
             const value = result[key];
+            console.log("value-----" + value + "---key---" + key);
             const html = generateBasicSentenceResult(value);
             if (html !== ``) {
                 $(basicWritingPane).append(html);
@@ -525,6 +550,7 @@ function showAcademicWritingResult(result) {
 }
 
 function showAcademicWritingResult2(result) {
+    console.log("showAcademicWritingResult2:", result);
     academicWritingPane.innerHTML = "";
     if (result) {
         Object.keys(result).forEach((key) => {
@@ -538,8 +564,19 @@ function showAcademicWritingResult2(result) {
 const showAcademicWritingResultFunc = showAcademicWritingResult2;
 
 function showOriginalityResult(result) {
-    if (result) {
-        if (Object.entries(result).length === 0) {
+    console.log("showOriginalityResult:", result);
+    // console.log(Object.entries(result).length === 0);
+    console.log(typeof result);
+    let tempResult;
+    if (typeof result === "string") {
+        tempResult = eval(result);
+    } else {
+        tempResult = result;
+    }
+    console.log("showOriginalityResult:", result);
+    console.log(typeof result);
+    if (tempResult) {
+        if (Object.entries(tempResult).length === 0) {
             originalityPane.innerHTML = `
             <div class="card card-body alert alert-success mt-2">
                 There is no originality error.
@@ -547,8 +584,8 @@ function showOriginalityResult(result) {
             `;
         } else {
             originalityPane.innerHTML = "";
-            Object.keys(result).forEach((key) => {
-                const value = result[key];
+            Object.keys(tempResult).forEach((key) => {
+                const value = tempResult[key];
                 const html = generateOriginalitySentenceResult(value);
                 $(originalityPane).append(html);
             });
@@ -557,6 +594,7 @@ function showOriginalityResult(result) {
 }
 
 function showIntegrationResult(result) {
+    console.log("showIntegrationResult:", result);
     let writingInfo = eval(result);
     if (writingInfo) {
         integrationPane.innerHTML = "";
@@ -634,7 +672,8 @@ function performRuleBasedCheck(tabName) {
             const elapsedTime = (endTime - startTime).toFixed(2);
             // console.log(`${tabName} ajax request took ${elapsedTime}ms success.`);
             // Handle the successful response
-            let results = response.data
+            let results = response.data;
+
             // 调用各自的展示结果函数
             checklistResultMap.set(tabName, results);
             showResultFunctionMap.get(tabPane)(results);
@@ -678,9 +717,12 @@ function loadRuleBaseResultFromDB(tabName) {
         const elapsedTime = (endTime - startTime).toFixed(2);
         // console.log(`${tabName} ajax request took ${elapsedTime}ms success.`);
         // Handle the successful response
+        // console.log(url + "-----------results", response.data);
         let results = response.data;
+        // console.log(url + "----------parsed-results", response.data);
         // 调用各自的展示结果函数
         checklistResultMap.set(tabName, results);
+        console.log(tabName + "result:", results);
         showResultFunctionMap.get(tabPane)(results);
     });
 }  
@@ -797,7 +839,7 @@ function setupChecklistTool() {
 }
 
 // let checklistToolUseLength = 0;
-
+showChecklistBtn.addEventListener("mousedown", function (e) {e.stopPropagation();});
 showChecklistBtn.onclick = function(e) {
     console.log("----------------------------------------show checklist Btn clicked");
     stopEventPropagation(e);

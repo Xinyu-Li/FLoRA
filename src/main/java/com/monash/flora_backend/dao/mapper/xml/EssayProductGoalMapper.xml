@@ -6,10 +6,16 @@
     <resultMap id="BaseResultMap" type="com.monash.flora_backend.dao.entity.EssayProductGoal">
         <id column="id" property="id" />
         <result column="user_id" property="userId" />
+        <result column="course_id" property="courseId" />
         <result column="username" property="username" />
         <result column="process_time" property="processTime" />
         <result column="structure" property="structure" />
         <result column="relevance" property="relevance" />
         <result column="main_points" property="mainPoints" />
+
+        <result column="essay" property="essay" />
+        <result column="trigger_type" property="triggerType" />
+        <result column="analysis_type" property="analysisType" />
+        <result column="analysis_result" property="analysisResult" />
     </resultMap>
 </mapper>

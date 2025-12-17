@@ -1,36 +1,233 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Chatbot</title>
-    <!-- Add Bootstrap CSS -->
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Add jQuery -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <!-- Add jQuery UI -->
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-    <!-- Add Bootstrap JS -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <!-- Add custom CSS -->
-    <link href="/css/chattest.css" rel="stylesheet" />
-</head>
-<body>
-    <div class="container">
-        <h1 class="text-center mt-4">ChatBot</h1>
-        <div id="chatbox" class="rounded border p-3 mt-4">
-            <!-- Chat messages will be displayed here -->
-        </div>
-        <form id="message-form" class="mt-4">
-            <div class="input-group">
-                <input id="message-input" type="text" class="form-control" placeholder="Type your message...">
-                <div class="input-group-append">
-                    <button type="submit" class="btn btn-primary">Send</button>
-                </div>
-            </div>
-        </form>
-    </div>
-    <!-- Add custom JavaScript -->
-    <script src="/js/chattest.js"></script>
-</body>
-</html>
+<!--start_PLUGINS_GENERICO_TEMPLATE_BODY-->
+
+<script src="/flora/js/jquery.min.js"></script>
+<script src="/flora/js/etherpad.js"></script>
+<script src="/flora/js/diff.js"></script>
+<link href="/flora/css/bootstrap.min.css" rel="stylesheet"/>
+<script src="/flora/js/bootstrap.bundle.min.js"></script>
+<script src="/flora/js/quill.min.js"></script>
+<script src="/flora/js/flipdown.min.js"></script>
+
+<script>
+    var currentRange = null;
+    var whetherDoHighlight = false;
+    var saveHighlight = null;
+    var saveHighlightText = '';
+
+    var totalMinutes = 45;
+    var unlimitedTime = true;
+    var hintMinutesBeforeEnd = 5;
+
+    var annotationTakeNoteLabel = 'Takenote';
+    var annotationLabelColors = [{"annotationLabel":"important","annotationLabelColor":"#99CCFF"},{"annotationLabel":"useful","annotationLabelColor":"#CCFFCC"},{"annotationLabel":"concept","annotationLabelColor":"#FFCCE5"},{"annotationLabel":"confusing","annotationLabelColor":"#75ff66"}];
+
+    var scaffoldContent = [{"triggerMinute":2,"mainMessage":"It is important to understand what the task is about.","content":["(a) Use menu to get an overview and skim text","(b) Check the essay rubric","(c) Check the learning goals and instructions"]},{"triggerMinute":7,"mainMessage":"It is important to read information about the topics.","content":["(a) Note down important information","(b) Select what to read","(c) Check the time left"]},{"triggerMinute":16,"mainMessage":"It is important to read relevant information and review your reading.","content":["(a) Review annotations to check learning so far","(b) Review the learning goals and instructions","(c) Check essay to determine what to read next"]},{"triggerMinute":21,"mainMessage":"It is important to write a good essay.","content":["(a) Check the remaining time","(b) Check the essay rubric","(c) Draft essay by transferring learning to main points"]},{"triggerMinute":35,"mainMessage":"It is important to write relevant information and check your writing.","content":["(a) Check the essay rubric","(b) Edit your essay","(c) Check the learning goals and instructions"]}];
+    var plannerSelectStrategyHint = 'Please select one strategy to continue!!!';
+    var plannerAllocateTimeHint = 'Please allocate time to all tasks and total time must within regulated minutes!!!';
+    var plannerSelectSkillsHint = 'Please selected skills you plan to use!!!';
+    var plannerSavePlanHint = 'Please fill all the strategy name and correct time!!!';
+
+    var plannerAllStrategy = [{"plannerOverallStrategy":"Read First, then Write","plannerStrategyInstruction":"How much time do you plan to spend on reading and writing respectively?","plannerStep2Task":[{"title":"Read first module","time":5},{"title":"Read second module","time":5},{"title":"Read third module","time":5},{"title":"Write essay","time":5}]},{"plannerOverallStrategy":"Read and Write Simultaneously","plannerStrategyInstruction":"How much time do you plan to spend on each topic?","plannerStep2Task":[{"title":"Read/writing about first module","time":10},{"title":"Read/writing about second module","time":10},{"title":"Read/writing about third module","time":10}]},{"plannerOverallStrategy":"Write Intensively, Read Selectively","plannerStrategyInstruction":"How much time do you plan to spend on different stages of writing?","plannerStep2Task":[{"title":"Conceive the structure of the essay","time":5},{"title":"Write the first draft","time":5},{"title":"Read additional information in relation to the essay","time":5},{"title":"Review, refine and enhance the essay","time":5}]}]
+    var defaultStep3ReadingStrategy = ['Read the material page by page', 'Quick browsing and then detailed reading', 'Use the highlight tool to mark key content', 'Write down my understanding in notes while reading', 'Question-guided reading with focus on certain content', 'Read selectively and skip irrelevant content'];
+    var defaultStep3ReadingInstruction = 'What reading skills do you plan to use (multiple choice)?';
+    var defaultStep3WritingStrategy = ['First draft an essay structure and then fill in with details', 'Use my notes and highlighting when writing the essay', 'Review instructions and rubrics to get writing in line', 'Copy Paste key sentences and then rewrite them fluently', 'Use the writing framework and patterns I have learned to write'];
+    var defaultStep3WritingInstruction = 'What writing skills do you plan to use (multiple choice)?';
+
+    var customiseStep2Instruction = 'Please describe in detail the learning strategy you plan to adopt and how you will allocate your time. You may also include the reasons for the strategy and time allocation.';
+
+
+    let eventWebsocket = null;
+    let teacherChatWebsocket = null;
+
+    var apiBaseUrl = 'http://localhost:8081/myapi';
+    var websocketApiBaseUrl = 'ws://localhost:8081';
+    var mainEditor = null;
+    var editors = {}; //多个不同的侧边栏editor
+
+    // 是否展示工具
+    var useAnnotationTool = true;
+    var useScaffoldTool = false;
+    var useGPTScaffoldTool = false;
+
+    var srlModel = 'maria';    // copes
+    var gptScaffoldRole = 'assistant';
+    var gptScaffoldRoleDescription = 'You are a helpful assistant, please give suggestions based on the given text.';
+    var gptScaffoldPromptIncludeEssay = false;
+    var gptScaffoldPromptTemplate = `This student is working on an essay writing task.
+
+These are task instructions:
+They are reading the material on (1) artificial intelligence and (2) the medicine of the future. The student cannot use reading materials outside of those provided in the environment. Based on these, they need to write an essay (200-300 words) in which they describe in their own words how AI is part of their daily life and how health care now and in the future would look like.
+The essay should reflect the student's own vision and the essay will be automatically checked on how much is copied from the text and/or from other internet sources.
+The student has 45 minutes to study the topics and write the essay. This means that they should work efficiently. They may not have sufficient time to read everything, so they must select their activities carefully. The student is advised to focus on the two topics, how AI works and how new technologies can be used in health care in the future.
+At the end of the learning session, the student should be able to: explain the concept of AI, explain how AI applies to their daily life, explain how AI based technologies can change health care.
+The student can use different tools provided in the learning environment to help them with the task: annotator (to highlight and tag parts of texts and to take notes), planner and essay writing tool.
+This is an individual task, so asking for help from a teacher of peers is not allowed.
+
+This is how the essay will be scored:
+
+The rubric is used to evaluate the essay. There are two global criteria and three components on which the essay will be graded.
+The two global criteria are:
+1.    The essay consists of 200 to 300 words.
+2.    The essay is written clearly and in the student's own words, meaning that no part in the essay can be copied from the text or from other sources.
+
+The three components are:
+1.    Discussion of the concept of AI.
+2.    Discussion of the use of AI-based technologies in medicine.
+3.    Discussion of the future integration of AI in your daily life and in health care (See Table 1.).
+
+This is the rubric. The rubric is used to score the essay, and the full score is 16 points.
+There are two global criteria:
+1.    Word count: The essay consists of 200 to 400 words; Yes (2 points), No (0 points).
+2.    Originality: Your writing should be your own opinion elaborated in your own words, not simply copy-pasted sentences from the material; Yes (2 points), Partial (1 point) No (0 point).
+
+In addition, the essay response will be evaluated according to the following criteria:
+1.    Description of topic AI: the essay has a weak description of the topic AI (1 point); the essay has a sufficient description of the topic AI (2 points); the essay has an in-depth description of the topic AI (3 points); the essay has a in depth description of the topic AI and application to daily life (4 points).
+2.    Discussion of topic AI-based technologies in medicine: the essay has a weak description of AI-based technologies in medicine (1 point); the essay has a sufficient description of AI-based technologies in medicine (2 points); the essay has an in-depth description of AI-based technologies in medicine (3 points); the essay has an in-depth description of AI-based technologies in medicine and application to the future (4 points).
+3.    Combining topics: the essay does not reflect combining of the topics (1 point); the combination of topics is superficial (2 points); the combination of topic is detailed and aligns with the text (3 points); combination of topics is beyond the text and applications to daily life and future health care are discussed (4 points).
+
+;;;ADAPTIVE_PROMPT;;;
+
+
+;;;SRL_PROCESS_PROMPT;;;
+`;
+    var gptScaffoldBackgroundFileNameList = ['1720866186719_timeline.pdf', '1720868264847_progress chart.png'];
+    var gptScaffoldParameters = [200, 1, 2]; //  response max token, n, temperature/10
+
+    var gptScaffoldNeedCheckSubActionPrompt = [{"subAction":"SAVE_PLANNER","notExistPrompt":"This student didn’t create explicit plans for how they will go about the task.","existPrompt":"","threshold":0,"appearOverThresholdPrompt":"","appearLessThanEqualThresholdPrompt":""},{"subAction":"TIMER","notExistPrompt":"This student is not aware of the time left to complete the task.","existPrompt":"This student is aware of the time left to complete the task.","threshold":0,"appearOverThresholdPrompt":"","appearLessThanEqualThresholdPrompt":""},{"subAction":"TRY_OUT_TOOLS","notExistPrompt":"This student is not aware of the tools in the environment that may help them with the task.","existPrompt":"This student seems aware of the available tools in the environment that may help them with the task.","threshold":0,"appearOverThresholdPrompt":"","appearLessThanEqualThresholdPrompt":""},{"subAction":"PAGE_NAVIGATION","notExistPrompt":"This student seems not aware of the available reading materials.","existPrompt":"This student seems aware of the available reading materials in the environment that may help them with the task.","threshold":0,"appearOverThresholdPrompt":"","appearLessThanEqualThresholdPrompt":""},{"subAction":"RUBRIC","notExistPrompt":"This student seems not to understand the rubric.","existPrompt":"This student seems to understand the task rubric.","threshold":0,"appearOverThresholdPrompt":"","appearLessThanEqualThresholdPrompt":""},{"subAction":"TASK_REQUIREMENT","notExistPrompt":"This student seems not to understand the task instructions.","existPrompt":"This student seems to understand the task instructions.","threshold":0,"appearOverThresholdPrompt":"","appearLessThanEqualThresholdPrompt":""}];
+
+    var gptScaffoldNeedCheckSavePlannerSelectIndexPrompt = ['', 'This student came up with the plan to [read first then write] for this task.', 'This student came up with the plan to [read and write simultaneously] for this task.', 'This student came up with the plan to [write intensively and read selectively] for this task.', 'This student came up with the plan to [design his own plan] for the task']; // 确保此处数量和planner 选项数量一致
+
+    var testISDIMUName = 'ISDIMU Questionnaire';
+    var preTestName = 'Questionnaire 2: Pre-Test Activity';
+    var hasTakePreviousStudyTestName = 'Questionnaire 1: About yourself (study_2)';
+
+    var testISDIMUCourseId = 2;
+    var hasTakePreviousStudyTestNameCourseId = 2;
+    var pretestNameCourseId = 2;
+
+    var pretestGradesPrompt = [{"threshold":0,"prompt":"This student has a high level of knowledge about AI in medicine."},{"threshold":5,"prompt":"This student has a low level of knowledge about AI in medicine."},{"threshold":10,"prompt":"This student has a medium level of knowledge about AI in medicine."}];
+    var isdimuScorePrompt = [{"threshold":0,"prompt":"This student seems to have good understanding of various strategies or techniques that can be applied to facilitate learning."},{"threshold":16,"prompt":"This student seems to have a low level of understanding of various strategies or techniques that can be applied to facilitate learning."},{"threshold":32,"prompt":"This student seems to have some understanding of various strategies or techniques that can be applied to facilitate learning."}];
+
+    var userTakePreviousStudyPrompt = 'This student has participated in the prior study so he/she has a certain level of task knowledge.';
+
+    var classifySentenceBackgroundFileNameList = [''];
+    var gptScaffoldNeedCheckSRLProcessPrompt = [{"triggerMinute":1,"beginMinute":7,"endMinute":14,"rules":[{"srlProcess":"CMTR2","notExistPrompt":"","existPrompt":"Up until this point in the learning session, students who performed well in this task would double-check task instructions at least once. This doesn’t seem to be the case with this student. Could you please provide the student with paragraph-style (don't use the bullet points and numbered lists) feedback on how to make sure they checked task instructions and they do this regularly until the end of this writing session?\n\n                    Please don’t advise the student on conditions listed above, just provide advice on how to check task instructions and keep doing this occasionally until the end of this writing session.\n\n                    For this feedback, please follow the effective feedback framework. It is learner-centred and it should include three main components:\n                    1. Highlight both strengths and weaknesses of the student’s performance in relation to what they did in the task so far. This should come from conditions listed above.\n                    2. Focus on the future impact by providing comments with actionable information to help the student achieve the learning outcomes for the task. This should come from the advice listed above.\n                    3. Support the student to feel in control of their learning, attend to their social, emotional and motivational needs, and encourage them to be open to evaluative comments.\n\n                    The feedback should not exceed 50 words.","threshold":0,"appearOverThresholdPrompt":"","appearLessThanEqualThresholdPrompt":""},{"srlProcess":"CMTR3test","notExistPrompt":"","existPrompt":"The feedback should not exceed 50 words.","threshold":0,"appearOverThresholdPrompt":"","appearLessThanEqualThresholdPrompt":""}]},{"triggerMinute":3,"beginMinute":14,"endMinute":21,"rules":[{"srlProcess":"OR2","notExistPrompt":"Up until this point in the learning session, students who performed well in this task made sure they had already included some information from the reading material in their essays. This doesn’t seem to be the case with this student. Could you please provide the student with paragraph-style (don't use the bullet points and numbered lists) feedback on how to include information from the reading material to their essay draft, based on task requirements?\n\n                    Please don’t advise the student on conditions listed above, just provide advice on how to include information from the reading material to their essay draft, based on task requirements.\n\n                    For this feedback, please follow the effective feedback framework. It is learner-centred and it should include three main components:\n                    1. Highlight both strengths and weaknesses of the student’s performance in relation to what they did in the task so far. This should come from conditions listed above.\n                    2. Focus on the future impact by providing comments with actionable information to help the student achieve the learning outcomes for the task. This should come from the advice listed above.\n                    3. Support the student to feel in control of their learning, attend to their social, emotional and motivational needs, and encourage them to be open to evaluative comments.\n\n                    The feedback should not exceed 50 words.","existPrompt":"","threshold":0,"appearOverThresholdPrompt":"","appearLessThanEqualThresholdPrompt":""}]},{"triggerMinute":5,"beginMinute":21,"endMinute":28,"rules":[{"srlProcess":"OT2","notExistPrompt":"","existPrompt":"","threshold":3,"appearOverThresholdPrompt":"","appearLessThanEqualThresholdPrompt":"Up until this point in the learning session, students who performed well in this task made sure they had already started adding novel information in their own words, based on the reading material. This doesn’t seem to be the case with this student. Could you please provide the student with paragraph-style (don't use the bullet points and numbered lists) feedback on how to expand on the information they used from reading materials. The student should do this in their own words.\n\n                    Please don’t advise the student on conditions listed above, just provide advice on how to expand on the information they used from reading materials.\n\n                    For this feedback, please follow the effective feedback framework. It is learner-centred and it should include three main components:\n                    1. Highlight both strengths and weaknesses of the student’s performance in relation to what they did in the task so far. This should come from conditions listed above.\n                    2. Focus on the future impact by providing comments with actionable information to help the student achieve the learning outcomes for the task. This should come from the advice listed above.\n                    3. Support the student to feel in control of their learning, attend to their social, emotional and motivational needs, and encourage them to be open to evaluative comments.\n\n                    The feedback should not exceed 50 words."}]}];
+
+
+
+    var useWriteEssayTool = true;
+
+    var useWriteEssayWordCountButton = false;
+    var useCollaborativeWriteEssayTool = false;
+    var useCollaborativeWriteEssayWordCountButton = false;
+    var includeChatgptToCollaborativeWriteEssay = false;
+
+    var usePlannerTool = true;
+    var useChatgptTool = true;
+
+    var useChatgptRating = false;
+    var useChatgptAssistantTool = false;
+    var useChatgptAssistantRating  = false;
+    var useDoctorScaffold   = false;
+    var useConsultationSubmitTool    = false;
+    var medicalConsultAssistanceType = "jisan";
+    var patientRoleDescription = "patientRoleDescription placeholder";
+    var scaffoldRoleDescription  = "scaffoldRoleDescription placeholder";
+    var assessmentRoleDescription="";
+    var includeSurveyToChatgptPrompt = [];
+    var studyName = "studyName placeholder";var agentsConfig =
+        [{"chatName":"Brand","agentName":"Mayor","agentType":"mayor_beranda","agentRole":"mayor","chatgptRoleDescription":"You are the mayor of Beranda. Please answer all the questions.","useRating":true,"useThisAgent":true,"promptIncludeEssay":true,"chatgptParametersMaxResponseToken":1000,"chatgptParametersN":1,"chatgptParametersTemperature":2,"chatgptBackgroundFileNameList":["1720866186719_timeline.pdf","1720868264847_progress chart.png"]},{"chatName":"awgawg","agentName":"awgawga","agentType":"awgawg","agentRole":"awgawg","chatgptRoleDescription":"awgawgawgawg","useRating":false,"useThisAgent":false,"promptIncludeEssay":false,"chatgptParametersMaxResponseToken":1000,"chatgptParametersN":1,"chatgptParametersTemperature":2,"chatgptBackgroundFileNameList":[]},{"chatName":"gawgawg","agentName":"awgawgawg","agentType":"awgawgawg","agentRole":"awgawgawgawg","chatgptRoleDescription":"awgawgawg","useRating":false,"useThisAgent":false,"promptIncludeEssay":false,"chatgptParametersMaxResponseToken":1000,"chatgptParametersN":1,"chatgptParametersTemperature":2,"chatgptBackgroundFileNameList":["1720866186719_timeline.pdf"]},{"chatName":"ggg","agentName":"gg","agentType":"gg","agentRole":"gg","chatgptRoleDescription":"","useRating":false,"useThisAgent":false,"promptIncludeEssay":false,"chatgptParametersMaxResponseToken":1000,"chatgptParametersN":1,"chatgptParametersTemperature":2,"chatgptBackgroundFileNameList":["1720868356315_9ec9148bf6b6d95528546a6773f2248.jpg"]}]
+    var useChecklistTool = false;
+    var useChecklistToolGrammar = false;
+    var useChecklistToolAcademic = false;
+    var useChecklistToolOriginality = false;
+    var useChecklistToolClassification = false;
+    var useDictionaryTool = false;
+    var dictionarySourceLanguage = 'zh-cn';
+    var dictionaryTargetLanguage = 'en';
+    var useTeacherChat = false;
+    var useTimerTool = true;
+
+    var useVideoRecordingTool = false;
+
+    var toolsLanguage = 'en';
+
+    const toolList1 = [];
+
+    function loadScript(url) {
+        let currentDate = new Date();
+
+        // Get the year, month, and day from the date object
+        let year = currentDate.getFullYear();
+        let month = currentDate.getMonth() + 1; // Month is 0-indexed
+        let day = currentDate.getDate();
+
+        // Pad the month and day with leading zeros if they are less than 10
+        month = month < 10 ? '0' + month : month;
+        day = day < 10 ? '0' + day : day;
+
+        // Concatenate the year, month, and day to form the desired format
+        let formattedDate = year.toString() + month.toString() + day.toString();
+
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = url + "?v=" + formattedDate;
+        script.defer = true;
+        script.async = false;
+        document.head.appendChild(script);
+    }
+    function getURLParameters(url) {
+        var params = {};
+        var parser = document.createElement('a');
+        parser.href = url;
+        var query = parser.search.substring(1);
+        var vars = query.split('&');
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split('=');
+            params[pair[0]] = decodeURIComponent(pair[1]);
+        }
+        return params; // string 类型
+    }
+    let navTagA = document.querySelector("#page-navbar>nav>ol>li>a");
+    var currentCourseId = 0;
+    if (navTagA != null) {
+        console.log(navTagA.href);
+        currentCourseId = getURLParameters(navTagA.href).id;
+        // navTagA.href = "#";
+        navTagA.onclick = "return false;";
+    }
+</script>
+<script>
+    loadScript("/flora/js/text.js");
+    loadScript("/flora/js/i18n_function.js");
+    loadScript("/flora/js/generateToolsHtml.js");
+    loadScript("/flora/js/tools_00common.js");
+
+    if(useAnnotationTool) loadScript("/flora/js/tools_01annotation.js");
+    if(useScaffoldTool) loadScript("/flora/js/tools_02scaffolding.js");
+    if(useWriteEssayTool) loadScript("/flora/js/tools_03essay_writing.js");
+    if(usePlannerTool) loadScript("/flora/js/tools_04planner.js");
+    if(useChatgptTool) loadScript("/flora/js/tools_05chatgpt.js");
+    if(useChecklistTool) loadScript("/flora/js/tools_06checklist.js");
+    if(useVideoRecordingTool) {
+        loadScript("/flora/js/MediaStreamRecorder.js");
+        loadScript("/flora/js/tools_09record_video.js");
+    }
+
+    // if(useTimerTool) 不确定timer是否需要按需加载
+    loadScript("/flora/js/tools_08timer.js");
+    if(useDictionaryTool) loadScript("/flora/js/tools_10dictionary.js");
+    if(useTeacherChat) loadScript("/flora/js/tools_11teacherchat.js");
+
+
+    // if (useCollaborativeWriteEssayTool) loadScript("/flora/js/tools_12collaboratewrite.js");
+
+    if(useGPTScaffoldTool) loadScript("/flora/js/tools_07gpt_scaffolding.js");
+
+    loadScript("/flora/js/tools_08timer.js");
+    loadScript("/flora/js/setupInstrumentationTools.js");
+
+
+</script>
+
+<!--end_PLUGINS_GENERICO_TEMPLATE_BODY-->

@@ -39,6 +39,21 @@ public class MdlQuizAttemptsServiceImpl extends ServiceImpl<MdlQuizAttemptsMappe
 
     @Override
     public List<MdlQuizVO> getQuizResponseAllUser(String quizName, Long courseId) {
-        return getBaseMapper().getQuizResponseAllUser(quizName,courseId);
+        return getBaseMapper().getQuizResponseAllUser(quizName, courseId);
+    }
+
+    @Override
+    public List<MdlQuizVO> getQuizResponseByUserIdAndCourseIdAndQuizName(String quizName, Long courseId, Long userId) {
+        return getBaseMapper().getQuizResponseByUserIdAndCourseIdAndQuizName(quizName, courseId, userId);
+    }
+
+    @Override
+    public List<MdlQuizVO> getQuizResponseByUserIdAndCourseIdAndQuizNameSimplified(String quizName, Long courseId, Long userId) {
+        return getBaseMapper().getQuizResponseByUserIdAndCourseIdAndQuizNameSimplified(quizName, courseId, userId);
+    }
+
+    @Override
+    public MdlQuizVO findQuizGradeByUserIdAndCourseIdAndQuizName(String quizName, Long courseId, Long userId) {
+        return getBaseMapper().findQuizGradeByUserIdAndCourseIdAndQuizName(quizName, courseId, userId);
     }
 }

@@ -1,6 +1,7 @@
 package com.monash.flora_backend;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.monash.flora_backend.controller.vo.TraceDataCleanGroupVO;
 import com.monash.flora_backend.controller.vo.TraceDataCleanPersonalVO;
 import com.monash.flora_backend.dao.entity.UserChatgptLog;
 import com.monash.flora_backend.service.ITraceDataService;
@@ -20,7 +21,12 @@ public class VisualisationTest extends FLoRaBackendApplicationTests{
     private ITraceDataService iTraceDataService;
     @Test
     public void testGetListReturnNull() {
-        List<TraceDataCleanPersonalVO> outputData = iTraceDataService.getPersonalLevelData("%india%", "4");
+        List<TraceDataCleanPersonalVO> outputData = iTraceDataService.getPersonalLevelData("17", 45 *60*1000, "%oulu%");
+        String i = "0";
+    }
+    @Test
+    public void testGetGroupData() {
+        List<TraceDataCleanGroupVO> outputData = iTraceDataService.getGroupLevelData("4", 30 *60*1000, "%oulu%");
         String i = "0";
     }
 }

@@ -2,6 +2,7 @@ package com.monash.flora_backend.controller;
 
 import com.monash.flora_backend.constant.MyConstant;
 import com.monash.flora_backend.controller.vo.UserStartTimeVO;
+import com.monash.flora_backend.dao.entity.UserStartTime;
 import com.monash.flora_backend.service.ICollaborateService;
 import com.monash.flora_backend.service.IScaffoldService;
 import com.monash.flora_backend.service.ITraceDataService;
@@ -111,5 +112,17 @@ public class TraceDataController {
             return JSONResult.ok(startTimeFromRedis);
         }
 
+    }
+
+    @PostMapping("/add-task-start-time") // for task2
+    public JSONResult addTaskStartTime(Long userId, String courseId, String currentTimestamp) {
+        log.info("------------------------into addTaskStartTime:" + currentTimestamp + "::::courseId:" + courseId + "::::userId:" + userId);
+        iUserStartTimeService.saveStartTimeToRedis(MyConstant.REDIS_TASK_START_TIME + userId + "-" + courseId, currentTimestamp);
+        UserStartTime u = new UserStartTime();
+        u.setUserId(userId);
+        u.setCourseId(courseId);
+        u.setUserStartTime(currentTimestamp);
+        iUserStartTimeService.save(u);
+        return JSONResult.ok();
     }
 }

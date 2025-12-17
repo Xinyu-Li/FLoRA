@@ -19,16 +19,31 @@ public class EssayProductGoal extends Model<EssayProductGoal> {
     private Long id;
 
     private Long userId;
+    private String courseId;
 
     private String username;
 
     private String processTime;
 
+
+
+    private String essay;
+    private String triggerEvent;
+    private String analysisType;
+    private String analysisResult;
+
+    //下面3个暂时没用
     private String structure;
-
     private String relevance;
-
     private String mainPoints;
+
+    public String getCourseId() {
+        return courseId;
+    }
+
+    public void setCourseId(String courseId) {
+        this.courseId = courseId;
+    }
 
     public Long getId() {
         return id;
@@ -86,6 +101,38 @@ public class EssayProductGoal extends Model<EssayProductGoal> {
         this.mainPoints = mainPoints;
     }
 
+    public String getEssay() {
+        return essay;
+    }
+
+    public void setEssay(String essay) {
+        this.essay = essay;
+    }
+
+    public String getTriggerEvent() {
+        return triggerEvent;
+    }
+
+    public void setTriggerEvent(String triggerEvent) {
+        this.triggerEvent = triggerEvent;
+    }
+
+    public String getAnalysisType() {
+        return analysisType;
+    }
+
+    public void setAnalysisType(String analysisType) {
+        this.analysisType = analysisType;
+    }
+
+    public String getAnalysisResult() {
+        return analysisResult;
+    }
+
+    public void setAnalysisResult(String analysisResult) {
+        this.analysisResult = analysisResult;
+    }
+
     @Override
     protected Serializable pkVal() {
         return null;
@@ -94,13 +141,17 @@ public class EssayProductGoal extends Model<EssayProductGoal> {
     @Override
     public String toString() {
         return "EssayProductGoal{" +
-        ", id=" + id +
-        ", userId=" + userId +
-        ", username=" + username +
-        ", processTime=" + processTime +
-        ", structure=" + structure +
-        ", relevance=" + relevance +
-        ", mainPoints=" + mainPoints +
-        "}";
+                "id=" + id +
+                ", userId=" + userId +
+                ", username='" + username + '\'' +
+                ", processTime='" + processTime + '\'' +
+                ", structure='" + structure + '\'' +
+                ", relevance='" + relevance + '\'' +
+                ", mainPoints='" + mainPoints + '\'' +
+                ", essay='" + essay + '\'' +
+                ", triggerEvent='" + triggerEvent + '\'' +
+                ", analysisType='" + analysisType + '\'' +
+                ", analysisResult='" + analysisResult + '\'' +
+                '}';
     }
 }

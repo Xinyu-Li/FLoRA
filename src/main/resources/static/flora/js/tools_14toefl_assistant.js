@@ -353,13 +353,7 @@ if (agents.Mediator.useToeflMediator){
 
 function askMediatorForScaffold(expert_type){
     console.log("askMediatorForScaffold",expert_type);
-        let essayContent = "";
-        if (typeof mainEditor === 'undefined' || mainEditor === null){
-            essayContent = "";
-        }
-        else {
-            essayContent = mainEditor.getText();
-        }
+    let essayContent = mainEditor?.getText() ?? "";
         let chatgptData = {
             question: expert_type,
             userId: userId,
@@ -431,13 +425,7 @@ function getIfNotAskAllExpertResponse(){
     }
     let question = extraInfo
     console.log("calling askMediatorForInstruction",question);
-        let essayContent = "";
-        if (typeof mainEditor === 'undefined' || mainEditor === null){
-            essayContent = "";
-        }
-        else {
-            essayContent = mainEditor.getText();
-        }
+    let essayContent = mainEditor?.getText() ?? "";
         let chatgptData = {
             question: question,
             userId: userId,
@@ -494,9 +482,9 @@ function setConversationRound(chat_history){
     console.log("setConversationRound----------------------------")
     let expert_chat_history = chat_history.filter(chat => chat.chatgptRole && chat.chatgptRole.includes("expert"));
     // 通过expert_chat_history 计算学生与每个expert的对话轮数
-    let expert_structure_round = expert_chat_history.filter(chat => chat.type === "expert_structure").length
-    let expert_grammar_round = expert_chat_history.filter(chat => chat.type === "expert_grammar").length
-    let expert_language_round = expert_chat_history.filter(chat => chat.type === "expert_language").length
+    let expert_structure_round = expert_chat_history.filter(chat => chat.assistantName === "expert_structure").length
+    let expert_grammar_round = expert_chat_history.filter(chat => chat.assistantName === "expert_grammar").length
+    let expert_language_round = expert_chat_history.filter(chat => chat.assistantName === "expert_language").length
     toeflAssistantRound = expert_language_round + expert_grammar_round + expert_structure_round;
 
 
@@ -874,13 +862,7 @@ function askMediatorQuestion(question){
 
         console.log("cleanQuestion",cleanQuestion)
 
-        let essayContent = "";
-        if (typeof mainEditor === 'undefined' || mainEditor === null){
-            essayContent = "";
-        }
-        else {
-            essayContent = mainEditor.getText();
-        }
+        let essayContent = mainEditor?.getText() ?? "";
         let chatgptData = {
             question: cleanQuestion,
             userId: userId,
@@ -943,13 +925,7 @@ function askStructureExpertQuestion(question){
         $(assistantTextarea).append(processingMessage);
         $(assistantTextarea).scrollTop(assistantTextarea.scrollHeight);
 
-        let essayContent = "";
-        if (typeof mainEditor === 'undefined' || mainEditor === null){
-            essayContent = "";
-        }
-        else {
-            essayContent = mainEditor.getText();
-        }
+        let essayContent = mainEditor?.getText() ?? "";
         let chatgptData = {
             question: question,
             userId: userId,
@@ -1022,13 +998,7 @@ function askGrammarExpertQuestion(question){
     $(assistantTextarea).scrollTop(assistantTextarea.scrollHeight);
 
     if (question.length > 0) {
-        let essayContent = "";
-        if (typeof mainEditor === 'undefined' || mainEditor === null){
-            essayContent = "";
-        }
-        else {
-            essayContent = mainEditor.getText();
-        }
+        let essayContent = mainEditor?.getText() ?? "";
         let chatgptData = {
             question: question,
             userId: userId,
@@ -1100,13 +1070,7 @@ function askLanguageExpertQuestion(question){
         $(assistantTextarea).append(processingMessage);
         $(assistantTextarea).scrollTop(assistantTextarea.scrollHeight);
 
-        let essayContent = "";
-        if (typeof mainEditor === 'undefined' || mainEditor === null){
-            essayContent = "";
-        }
-        else {
-            essayContent = mainEditor.getText();
-        }
+        let essayContent = mainEditor?.getText() ?? "";
         let chatgptData = {
             question: question,
             userId: userId,
@@ -1224,10 +1188,10 @@ function loadToeflAssistantChatHistory() {
             $(assistantTextarea).empty();
             console.log("chat_history",chat_history);
             setConversationRound(chat_history);
-            let expert_chat_history = chat_history.filter(chat => chat.chatgptRole && (chat.chatgptRole.includes("expert") || chat.chatgptRole.includes("mediator") || (chat.type !== null && chat.type.includes("mediator"))));
+            let expert_chat_history = chat_history.filter(chat => chat.chatgptRole && (chat.chatgptRole.includes("expert") || chat.chatgptRole.includes("mediator") || (chat.assistantName !== null && chat.assistantName.includes("mediator"))));
             // 最后一个chat的expert的type
             if (chat_history.length > 0) {
-                let lastAskedExpertType = chat_history[chat_history.length - 1].type;
+                let lastAskedExpertType = chat_history[chat_history.length - 1].assistantName;
                 if (lastAskedExpertType === "expert_language") {
                     lastAskedExpert = "language";
                 }
@@ -1254,7 +1218,7 @@ function loadToeflAssistantChatHistory() {
                 console.log("alreadyNotified",alreadyNotified);
                 console.log("ask_all_expert",ask_all_expert);
             }
-            let startMediatorConversation = chat_history.filter(chat => chat.type === "mediator_start_conversation").length;
+            let startMediatorConversation = chat_history.filter(chat => chat.assistantName === "mediator_start_conversation").length;
             if(startMediatorConversation > 0){
                 startMediatorNotified = true;
                 console.log("startMediatorNotified",startMediatorNotified);
@@ -1271,21 +1235,21 @@ function loadToeflAssistantChatHistory() {
                 // 如果chat的chatgptrole不是assistant,则显示
                 let round = expert_chat_history.findIndex(value => value.id === chat.id) + 1;
                 // 此处要根据不同的role进行不同的处理
-                if (chat.type === "expert_structure") {
+                if (chat.assistantName === "expert_structure") {
                     $(assistantTextarea).append(generateQuestionHtml("@结构专家 "+chat.userQuestions, new Date(parseInt(chat.userAskTime, 10)).toLocaleTimeString(), chat.id));
                     $(assistantTextarea).append(generateStructureExpertAnswerHtml(chat.chatgptAnswer, new Date(parseInt(chat.chatgptResponseTime, 10)).toLocaleTimeString(), chat.questionId, chat.id,useToeflAssistantRating,round));
                     if (useToeflAssistantRating){
                         renderToeflAssistantChatRating(chat.id,chat.responseRatingStar,chat.responseRatingThumb)
                     }
                 }
-                else if (chat.type === "expert_grammar") {
+                else if (chat.assistantName === "expert_grammar") {
                     $(assistantTextarea).append(generateQuestionHtml("@语法专家 " + chat.userQuestions, new Date(parseInt(chat.userAskTime, 10)).toLocaleTimeString(), chat.id));
                     $(assistantTextarea).append(generateGrammarExpertAnswerHtml(chat.chatgptAnswer, new Date(parseInt(chat.chatgptResponseTime, 10)).toLocaleTimeString(), chat.questionId, chat.id,useToeflAssistantRating,round));
                     if (useToeflAssistantRating){
                         renderToeflAssistantChatRating(chat.id,chat.responseRatingStar,chat.responseRatingThumb)
                     }
                 }
-                else if (chat.type === "expert_language") {
+                else if (chat.assistantName === "expert_language") {
                     $(assistantTextarea).append(generateQuestionHtml("@语言专家 "+chat.userQuestions, new Date(parseInt(chat.userAskTime, 10)).toLocaleTimeString(), chat.id));
                     $(assistantTextarea).append(generateLanguageExpertAnswerHtml(chat.chatgptAnswer, new Date(parseInt(chat.chatgptResponseTime, 10)).toLocaleTimeString(), chat.questionId, chat.id,useToeflAssistantRating,round));
                     if (useToeflAssistantRating){

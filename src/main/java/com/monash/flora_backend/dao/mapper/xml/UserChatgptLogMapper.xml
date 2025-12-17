@@ -6,11 +6,8 @@
     <resultMap id="BaseResultMap" type="com.monash.flora_backend.dao.entity.UserChatgptLog">
         <id column="id" property="id" />
 
-
-
         <result column="user_id" property="userId" />
         <result column="course_id" property="courseId" />
-        <result column="thread_id" property="threadId" />
         <result column="chatgpt_role" property="chatgptRole" />
         <result column="chatgpt_role_description" property="chatgptRoleDescription" />
         <result column="question_id" property="questionId" />
@@ -27,6 +24,21 @@
 
         <result column="chatgpt_whole_response" property="chatgptWholeResponse" />
         <result column="chatgpt_whole_prompt" property="chatgptWholePrompt" />
-        <result column="type" property="type" />
+
+        <result column="topic_id" property="topicId" />
+        <result column="hidden" property="hidden" />
+        <result column="question_version" property="questionVersion" />
+
+
+        <result column="assistant_name" property="assistantName" />
+        <result column="response_type" property="responseType" />
+        <result column="api_model" property="apiModel" />
+        <result column="api_object" property="apiObject" />
+
+        <result column="thread_id" property="threadId" />
+        <result column="run_id" property="runId" />
+        <result column="assistant_id" property="assistantId" />
+        <result column="openai_conversationI_id" property="openaiConversationId" />
+
     </resultMap>
 </mapper>

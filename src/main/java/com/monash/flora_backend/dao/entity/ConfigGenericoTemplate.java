@@ -102,6 +102,12 @@ public class ConfigGenericoTemplate extends Model<ConfigGenericoTemplate> {
 
     private Boolean useDictionaryTool;
 
+    // add zoteroNotes tool
+    private Boolean useZoteroNotesTool;
+
+    // add processVisual tool
+    private Boolean useProcessVisualTool;
+
     private String dictionarySourceLanguage;
 
     private String dictionaryTargetLanguage;
@@ -371,9 +377,24 @@ public class ConfigGenericoTemplate extends Model<ConfigGenericoTemplate> {
     public Boolean getUseCollaborativeWriteEssayTool() {
         return useCollaborativeWriteEssayTool;
     }
-
     public void setUseCollaborativeWriteEssayTool(Boolean useCollaborativeWriteEssayTool) {
         this.useCollaborativeWriteEssayTool = useCollaborativeWriteEssayTool;
+    }
+
+    // zoteroNotes
+    public Boolean getUseZoteroNotesTool() {
+        return useZoteroNotesTool;
+    }
+    public void setUseZoteroNotesTool(Boolean useZoteroNotesTool) {
+        this.useZoteroNotesTool = useZoteroNotesTool;
+    }
+
+    // processVisualTool
+    public Boolean getProcessVisualTool() {
+        return useProcessVisualTool;
+    }
+    public void setProcessVisualTool(Boolean useProcessVisualTool) {
+        this.useProcessVisualTool = useProcessVisualTool;
     }
 
     public Boolean getUseCollaborativeWriteEssayWordCountButton() {

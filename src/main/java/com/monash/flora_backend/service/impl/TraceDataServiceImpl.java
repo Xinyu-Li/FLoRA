@@ -443,7 +443,15 @@ public class TraceDataServiceImpl extends ServiceImpl<TraceDataMapper, TraceData
             queryWrapper.eq("course_id", courseId);
         }
         queryWrapper.orderByAsc("save_time");
-        return super.list(queryWrapper);
+
+        try {
+            return super.list(queryWrapper);
+        } catch (Exception e) {
+            System.out.println("findAllByUserIdAndCourseIdOrderByTimeAsc---begin---------------------userId: " + userId + " courseId: " + courseId);
+            e.printStackTrace();
+            System.out.println("findAllByUserIdAndCourseIdOrderByTimeAsc-----end-------------------userId: " + userId + " courseId: " + courseId);
+            return new ArrayList<>();
+        }
     }
 
     @Override

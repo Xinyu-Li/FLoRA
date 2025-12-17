@@ -12,33 +12,56 @@ public class MyConstant {
 //    public static String CHAT_SERVICE_URL = "https://chat-service.floraproject.org/myapi";  //http://localhost:5000
 //    public static String ETHERPAD_API_KEY = "49a6a6329b12c93fa4eff0cfe53257bba064637fe277c1c9a4535d24fa5ef81e";
 
+    public static String PROJECT_ID = "local";
+    public static String LANGUAGE = "en";
     public static int BATCH_SIZE = 100;
+    //public static String ETHERPAD_API_KEY = "9e4efe1e2b1f3c8ab480c6d2e397d7c22d69252de5be9ea87df8d9e43d6d7c7f";
 
-    public static String ETHERPAD_API_KEY = "d4613401a7a7954334df7f10d1414f7cd6653c6487d1a9feb3c0c0f0db2e65c1";
+    //public static String ETHERPAD_API_KEY = "32639c711ef2819879628f93f4dc6812a6815ca625949ec698120d3a7bdb1b0e";
+    public static String ETHERPAD_API_KEY = "fc90408313dc36713c124e8dbe07cc2a4693a81cc7df90a50a5249ced07c59a2";
+   //public static String ETHERPAD_API_URL = "https://ar.floraengine.org/myapi/etherpad";
 
-//    public static String CHAT_SERVICE_URL = "http://localhost:5000";
-    public static String CHAT_SERVICE_URL = "https://chat-service.floraproject.org/myapi/"; //中国本地测试使用
+    //public static String ETHERPAD_API_KEY = "32639c711ef2819879628f93f4dc6812a6815ca625949ec698120d3a7bdb1b0e";
+    //public static String ETHERPAD_API_URL = "https://ar.floraengine.org/myapi/etherpad";
+    public static String ETHERPAD_API_URL = "http://localhost/etherpad";
+
+    public static String CHAT_SERVICE_URL = "http://localhost:5000";
+//    public static String CHAT_SERVICE_URL = "https://chat-service.floraproject.org/myapi/"; //中国本地测试使用
+//    public static String CHAT_SERVICE_URL = "https://beijing-chat.floraengine.org/myapi/"; //中国本地测试使用
+    public static String CHAT_SERVICE_DEEPSEEK_URI = "/deepseek";
     public static String CHAT_SERVICE_CHATGPT_URI = "/chatgpt";
     public static String CHAT_SERVICE_CHATGPT_ASSISTANT_URI = "/chatgpt-assistant";
+    public static String CHAT_SERVICE_CHATGPT_CONVERSATION_API_URI = "/chatgpt-conversation";
+    public static String CHAT_SERVICE_CHATGPT_ASSISTANT_REGENERATE_URI = "/chatgpt-assistant-regenerate";
+    public static String CHAT_SERVICE_CHATGPT_ASSISTANT_EMBED_URI = "/chatgpt-assistant-embed";
     public static String CHAT_SERVICE_CHATGPT_ASSISTANT_SCAFFOLD_URI = "/chatgpt-assistant-scaffold";
     public static String CHAT_SERVICE_CHATGPT_ASSISTANT_SCORE_URI = "/chatgpt-assistant-score";
     public static String CHAT_SERVICE_CHATGPT_CONSULT_URI = "/chatgpt-consult";
     public static String CHAT_SERVICE_CHATGPT_MEDIATOR_SCAFFOLD_URI = "/chatgpt-mediator-scaffold";
     public static String CHAT_SERVICE_GPT_SCAFFOLD_URI = "/gpt-scaffold";
-//    public static String CHAT_SERVICE_URL = "https://chat-service.floraproject.org/myapi";
+    public static String CHAT_SERVICE_ESSAY_PRODUCT_ANALYSIS = "/essay-product-analysis";
+//    public static String CHAT_SERVICE_URL = "http://beijing-chat-elb.floraengine.org/";
 
     //--------------------------------- used for getting simplified logs------------------------------------------
     public static final Set<String> MOUSE_EVENTS = Set.of("MOUSE_MOVE", "MOUSE_WHEEL");
     public static final Set<String> SUB_ACTION_LABELS = Set.of("TASK_REQUIREMENT", "RUBRIC", "RELEVANT_READING", "RELEVANT_REREADING");
     public static final Set<String> CLOSE_TOOL_LABELS = Set.of("CLOSE_ESSAY", "CLOSE_PLANNER", "CLOSE_ANNOTATION", "OPEN_GPT", "OPEN_GPT_SCAFFOLD", "OPEN_DICTIONARY");
     public static final Set<String> OPEN_TOOL_LABELS = Set.of("OPEN_ESSAY", "OPEN_PLANNER", "OPEN_ANNOTATION", "CREATE_NOTE", "CREATE_HIGHLIGHT", "CLOSE_GPT", "CLOSE_GPT_SCAFFOLD", "CLOSE_DICTIONARY");
+
+    public static final String CHATGPT_ROLE_ASSISTANT = "assistant";
+    public static final String CHATGPT_ROLE_SCAFFOLD_CHAT = "scaffold-chat";
+    public static final String CHATGPT_ROLE_TUTOR = "tutor";
+    public static final String CHATGPT_ROLE_PATIENT = "patient";
+    public static final String CHATGPT_ROLE_SCAFFOLD = "scaffold";
+    public static final String AGENT_ROLE = "chat-with-scaffold"; // add scaffold content into chat answer
     //--------------------------------- used for getting simplified logs ---- end------------------------------------------
 //"https://study.floralearn.cn",
 
     public static final String[] myOrigins = {"http://localhost", "http://localhost:80", "http://localhost:8088", "http://localhost:8080", "http://localhost:8081", "http://localhost:4200", "http://localhost:3000",
             "http://localhost:9001", "https://lak24.floraengine.org", "http://localhost:5000", "https://yidelearn.com", "https://cella-lala.floraengine.org", "https://ar.floraengine.org",
             "https://cella-monash.floraproject.org", "https://nijmegen.floraproject.org",
-            "https://www.floraengine.org", "https://test.floraengine.org", "https://oulucella.oulu.fi", "https://flora.cite.hku.hk", "https://ar.floraengine.org", "https://flora.ntcu.edu.tw"};
+            "https://www.floraengine.org", "https://test.floraengine.org", "https://oulucella.oulu.fi", "https://flora.cite.hku.hk", "https://ar.floraengine.org", "https://flora.ntcu.edu.tw",
+        "https://gaila.hku.hk", "https://infoseeking.floraengine.org","https://flora.pku.edu.cn", "https://asia.floraengine.org"};
 
 
     public static int ITEM_NUMBER_PER_EXCEL = 100000;
@@ -48,6 +71,8 @@ public class MyConstant {
     public final static String KAFKA_TOPIC_ESSAY = "essay-save-content";
     public static final int REDIS_LINK_EXPIRE_SECONDS = 86400;// 24 hours
     public static int REDIS_EXPIRE_SECONDS = 7200; // second  2 hours
+
+    public final static String REDIS_OPENAI_CONVERSATION_ID = "redis-openai-conversation-id-";
     public final static String REDIS_SCAFFOLD_INFO = "redis-scaffold-info-";
     public final static String REDIS_ACTION_LABEL_LIST = "redis-action-label-list-";
     public final static String REDIS_GPT_CHAT_LOG_LIST = "redis-gpt-handler-log-list-";
@@ -58,6 +83,7 @@ public class MyConstant {
     public final static String REDIS_SIMPLIFIED_SUB_ACTION_LIST = "redis-simplified-sub-action-list-";
     public final static String REDIS_ACTION_EXIST_SET = "redis-action-exist-set-";
     public final static String REDIS_PLANNER_SELECT_INDEX = "redis-planner-select-index-";
+    public static final String REDIS_ESSAY_PRODUCT_ANALYSIS = "redis-essay-product-analysis-";
 
     public final static String REDIS_GPT_SCAFFOLD_TRIGGER = "redis-gpt-scaffold-";
 
@@ -85,7 +111,7 @@ public class MyConstant {
     public static String preTestName = "";
     public static Long preTestCourseId = 0L;
     public static Long testISDIMUCourseId = 0L;
-    public static String SRL_MODEL = "maria"; // copes
+    public static String SRL_MODEL = "copes"; //maria copes
 
 
 //    public static String COPES_CLASSIFY_BACKGROUND_FILE = "CELLA_main_task_reading.docx";

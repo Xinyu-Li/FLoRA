@@ -11,10 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Arrays;
+import java.lang.reflect.InaccessibleObjectException;
 import java.util.List;
 import java.util.Random;
 
@@ -27,14 +24,9 @@ public class AsyncTaskServiceTest extends FLoRaBackendApplicationTests {
     @Autowired
     private AsyncTaskService asyncTaskService;
 
-    // 第一次发用户名密码用的
-    private String[][] studentsEmailPassword = {
-            {"xinyu.li1@monash.edu", "111111"}
-    };
+    private String[][] studentsEmailPassword = {};
 
-    // 第二次 给所有已经使用了系统的学生发信息用的，因为需要过滤掉没使用的，所以需要获取用户id
     private static String[][] studentEmailId = {
-
             {"xinyu.li1@monash.edu", "111111"},
             {"guanliang.chen@monash.edu", "221111"}
     };
@@ -67,7 +59,7 @@ public class AsyncTaskServiceTest extends FLoRaBackendApplicationTests {
 
 
 
-//    @Test
+    @Test
     public void generatePassword() {
         for (int i = 0; i < studentsEmailPassword.length; i++) {
             String[] emailPassword = studentsEmailPassword[i];
@@ -81,7 +73,7 @@ public class AsyncTaskServiceTest extends FLoRaBackendApplicationTests {
     @Autowired
     private IUserChatgptLogService iUserChatgptLogService;
 
-//    @Test
+    @Test
     public void testGenerateDataFile() {
         for (int i = studentEmailId.length - 1; i >= 0; i--) {
             String[] emailId = studentEmailId[i];
@@ -109,57 +101,25 @@ public class AsyncTaskServiceTest extends FLoRaBackendApplicationTests {
         }
     }
 
-    @Test
     public void testSendEmailAboutData() {
-        String filePath = ""; //"D:\\PythonProjects\\pythonProject\\FIT5145_2024_S2\\user_list.csv";
-        String explanatoryStatement = ""; //"E:\\Google Drive\\Papers\\Guanliang 5145 Data set\\ethics\\explanatory-statement-student.doc";
-        try {
-            List<String> lines = Files.readAllLines(Paths.get(filePath), StandardCharsets.UTF_8);
-            int count = 0;
-            for (String line: lines) {
-                count++;
-                if (!StrUtil.isEmpty(line.strip())) {
-                    String[] elements = line.split(",");
-                    System.out.println(Arrays.toString(elements));
-//                    String email = elements[3];
-//                    String password = elements[4];
+        for (int i = studentsEmailPassword.length - 1; i >= 0; i--) {
+            String[] emailPassword = studentsEmailPassword[i];
+            String email = emailPassword[0];
+            String password = emailPassword[1];
 
-                    String email = "2_lixinyu6688558@gmail.com";
-                    String password = "111111";
-                    System.out.println("count:" + count + "------------------------sending email:" + email);
-                    if (StrUtil.equals("email", email)) {
-                        continue;
-                    }
+            String content = "Dear All,\n" +
+                    "\n" +
+                    "To accomplish Assignment 1 in FIT5145, please use the following login credentials to access the FLoRA platform:\n" +
+                    "Username: " + email + "\n" +
+                    "Password: " + password + "\n" +
+                    "FLoRA Address: https://www.floraengine.org/moodle\n" +
+                    "\n" +
+                    "For any technical issues in using FLoRA, please contact guanliang.chen@monash.edu and xinyu.li1@monash.edu \n" +
+                    "\n" +
+                    "Best regards,\n" +
+                    "Guanliang Chen & Xinyu Li";
 
-
-                    String content = "<p>Dear All,</p>" +
-                            "<br/>" +
-                            "<p>To accomplish Assignment 1 in FIT5145, please use the following login credentials to access the FLoRA platform:</p>" +
-                            "<p>Username: " + email + "</p>" +
-                            "<p>Password: " + password + "</p>" +
-                            "<p>FLoRA Address: https://www.floraengine.org/moodle</p>" +
-                            "<br/>" +
-                            "<p>For any technical issues in using FLoRA, please contact guanliang.chen@monash.edu and xinyu.li1@monash.edu </p>" +
-                            "<br/>" +
-                            "<p>The FLoRA platform is designed to automatically collect trace data during user interaction with the platform. " +
-                            "An explanatory statement, detailing the methods of data collection and utilization, is provided as an attachment. " +
-                            "The data acquisition process operates automatically and continuously; it cannot be deactivated during the use of the platform. " +
-                            "The scope of the collected data encompasses all user activities within the platform, including mouse movements, clicks, utilization of various tools, and interactions with the chatbot.</p>" +
-                            "<p>Should you prefer that your data not be utilized for research purposes, you are encouraged to contact us via email to request the removal of your data. " +
-                            "You may submit a request for data deletion at any point, which will not affect your assignment grades. Despite opting for data deletion, you will retain full access to the platform for the completion of your assignments.</p>" +
-                            "<p>Best regards,</p>" +
-                            "<p>Guanliang Chen & Xinyu Li";
-
-                    if (email.startsWith("2_")) {
-                        email = email.substring(2);
-                    }
-
-                    asyncTaskService.sendEmailWithFile(email, "FIT5145 Assignment1", content, explanatoryStatement);
-                    System.out.println("send finish------");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+//            asyncTaskService.sendEmailWithFile(email, "FIT5145 Assignment1 Data", content, "filepath");
         }
     }
 

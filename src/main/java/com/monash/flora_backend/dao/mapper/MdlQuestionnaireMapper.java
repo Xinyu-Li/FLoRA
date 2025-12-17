@@ -359,7 +359,7 @@ public interface MdlQuestionnaireMapper extends BaseMapper<MdlQuestionnaire> {
             "WHEN mqrm.choice_id IS NOT NULL THEN TRUE " +
             "ELSE FALSE " +
             "END AS selected, " +
-            "COALESCE(CONCAT(dependentQuestion.name, ' -> ', dependentChoice.content), 'none') AS dependency " +
+            "COALESCE(CONCAT(dependentQuestion.name, ' -> ', dependentChoice.content), 'none') AS dependency " + //CONCAT 函数中遇到NULL时候，结果直接是NULL
             "FROM " +
             "mdl_questionnaire_response mqr " +
             "JOIN " +
@@ -382,7 +382,7 @@ public interface MdlQuestionnaireMapper extends BaseMapper<MdlQuestionnaire> {
             "mqr.complete = 'y' " +
             "AND " +
             "mq.id = ( " +
-            "SELECT id " +
+            "SELECT MAX(id) " +
             "FROM mdl_questionnaire " +
             "WHERE name LIKE CONCAT('%', #{questionnaireName}, '%') "+
             "AND course = #{courseId} " +

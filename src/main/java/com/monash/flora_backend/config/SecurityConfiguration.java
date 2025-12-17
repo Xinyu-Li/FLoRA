@@ -34,7 +34,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests()
                 .antMatchers(
                         "/save-annotation", "/save-backgroundDoc",
-                        "/update-annotation", "/save-essay-content",
+                        "/update-annotation", "/save-essay-content", "/save-essay-content-time-point",
                         "/save-essay-content-manually", "/save-planner-content", "/save-scaffold-content",
                         "/load-planner-to-sidebar", "/load-highlights-to-sidebar", "/load-whole-page-highlights",
                         "/load-essay-to-sidebar", "/load-scaffold-to-sidebar", "/delete-annotation",
@@ -49,6 +49,8 @@ public class SecurityConfiguration {
 
                         "/chatgpt", "/chatgpt-scaffold", "/load-chatgpt-scaffold/**", "/load-chatgpt-chat/**", "/load-teacher-chat/**", "/rate-chatgpt-answer",
                         "/uploadvideo", "/download-student-essay/**", "/favicon.ico", "/flora/**", "/collaborate-write", "/collaborate-send-message","/collaborate-get-userColor", "/collaborate-write-openai",
+                        "/submit-dialogue-label", "/delete-dialogue-label/**", "/get-dialogue-label",
+                        "/submit-consult-table","/latest-consult-table", "/chat-with-scaffold", "/load-chat-with-scaffold/**",
 
 
                         "/ws/human-chat/**",
@@ -57,25 +59,32 @@ public class SecurityConfiguration {
                         "/submit-consult-result",
                         "/chatgpt-consult",
                         "/save-rule-base-message",
+                        //NHB chat
+                        "/request-chatgpt-response", "/load-chatgpt-chat-and-topics/**",
+                        "/add-chatgpt-topic", "/delete-chatgpt-topic", "/update-chatgpt-topic", "/update-chatgpt-message-thumb",
+                        "/update-chatgpt-message-hidden",
 
                         //get Questionnaire Response
                         "/get-questionnaire-response",
                         "/get-questionnaire-all-response",
+                        "/real-time-srl-process/**", "/label-current-real-time-srl-process/**", "/analyse-essay-product", "/get-essay-product-analysis",
 
                         // trace part
                         "/trace-extra", "/trace-planner", "/trace-essay", "/trace-page-click",
                         "/trace-annotation-label", "/trace-annotation", "/trace-search-annotation",
                         "/trace-off-task", "/trace-checklist", "/trace-select-click", "/trace-body-click",
                         "/trace-page-reading", "/trace-chatgpt", "/trace-dictionary","/trace-teacherchat", "/trace-grammarly",
-                        "/trace-scaffold", "/trace-timer", "/get-task-start-time",
+                        "/trace-scaffold", "/trace-timer", "/get-task-start-time", "/add-task-start-time",
+
                         // test part
                         "/test-student-handler", "/chattest", "/chatgpttool", "/test-video-upload", "/test-emitter",
                         "/test-video-record", "/", "/index-revision", "/index-revision2", "/index-revision3", "/index-revision4", "/index-revision_s2t_t2s", "/clear-trace-data/**", "/clear-student-logs","/login",
-                        "/generate-download-link", "/get-cached-links/**", "/test-real-time-process/**",
+                        "/generate-download-link", "/get-cached-links/**", "/index-test-lin",
                         // test
                         "/account/**", "/tools-config/**", "/data/**",
                         "data/label-model/**", "/label-model/**","/api/**","/api/**/**","/api/hpt-flora-annotations-update/**",
-                        "/voice/**", "/visualization/**", "/test-tony", "/test-oulu", "/index-test-v**"
+                        "/voice/**", "/visualization/**", "/test-tony", "/test-oulu", "/test-zijian","/index-test-v**", "/questionnaire-create","/index-test-**",
+                        "/questionnaire-answer", "/srlprocesslist/**", "/load-popup-questionnaire/**"
                 ).permitAll()
 //                .antMatchers("/manage/**").hasAnyRole(ADMIN.name(), MANAGER.name())
                 .anyRequest()

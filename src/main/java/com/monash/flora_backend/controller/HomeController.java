@@ -1,21 +1,27 @@
 package com.monash.flora_backend.controller;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.monash.flora_backend.config.cache.IGlobalCache;
 import com.monash.flora_backend.constant.MyConstant;
+import com.monash.flora_backend.constant.MyConstantForSpecificTask;
 import com.monash.flora_backend.constant.MyConstantMariaModelSRLPattern;
 import com.monash.flora_backend.controller.req.ChatgptRequest;
 import com.monash.flora_backend.controller.req.GptScaffoldRequest;
 import com.monash.flora_backend.controller.req.SrlProcessRequest;
 import com.monash.flora_backend.controller.vo.*;
+import com.monash.flora_backend.dao.customize_entity.MdlQuestionnaireAllResponse;
+import com.monash.flora_backend.dao.entity.ConsultationTableLog;
 import com.monash.flora_backend.dao.entity.MedicalConsultResult;
+import com.monash.flora_backend.dao.entity.TraceDataRealTimeProcess;
 import com.monash.flora_backend.dao.entity.WholePageAnnotation;
 import com.monash.flora_backend.service.*;
 import com.monash.flora_backend.service_func.ActionAndProcessService;
 import com.monash.flora_backend.service_func.AsyncTaskService;
 import com.monash.flora_backend.service_func.GptScaffoldPromptService;
+import com.monash.flora_backend.service_moodle.IMdlQuestionnaireService;
 import com.monash.flora_backend.util.JSONResult;
 import com.monash.flora_backend.util.MyBeanCopyUtils;
 import com.monash.flora_backend.util.MyUtils;
@@ -31,10 +37,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+
 
 
 @Slf4j
@@ -62,9 +67,13 @@ public class HomeController {
     private final ActionAndProcessService actionAndProcessService;
     private final GptScaffoldPromptService gptScaffoldPromptService;
     private final IGptScaffoldService iGptScaffoldService;
+    private final IMdlQuestionnaireService iMdlQuestionnaireService;
+    private final IEssayProductGoalService iEssayProductGoalService;
 
     private final IMedicalConsultResultService iMedicalConsultResultService;
+    private IConsultationTableLogService iConsultationTableLogService;
     private final IGlobalCache iGlobalCache;
+    private final IEssayAtTimePointService iEssayAtTimePointService;
 
     @PostMapping("/save-annotation")
     @ResponseBody
@@ -125,6 +134,13 @@ public class HomeController {
     public JSONResult saveEssayContent(EssayVO essayVO) {
 //        kafkaTemplate.send(MyConstant.KAFKA_TOPIC_ESSAY, JSON.toJSONString(essayVO));
         kafkaTemplate.send(MyConstant.KAFKA_TOPIC_ESSAY, JSONUtil.toJsonStr(essayVO));
+        return JSONResult.ok();
+    }
+
+    @PostMapping("/save-essay-content-time-point")
+    @ResponseBody
+    public JSONResult saveEssayContentTimePoint(EssayVO essayVO) {
+        iEssayAtTimePointService.saveEssayAtTimePoint(essayVO);
         return JSONResult.ok();
     }
 
@@ -327,19 +343,27 @@ public class HomeController {
 
         return JSONResult.ok();
     }
-    @GetMapping("/load-chatgpt-scaffold/{userId}/{courseId}")
+    @GetMapping("/load-chatgpt-scaffold/{userId}/{courseId}/{allowGptScaffoldsChat}")
     @ResponseBody
-    public JSONResult loadGptScaffold(@PathVariable("userId") Long userId, @PathVariable("courseId") String courseId) {
+    public JSONResult loadGptScaffold(@PathVariable("userId") Long userId, @PathVariable("courseId") String courseId, @PathVariable("allowGptScaffoldsChat") boolean allowGptScaffoldsChat) {
 //        List<UserChatgptLogVO> userChatgptLogVOList = iUserChatgptLogService.findAllChatgptLogByUserIdAndType(userId, courseId);
-        List<GptScaffoldVO> gptScaffoldVOList = iGptScaffoldService.findAllGptScaffoldByUserIdAndCourseId(userId, courseId);
+        List<GptScaffoldVO> gptScaffoldVOList;
+
+        if (allowGptScaffoldsChat) {
+            gptScaffoldVOList = iGptScaffoldService.findAllGptScaffoldAndChatByUserIdAndCourseId(userId, courseId);
+        } else {
+            gptScaffoldVOList = iGptScaffoldService.findAllGptScaffoldByUserIdAndCourseId(userId, courseId);
+        }
+
 //        log.info(userChatgptLogVOList.size());
 //        List<UserChatgptLogVO> scaffoldsLogList = userChatgptLogVOList.stream().filter(u -> !u.getUserQuestions().startsWith("no scaffold generated")).collect(Collectors.toList());
         return JSONResult.ok(gptScaffoldVOList);
     }
 
 
+
     /**
-     * For CELLA study, support GPT scaffold.
+     * For CELLA study 2, support GPT scaffold.
      *
      * @param gptScaffoldRequest
      * @return
@@ -348,28 +372,16 @@ public class HomeController {
     @ResponseBody
     public JSONResult gptScaffold(@RequestBody GptScaffoldRequest gptScaffoldRequest) {
 
+        log.info("request for chatgpt-scaffold");
         // 收到请求，先放入缓存，每个userid-courseid-gpt-scaffold-1 2 3
         String redisKey = MyConstant.REDIS_GPT_SCAFFOLD_TRIGGER + gptScaffoldRequest.getUserId() + "-" + gptScaffoldRequest.getCourseId() + "-" + gptScaffoldRequest.getGptScaffoldNumber();
-        if (iGlobalCache.hasKey(redisKey)) {
-            log.info("------------------repeat send gpt scaffold-userid:" + gptScaffoldRequest.getUserId() + "-courseid:" + gptScaffoldRequest.getCourseId() + "-number:" + gptScaffoldRequest.getGptScaffoldNumber());
-            return JSONResult.errorMsg("repeat send gpt scaffold");
-        } else {
-            log.info("------------------first time send gpt scaffold-userid:" + gptScaffoldRequest.getUserId() + "-courseid:" + gptScaffoldRequest.getCourseId() + "-number:" + gptScaffoldRequest.getGptScaffoldNumber());
-            iGlobalCache.set(redisKey, "1", MyConstant.REDIS_EXPIRE_SECONDS);
+        if (iGptScaffoldService.isRepeatGptScaffoldRequest(redisKey, gptScaffoldRequest.getUserId(), gptScaffoldRequest.getCourseId(), gptScaffoldRequest.getGptScaffoldNumber())) {
+            return JSONResult.errorMsg("repeat send gpt scaffold"); // TODO 需要查看此处能否正确在前端收到
         }
 
-        if (gptScaffoldRequest.getGptScaffoldReturnMessages() != null) {
+        if (CollUtil.isNotEmpty(gptScaffoldRequest.getGptScaffoldReturnMessages())) {
             //直接return message
-            log.info("number of scaffold generated-----{}", gptScaffoldRequest.getGptScaffoldNumber());
-            GptScaffoldVO gptScaffoldVO = iGptScaffoldService.createGptScaffold(
-                    "manually generated-----" + gptScaffoldRequest.getGptScaffoldNumber(), gptScaffoldRequest.getIncludeEssay() ? gptScaffoldRequest.getEssay() : "",
-                    gptScaffoldRequest.getGptScaffoldReturnMessages().get(gptScaffoldRequest.getGptScaffoldNumber() - 1).getMessage(),
-                    MyUtils.getCurrentTimestamp(), MyUtils.getCurrentTimestamp(),
-                    gptScaffoldRequest.getGptScaffoldRole(), gptScaffoldRequest.getGptScaffoldRoleDescription(),
-                    gptScaffoldRequest.getGptScaffoldNumber(), gptScaffoldRequest.getUserId(), gptScaffoldRequest.getCourseId());
-            log.info("manually generated-----{}", gptScaffoldVO.toString());
-
-            return JSONResult.ok(gptScaffoldVO);
+            return JSONResult.ok(iGptScaffoldService.handleManualScaffold(gptScaffoldRequest));
         }
 
         gptScaffoldRequest.setEssay(checkChatgptRequestEssay(gptScaffoldRequest.getEssay(), gptScaffoldRequest.getUserId(), gptScaffoldRequest.getCourseId()));
@@ -377,20 +389,72 @@ public class HomeController {
         //动态生成GPT prompt
 //        String dynamicPrompt = gptScaffoldPromptService.generateAdaptivePrompt(studyName, MyConstant.testISDIMUName, MyConstant.preTestName, MyConstant.testAboutYourSelfName, courseId, userId, gptScaffoldNumber, essay);
         String dynamicPrompt = gptScaffoldPromptService.generatePromptBasedOnLearningConditionAndSRLProcess(gptScaffoldRequest);
-
-        if (StrUtil.isEmpty(dynamicPrompt)) { // 验空，如果scaffold的条件都不触发，则不需要发送  TODO 如果所有条件都满足，则不触发, 或者显示空scaffold
-            log.info("number of scaffold generated-----" + gptScaffoldRequest.getGptScaffoldNumber());
-//            UserChatgptLogVO userChatgptLogVO = iUserChatgptLogService.createUserChatgptLog("", userId, "no scaffold generated-----" + gptScaffoldOrder, askQuestionTimestamp, "", essay, courseId, "scaffold");
-            GptScaffoldVO gptScaffoldVO = iGptScaffoldService.createGptScaffold("no scaffold generated-----" + gptScaffoldRequest.getGptScaffoldNumber(), gptScaffoldRequest.getIncludeEssay() ? gptScaffoldRequest.getEssay() : "", "",  MyUtils.getCurrentTimestamp(), MyUtils.getCurrentTimestamp(),
-                    gptScaffoldRequest.getGptScaffoldRole(), gptScaffoldRequest.getGptScaffoldRoleDescription(), gptScaffoldRequest.getGptScaffoldNumber(), gptScaffoldRequest.getUserId(), gptScaffoldRequest.getCourseId());
-            log.info(gptScaffoldVO.toString());
-
-            return JSONResult.errorMsg("number of scaffold generated-----number :" + gptScaffoldRequest.getGptScaffoldNumber());
+        if (StrUtil.isEmpty(dynamicPrompt)) {
+            GptScaffoldVO vo = iGptScaffoldService.handleNoScaffoldCondition(gptScaffoldRequest);
+            if (vo == null) {
+                return JSONResult.errorMsg("number of scaffold generated-----number :" + gptScaffoldRequest.getGptScaffoldNumber());
+            } else {
+                return JSONResult.ok(vo);
+            }
+        }
+        GptScaffoldVO gptScaffoldVO;
+        if (gptScaffoldRequest.isAllowGptScaffoldsChat()) { //当允许scaffold chat时候，使用 assistant 生成 scaffold
+            // Group C condition
+            gptScaffoldVO = iGptScaffoldService.getGptScaffoldResponse(
+                    dynamicPrompt, gptScaffoldRequest.getAgentName(), gptScaffoldRequest.getIncludeEssay() ? gptScaffoldRequest.getEssay() : "", gptScaffoldRequest.getBackgroundFileNameList(),
+                    gptScaffoldRequest.getGptScaffoldRole(), gptScaffoldRequest.getGptScaffoldRoleDescription(), gptScaffoldRequest.getGptScaffoldNumber(), gptScaffoldRequest.getUserId(),
+                    gptScaffoldRequest.getCourseId(), gptScaffoldRequest.getGptScaffoldParameters(), "This is a scaffold", gptScaffoldRequest.getToolsLanguage());
+        } else {
+            gptScaffoldVO = iGptScaffoldService.getGptScaffoldResponse(
+                    dynamicPrompt, gptScaffoldRequest.getIncludeEssay() ? gptScaffoldRequest.getEssay() : "", gptScaffoldRequest.getBackgroundFileNameList(),
+                    gptScaffoldRequest.getGptScaffoldRole(), gptScaffoldRequest.getGptScaffoldRoleDescription(), gptScaffoldRequest.getGptScaffoldNumber(), gptScaffoldRequest.getUserId(),
+                    gptScaffoldRequest.getCourseId(), gptScaffoldRequest.getGptScaffoldParameters());
         }
 
-        GptScaffoldVO gptScaffoldVO = iGptScaffoldService.getGptScaffoldResponse(dynamicPrompt, gptScaffoldRequest.getIncludeEssay() ? gptScaffoldRequest.getEssay() : "", gptScaffoldRequest.getBackgroundFileNameList(), gptScaffoldRequest.getGptScaffoldRole(), gptScaffoldRequest.getGptScaffoldRoleDescription(), gptScaffoldRequest.getGptScaffoldNumber(), gptScaffoldRequest.getUserId(), gptScaffoldRequest.getCourseId(), gptScaffoldRequest.getGptScaffoldParameters());
         return JSONResult.ok(gptScaffoldVO);
     }
+
+/*    *//**
+     * For CELLA study 3, support GPT scaffold and chat.
+     *
+     * @param gptScaffoldRequest
+     * @return
+     *//*
+    @PostMapping("/proactive-scaffold")
+    @ResponseBody
+    public JSONResult proactiveGptScaffold(@RequestBody GptScaffoldRequest gptScaffoldRequest) {
+        log.info("request for chatgpt-scaffold");
+        // 收到请求，先放入缓存，每个userid-courseid-gpt-scaffold-1 2 3
+        String redisKey = MyConstant.REDIS_GPT_SCAFFOLD_TRIGGER + gptScaffoldRequest.getUserId() + "-" + gptScaffoldRequest.getCourseId() + "-" + gptScaffoldRequest.getGptScaffoldNumber();
+        if (iGptScaffoldService.isRepeatGptScaffoldRequest(redisKey, gptScaffoldRequest.getUserId(), gptScaffoldRequest.getCourseId(), gptScaffoldRequest.getGptScaffoldNumber())) {
+            return JSONResult.errorMsg("repeat send gpt scaffold"); // TODO 需要查看此处能否正确在前端收到
+        }
+
+        if (CollUtil.isNotEmpty(gptScaffoldRequest.getGptScaffoldReturnMessages())) {
+            //直接return message
+            return JSONResult.ok(iGptScaffoldService.handleManualScaffold(gptScaffoldRequest));
+        }
+
+        gptScaffoldRequest.setEssay(checkChatgptRequestEssay(gptScaffoldRequest.getEssay(), gptScaffoldRequest.getUserId(), gptScaffoldRequest.getCourseId()));
+
+        //动态生成GPT prompt
+//        String dynamicPrompt = gptScaffoldPromptService.generateAdaptivePrompt(studyName, MyConstant.testISDIMUName, MyConstant.preTestName, MyConstant.testAboutYourSelfName, courseId, userId, gptScaffoldNumber, essay);
+        String dynamicPrompt = gptScaffoldPromptService.generatePromptBasedOnLearningConditionAndSRLProcess(gptScaffoldRequest);
+        if (StrUtil.isEmpty(dynamicPrompt)) {
+            GptScaffoldVO vo = iGptScaffoldService.handleNoScaffoldCondition(gptScaffoldRequest);
+            if (vo == null) {
+                return JSONResult.errorMsg("number of scaffold generated-----number :" + gptScaffoldRequest.getGptScaffoldNumber());
+            } else {
+                return JSONResult.ok(vo);
+            }
+        }
+
+        GptScaffoldVO gptScaffoldVO = iGptScaffoldService.getGptScaffoldResponse(
+                dynamicPrompt, gptScaffoldRequest.getIncludeEssay() ? gptScaffoldRequest.getEssay() : "", gptScaffoldRequest.getBackgroundFileNameList(),
+                gptScaffoldRequest.getGptScaffoldRole(), gptScaffoldRequest.getGptScaffoldRoleDescription(), gptScaffoldRequest.getGptScaffoldNumber(), gptScaffoldRequest.getUserId(),
+                gptScaffoldRequest.getCourseId(), gptScaffoldRequest.getGptScaffoldParameters(), "This is a scaffold");
+        return JSONResult.ok(gptScaffoldVO);
+    }*/
 
     /**
      * reqeust to get the current detected SRL process list
@@ -407,6 +471,7 @@ public class HomeController {
         return JSONResult.ok(srlProcessAppearList);
     }
 
+    // TODO 此方法可以优化， essay 可以直接赋值，不需要额外从数据库获取。
     private String checkChatgptRequestEssay(String essay, Long userId, String courseId) {
         String result = "";
         if (StrUtil.isEmpty(essay)) {
@@ -423,6 +488,30 @@ public class HomeController {
         return result;
     }
 
+    @PostMapping("/chat-with-scaffold")
+    @ResponseBody
+    public JSONResult chatWithScaffold(@RequestBody GptScaffoldRequest gptScaffoldRequest) {
+
+
+        String dynamicPrompt = gptScaffoldPromptService.generatePromptBasedOnLearningConditionAndSRLProcess(gptScaffoldRequest);
+        UserChatgptLogVO userChatgptLogVO = iUserChatgptLogService.getScaffoldChatResponse(
+                gptScaffoldRequest.getUserQuestion(), "", "",
+                gptScaffoldRequest.getEssay(), new ArrayList<>(), gptScaffoldRequest.getUserId(), gptScaffoldRequest.getCourseId(), gptScaffoldRequest.getAgentRole(),
+                gptScaffoldRequest.getAgentName(), 0, Long.valueOf(gptScaffoldRequest.getGptScaffoldNumber()), dynamicPrompt, gptScaffoldRequest.getToolsLanguage());
+        return JSONResult.ok(userChatgptLogVO);
+    }
+
+    @GetMapping("/load-chat-with-scaffold/{userId}/{courseId}")
+    @ResponseBody
+    public JSONResult loadChatWithScaffoldHistory(@PathVariable("userId") Long userId, @PathVariable("courseId") String courseId) {
+
+        List<UserChatgptLogVO> userChatgptLogVOList = iUserChatgptLogService.findAllChatgptLogByUserIdAndCourseId(userId, courseId, "", "");
+        userChatgptLogVOList.forEach(u->{
+            log.info(u.toString());
+        });
+        return JSONResult.ok(userChatgptLogVOList);
+    }
+
     @PostMapping("/chatgpt")
     @ResponseBody
     public JSONResult chatgpt(
@@ -431,24 +520,11 @@ public class HomeController {
 //                              String questionId, Boolean includeEssay, String chatgptRoleDescription,
 //                              String chatgptRole, List<String> backgroundFileNameList // 这三项来自 config tool
     ) {
-//        log.info("for /chatgpt, essay: "+chatgptRequest.getEssay());
-//        log.info("for /chatgpt, chatgptRequest.getChatgptRole(): "+chatgptRequest.getChatgptRole());
-//        if (chatgptRequest.getIncludeEssay()) {
-//            if (StrUtil.isEmpty(chatgptRequest.getEssay())) {
-//                EssayVO essayVO = iEssayService.findLatestVersionByUserIdAndCourseId(chatgptRequest.getUserId(), chatgptRequest.getCourseId());
-//                if (essayVO == null) {
-//                    return JSONResult.errorMsg("cannot find essay in chatgpt");
-//                } else {
-//                    chatgptRequest.setEssay(essayVO.getEssayContent());
-//                }
-//            }
-//        } else {
-//            chatgptRequest.setEssay("");
-//        }
-        String essay = chatgptRequest.getIncludeEssay() ? checkChatgptRequestEssay(chatgptRequest.getEssay(), chatgptRequest.getUserId(), chatgptRequest.getCourseId()) : "";
 
-        log.info("for /chatgpt, essay: "+chatgptRequest.getEssay());
-        log.info("for /chatgpt, chatgptRequest.getChatgptRole(): "+chatgptRequest.getChatgptRole());
+        String essay = chatgptRequest.getIncludeEssay() ? checkChatgptRequestEssay(chatgptRequest.getEssay(), chatgptRequest.getUserId(), chatgptRequest.getCourseId()) : "";
+        chatgptRequest.setEssay(essay);
+        /*log.info("for /chatgpt, essay: {}", chatgptRequest.getEssay());
+        log.info("for /chatgpt, chatgptRequest.getChatgptRole(): {}", chatgptRequest.getChatgptRole());
         if (chatgptRequest.getIncludeEssay()) {
             if (StrUtil.isEmpty(chatgptRequest.getEssay())) {
                 EssayVO essayVO = iEssayService.findLatestVersionByUserIdAndCourseId(chatgptRequest.getUserId(), chatgptRequest.getCourseId());
@@ -460,47 +536,51 @@ public class HomeController {
             }
         } else {
             chatgptRequest.setEssay("");
-        }
-
+        }*/
+        log.info("chatgptRole------------" + chatgptRequest.getChatgptRole());
 
         // todo 收到请求，先放入缓存 判断是不是重复发送
-        if(chatgptRequest.getChatgptRole().equals("scaffold")) { // 如果是scaffold，判断是否重复发送
+        if(chatgptRequest.getChatgptRole().equals("scaffold") && chatgptRequest.getRoundNumber() != null) { // 如果是scaffold，判断是否重复发送
 
             int scaffoldNumber = chatgptRequest.getRoundNumber() < 40 ? 1 : 2;
 
             String redisKey = "PatientScaffoldUsed-" + chatgptRequest.getUserId() + "-" + chatgptRequest.getCourseId() + "-" + scaffoldNumber;
-            if (iGlobalCache.hasKey(redisKey)) {
-                log.info("------------------repeat sending patient scaffold-userid:" + chatgptRequest.getUserId() + "-courseid:" + chatgptRequest.getCourseId() + "-number:" + scaffoldNumber);
+            if (iGptScaffoldService.isRepeatGptScaffoldRequest(redisKey, chatgptRequest.getUserId(), chatgptRequest.getCourseId(), scaffoldNumber)) {
                 return JSONResult.errorMsg("repeat sending patient scaffold");
-            } else {
-                log.info("------------------first time send gpt scaffold-userid:" + chatgptRequest.getUserId() + "-courseid:" + chatgptRequest.getCourseId() + "-number:" + scaffoldNumber);
-                iGlobalCache.set(redisKey, "1", MyConstant.REDIS_EXPIRE_SECONDS);
             }
         }
 
         // for toefl lab
         if(chatgptRequest.getChatgptRole().equals("mediator_scaffold")) {
             String redisKey = "MediatorScaffoldUsed-" + chatgptRequest.getUserId() + "-" + chatgptRequest.getCourseId();
-            if (iGlobalCache.hasKey(redisKey)) {
-                log.info("------------------repeat sending mediator scaffold-userid:" + chatgptRequest.getUserId() + "-courseid:" + chatgptRequest.getCourseId());
+            if (iGptScaffoldService.isRepeatGptScaffoldRequest(redisKey, chatgptRequest.getUserId(), chatgptRequest.getCourseId(), null)) {
                 return JSONResult.errorMsg("repeat sending mediator scaffold");
-            } else {
-                log.info("------------------first time send mediator scaffold-userid:" + chatgptRequest.getUserId() + "-courseid:" + chatgptRequest.getCourseId());
-                iGlobalCache.set(redisKey, "1", MyConstant.REDIS_EXPIRE_SECONDS);
             }
         }
-
-//        String askQuestionTimestamp = MyUtils.getCurrentTimestamp();
-//        String result = iUserChatgptLogService.getChatgptResponse(question, userId, courseId, essay, MyConstant.instructionForChatgptMap.get(studyName), MyConstant.backgroundTextForChatgptMap.get(studyName), MyConstant.rubricTextForChatgptMap.get(studyName));
-//        String getGPTResponseTimestamp = MyUtils.getCurrentTimestamp();
-////        "Hello, Can you teach me english writing?"
-//
-//        UserChatgptLogVO userChatgptLogVO = iUserChatgptLogService.createUserChatgptLog(result, userId, question, askQuestionTimestamp, getGPTResponseTimestamp, essay, courseId, "chat");
-//        log.info(userChatgptLogVO.toString());
-        // 使用gpt role 来区分
-        log.info("gpt role:" + chatgptRequest.getChatgptRole());
-
-        UserChatgptLogVO userChatgptLogVO = iUserChatgptLogService.getChatgptResponse(chatgptRequest.getQuestion(), chatgptRequest.getExtraPrompt(), chatgptRequest.getChatgptRoleDescription(), chatgptRequest.getQuestionId(), essay, chatgptRequest.getBackgroundFileNameList(), chatgptRequest.getUserId(), chatgptRequest.getCourseId(), chatgptRequest.getChatgptRole(), chatgptRequest.getChatgptParameters(), chatgptRequest.getAgentName(), chatgptRequest.getRoundNumber());
+        UserChatgptLogVO userChatgptLogVO = null;
+        if (chatgptRequest.getChatgptRole().equals("scaffold-chat")) { // 在提供scaffold之后可以问关于scaffold 的问题
+            userChatgptLogVO = iUserChatgptLogService.getScaffoldChatResponse(
+                    chatgptRequest.getQuestion(), chatgptRequest.getExtraPrompt(), chatgptRequest.getQuestionId(),
+                    essay, chatgptRequest.getBackgroundFileNameList(), chatgptRequest.getUserId(), chatgptRequest.getCourseId(), chatgptRequest.getChatgptRole(),
+                    chatgptRequest.getAgentName(), chatgptRequest.getRoundNumber(), 0L,
+                     "This is a question", chatgptRequest.getToolsLanguage());
+        } else if (CollUtil.contains(List.of(
+                "jimmie_nhb_B_unstrict_ai", "jimmie_nhb_C_metacognitive_ai", "jimmie_nhb_D_scaffolding_ai",
+                "jimmie_nhb_E_conflict_ai", "jimmie_nhb_F_learning-phase_ai", "jimmie_nhb_G_obedient_ai"),
+                (chatgptRequest.getAgentName()))) {
+            log.info("Jimmie study:{}---------------question:{}", chatgptRequest.getSpecialRequirementPrompt(), chatgptRequest.getQuestion());
+            // Jimmie study settings
+            userChatgptLogVO = iUserChatgptLogService.getScaffoldChatResponse(
+                    chatgptRequest.getQuestion(), chatgptRequest.getExtraPrompt(), chatgptRequest.getQuestionId(),
+                    essay, chatgptRequest.getBackgroundFileNameList(), chatgptRequest.getUserId(), chatgptRequest.getCourseId(), chatgptRequest.getChatgptRole(),
+                    chatgptRequest.getAgentName(), chatgptRequest.getRoundNumber(), chatgptRequest.getTopicId(),
+                    StrUtil.isEmpty(chatgptRequest.getSpecialRequirementPrompt()) ? "This is an interaction" : "This is a scaffold;;;" + chatgptRequest.getSpecialRequirementPrompt(), chatgptRequest.getToolsLanguage());
+        } else {
+            // 使用gpt role 来区分
+            log.info("gpt role:{}", chatgptRequest.getChatgptRole());
+            log.info("assistantName: {}", chatgptRequest.getAgentName());
+            userChatgptLogVO = iUserChatgptLogService.getChatgptResponse(chatgptRequest);
+        }
 
         return JSONResult.ok(userChatgptLogVO);
     }
@@ -536,7 +616,7 @@ public class HomeController {
             }
         }
 
-        UserChatgptLogVO userChatgptLogVO = iUserChatgptLogService.getChatgptConsultResponse(chatgptRequest.getQuestion(), chatgptRequest.getChatgptRoleDescription(), chatgptRequest.getQuestionId(), essay, chatgptRequest.getBackgroundFileNameList(), chatgptRequest.getUserId(), chatgptRequest.getCourseId(), chatgptRequest.getChatgptRole(), chatgptRequest.getChatgptParameters(), chatgptRequest.getAgentName(), chatgptRequest.getRoundNumber());
+        UserChatgptLogVO userChatgptLogVO = iUserChatgptLogService.getChatgptConsultResponse(chatgptRequest.getQuestion(), chatgptRequest.getChatgptRoleDescription(), chatgptRequest.getQuestionId(), essay, chatgptRequest.getBackgroundFileNameList(), chatgptRequest.getUserId(), chatgptRequest.getCourseId(), chatgptRequest.getChatgptRole(), chatgptRequest.getChatgptParameters(), chatgptRequest.getAgentName(), chatgptRequest.getRoundNumber(), chatgptRequest.getToolsLanguage());
 
         return JSONResult.ok(userChatgptLogVO);
     }
@@ -565,10 +645,10 @@ public class HomeController {
 
 
 
-        List<UserChatgptLogVO> userChatgptLogVOList = iUserChatgptLogService.findAllChatgptLogByUserIdAndCourseId(userId, courseId);
-//        userChatgptLogVOList.forEach(u->{
-//            log.info(u.toString());
-//        });
+        List<UserChatgptLogVO> userChatgptLogVOList = iUserChatgptLogService.findAllChatgptLogByUserIdAndCourseId(userId, courseId, "", "");
+        userChatgptLogVOList.forEach(u->{
+            log.info(u.toString());
+        });
         return JSONResult.ok(userChatgptLogVOList);
     }
 
@@ -773,7 +853,8 @@ public class HomeController {
         if (ruleBaseVO != null) {
 //            log.info(ruleBaseVO.toString());
 //            return JSONResult.ok(com.alibaba.fastjson2.JSONObject.parseObject(ruleBaseVO.getResponse()));
-            return JSONResult.ok(JSONUtil.parseObj(ruleBaseVO.getResponse()));
+//            return JSONResult.ok(JSONUtil.parseObj(ruleBaseVO.getResponse()));
+            return JSONResult.ok(JSONUtil.parseObj(ruleBaseVO.getResponse())); /// 此处 有问题 TODO
         } else {
             return JSONResult.ok();
         }
@@ -822,6 +903,257 @@ public class HomeController {
         return JSONResult.ok();
     }
 
+    @PostMapping("/submit-consult-table")
+    @ResponseBody
+    public JSONResult submitConsultTable(Long userId, String courseId, String contentJson, String createdAt) {
+        log.info("------------------submitConsultTable------------------");
+        ConsultationTableLog consultationTableLog = new ConsultationTableLog() {{
+            setUserId(userId);
+            setCourseId(courseId);
+            setContentJson(contentJson);
+            setCreatedAt(createdAt);
+        }};
+        log.info("saveConsultationTableLog: " + consultationTableLog.toString());
+        iConsultationTableLogService.save(consultationTableLog);
+        return JSONResult.ok();
+    }
+
+    @GetMapping("/latest-consult-table")
+    @ResponseBody
+    public JSONResult getLatestConsultTable(Long userId, String courseId) {
+        log.info("------------------getLatestConsultTable------------------");
+        ConsultationTableLog latestLog = iConsultationTableLogService.getLatestLog(userId, courseId);
+        if (latestLog == null) {
+            return JSONResult.errorMsg("没有找到该用户和课程的日志");
+        }
+        log.info("latestConsultationTableLog: " + latestLog.toString());
+        return JSONResult.ok(latestLog);
+    }
+
+
+
+
+    @GetMapping("/label-current-real-time-srl-process/{courseId}/{userId}/{modelType}")
+    @ResponseBody
+    public JSONResult labelCurrentRealTimeProcess(@PathVariable("userId") Long userId, @PathVariable("courseId") String courseId, @PathVariable("modelType") String modelType) {
+
+        String labelCurrentRealTimeProcessKey = "LABEL_CURRENT_REAL_TIME_PROCESS_" + userId + "-" + courseId;
+
+        if (iGlobalCache.hasKey(labelCurrentRealTimeProcessKey)) {
+            return JSONResult.ok(); // 上一次任务未完成
+        }
+
+        iGlobalCache.set(labelCurrentRealTimeProcessKey, "1", 30);
+
+        actionAndProcessService.getRealTimeSimplifiedTraceDataLabelledAsync(userId, courseId, modelType);
+
+        log.info("-------labelCurrentRealTimeProcess - finish");
+//        currentResultList.forEach(result -> log.info("----------result:{}", result.toString()));
+
+        return JSONResult.ok();
+    }
+
+
+    @GetMapping("/real-time-srl-process/{courseId}/{userId}/{modelType}")
+    @ResponseBody
+    public JSONResult testRealTimeProcess(@PathVariable("userId") Long userId, @PathVariable("courseId") String courseId, @PathVariable("modelType") String modelType) {
+
+        TraceDataRealTimeSrlCategoryVO traceDataRealTimeSrlCategoryVO = new TraceDataRealTimeSrlCategoryVO();
+
+        String previousCourseId = MyConstantForSpecificTask.NIJMEGEN_CELLA_STUDY_3_TASK_ID_MAP.getOrDefault(courseId, "0");
+
+
+        List<TraceDataRealTimeProcess> currentResultList = actionAndProcessService.getRealTimeSimplifiedTraceDataLabelled(userId, courseId, modelType);
+
+        log.info("-------result size:{}", currentResultList.size());
+        currentResultList.forEach(result -> log.info("----------result:{}", result.toString()));
+        Map<String, Double> currentLabelDurationMap = new HashMap<>();
+        List<ProcessDurationVO> currentDurationVOList = actionAndProcessService.calculateRealTimeProcessDurations(currentResultList, true, currentLabelDurationMap);
+
+        log.info("-------durationVOList size:{}", currentDurationVOList.size());
+        currentDurationVOList.forEach(durationVO -> log.info("----------durationVO:{}", durationVO.toString()));
+        traceDataRealTimeSrlCategoryVO.setCurrentDurationVOList(CollUtil.isEmpty(currentDurationVOList) ? new ArrayList<>() : currentDurationVOList);
+
+        if (!"0".equals(previousCourseId)) {
+            //previous的所有 real time trace 都已经储存好了
+//            List<TraceDataRealTimeProcess> previousResultList = actionAndProcessService.getRealTimeSimplifiedTraceDataLabelled(userId, previousCourseId, modelType);
+            List<TraceDataRealTimeProcess> previousResultList = actionAndProcessService.getAllRealTimeSimplifiedTraceData(userId, previousCourseId);
+            Map<String, Double> previousLabelDurationMap = new HashMap<>();
+            List<ProcessDurationVO> previousDurationVOList = actionAndProcessService.calculateRealTimeProcessDurations(previousResultList, true, previousLabelDurationMap);
+            traceDataRealTimeSrlCategoryVO.setPreviousDurationVOList(CollUtil.isEmpty(previousDurationVOList) ? new ArrayList<>() : previousDurationVOList);
+        } else {
+            traceDataRealTimeSrlCategoryVO.setPreviousDurationVOList(new ArrayList<>());
+        }
+
+        return JSONResult.ok(traceDataRealTimeSrlCategoryVO);
+    }
+
+    /**
+     * 通用获取questionnaire 所有问题的response
+     * @param courseId
+     * @param questionnaireName
+     * @param userId
+     * @return
+     */
+    @GetMapping("/get-questionnaire-all-response")
+    @ResponseBody
+    public JSONResult getQuestionnaireAllResponse(Long courseId, String questionnaireName, Long userId) {
+
+        log.info("courseId: {}, QuestionnaireName: {}, userId: {}", courseId, questionnaireName, userId);
+        String userQuestionnaireKey = userId + "_" + courseId + "_" + questionnaireName;
+        log.info("Getting questionnaire response -> userQuestionnaireKey:{}", userQuestionnaireKey);
+
+//        iGlobalCache.del(userQuestionnaireKey);
+//        log.info("******Deleted questionnaire response -> userQuestionnaireKey:" + userQuestionnaireKey);
+        Map<Object, Object> userResponseDictionary = null;
+        if (iGlobalCache.hasKey(userQuestionnaireKey)) {
+            userResponseDictionary = iGlobalCache.hmget(userQuestionnaireKey);
+        }
+
+        if (CollUtil.isEmpty(userResponseDictionary)) {
+            log.info("{}has no response in redis!", userQuestionnaireKey);
+            List<MdlQuestionnaireAllResponse> userResponseList = iMdlQuestionnaireService.getQuestionnaireUserResponse(questionnaireName, courseId, userId);
+            if (CollUtil.isEmpty(userResponseList)) {
+                log.info(userId + " has no response for questionnaire " + questionnaireName + "in course " + courseId);
+                return new JSONResult(200, "Never answered the questionnaire", new ArrayList<>());
+            } else {
+                log.info("userResponseList size: {}", userResponseList.size());
+
+                //过滤掉所有 selected 是false 的选项
+                Map<Long, List<MdlQuestionnaireResponseCompeteVO>> questionnaireRepMap = new HashMap<>();
+                Map<Long, List<String>> qsPairByRespId = new HashMap<>();
+                for (MdlQuestionnaireAllResponse resp : userResponseList) {
+                    Long curResponseId = resp.getResponseId();
+                    log.info("resp.getQuestionnaireName(): {}", resp.getQuestionnaireName());
+                    MdlQuestionnaireResponseCompeteVO questionnaireResponseVO = MyBeanCopyUtils.copyBean(resp, MdlQuestionnaireResponseCompeteVO.class);
+                    questionnaireResponseVO.setQuestionnaireName(resp.getQuestionnaireName());
+                    questionnaireResponseVO.setUserId(resp.getUserId());
+
+                    if (resp.getSelected()) {
+                        questionnaireRepMap.putIfAbsent(curResponseId, new ArrayList<>());
+                        questionnaireRepMap.get(curResponseId).add(questionnaireResponseVO);
+
+                        String qst_answer = resp.getQuestionName() + " -> " + resp.getChoiceContent();;
+                        qsPairByRespId.putIfAbsent(curResponseId, new ArrayList<>());
+                        qsPairByRespId.get(curResponseId).add(qst_answer);
+                    }
+                }
+                Map<String, Object> map4StoreRedis = new HashMap<>();
+                for (Map.Entry<Long, List<MdlQuestionnaireResponseCompeteVO>> userResponseEntry : questionnaireRepMap.entrySet()) {
+                    Long temp_respId = userResponseEntry.getKey();
+                    List<MdlQuestionnaireResponseCompeteVO> responses = userResponseEntry.getValue();
+                    //在Nijmegen study这个 none 代表product goal
+                    responses.removeIf(response ->
+                            !response.getDependency().equals("none") &&  // 所有Dependency 不是none的
+                                    !response.getDependency().isEmpty() &&  // 所有Dependency 不是空的
+                                    !qsPairByRespId.get(temp_respId).contains(response.getDependency())
+                    );
+
+                    // Sort using streams, 根据question position 排序，每个question 是一个答案
+                    List<MdlQuestionnaireResponseCompeteVO> sortedResponses = responses.stream()
+                            .sorted(Comparator.comparingInt(MdlQuestionnaireResponseCompeteVO::getQuestionPosition))
+                            .collect(Collectors.toList());
+
+                    map4StoreRedis.put(String.valueOf(temp_respId), sortedResponses);
+                }
+                iGlobalCache.hmset(userQuestionnaireKey, map4StoreRedis, MyConstant.REDIS_EXPIRE_SECONDS);
+                return JSONResult.ok(questionnaireRepMap);
+            }
+        }
+        return JSONResult.ok(userResponseDictionary);
+    }
+
+    @PostMapping("/analyse-essay-product")
+    @ResponseBody
+    public JSONResult analyseEssayProduct(@RequestParam("userId") Long userId, @RequestParam("courseId") String courseId,
+                                          @RequestParam("essay") String essay, @RequestParam("username") String username,
+                                          @RequestParam("processTime") String processTime, @RequestParam("triggerEvent") String triggerEvent,
+                                          @RequestParam("requestNumber") String requestNumber) {
+
+        //需要questionnaire 的 标题里面包含 relevance/main points/structure
+        // 获取 essay product goal
+        /*String requestNumber = ""; // 从questionnaire 获取 TODO
+        if (essayProductGoal.toLowerCase().contains("relevance")) {
+            requestNumber = "1";
+        } else if (essayProductGoal.toLowerCase().contains("main points")) {
+            requestNumber = "2";
+        } else if (essayProductGoal.toLowerCase().contains("structure")) {
+            requestNumber = "3";
+        }*/
+        String essayAnalysisResultKey = userId + "-" + courseId + "-essayAnalysisResultKey";
+
+        log.info("analyse-essay-product processing, userid:{}, courseid:{}", userId, courseId);
+        String essayProductAnalysisRequestKey = MyConstant.REDIS_ESSAY_PRODUCT_ANALYSIS + "-" + userId + "-" + courseId;
+        //iGlobalCache.del(essayProductAnalysisRequestKey);
+        if (iGlobalCache.hasKey(essayProductAnalysisRequestKey)) {
+            log.warn("has key in redis -------- analyse-essay-product processing has not finished, userid:{}, courseid:{}", userId, courseId);
+            return JSONResult.ok();
+        } else {
+            // 如果是第一次处理，将信息存入redis
+            iGlobalCache.set(essayProductAnalysisRequestKey, "processing", MyConstant.REDIS_EXPIRE_SECONDS);
+        }
+
+        log.info("essay:----]" + essay + "[--------");
+
+        if (StrUtil.isEmpty(essay.replaceAll("[\n\r]", ""))) {
+            log.warn("empty essay -------- analyse-essay-product processing, userid:{}, courseid:{}", userId, courseId);
+            // essay 分析结果返回后, 删除防抖设置的key
+            iGlobalCache.del(essayProductAnalysisRequestKey);
+            iGlobalCache.del(essayAnalysisResultKey);
+            return JSONResult.ok();
+        }
+        String taskName = "task1"; // 98 task1, 101 task2
+
+        if (MyConstantForSpecificTask.NIJMEGEN_CELLA_STUDY_3_TASK_ID_MAP.values().contains(courseId)) {
+            taskName = "task1";
+        } else {
+            taskName = "task2";
+        }
+        log.info("task name: {}", taskName);
+        // 发送请求处理essay
+
+        String essayAnalysisResult = iEssayProductGoalService.sendEssayProductAnalysisRequest(requestNumber, essay, userId, courseId, username, processTime, triggerEvent, taskName);
+        log.info("essayAnalysisResult: {}", essayAnalysisResult);
+
+
+
+        if (essayAnalysisResult.equals("essay-analysis-error")) {
+            log.info("essay-analysis-error, userid:{}, courseid:{}", userId, courseId);
+            // essay 分析结果返回后, 删除防抖设置的key
+            iGlobalCache.del(essayProductAnalysisRequestKey);
+            iGlobalCache.del(essayAnalysisResultKey);
+            return JSONResult.ok();
+        }
+
+
+        // essay 分析结果返回后, 删除防抖设置的key
+        iGlobalCache.del(essayProductAnalysisRequestKey);
+        // 最新 result 存入 redis
+
+        iGlobalCache.set(essayAnalysisResultKey, essayAnalysisResult, MyConstant.REDIS_EXPIRE_SECONDS);
+//        String essayProductGoalKey = userId + "-" + courseId + "-essayProductGoalKey";
+//        iGlobalCache.set(essayProductGoalKey, requestNumber, MyConstant.REDIS_EXPIRE_SECONDS);
+        return JSONResult.ok(essayAnalysisResult);
+    }
+
+    @PostMapping("/get-essay-product-analysis")
+    @ResponseBody
+    public JSONResult getEssayProductAnalysis(@RequestParam("userId") Long userId, @RequestParam("courseId") String courseId) {
+        //从redis中取出数据
+        String essayAnalysisResultKey = userId + "-" + courseId + "-essayAnalysisResultKey";
+        Map<String, Integer> essayAnalysisResultMap;
+        if (iGlobalCache.hasKey(essayAnalysisResultKey)) {
+            String essayAnalysisResult = iGlobalCache.get(essayAnalysisResultKey);
+            essayAnalysisResultMap = JSONUtil.toBean(essayAnalysisResult, HashMap.class);
+            log.info("Getting essayAnalysisResult from iGlobalCache: "+essayAnalysisResult);
+        } else {
+            log.info("essayAnalysisResult not exist in iGlobalCache!!!");
+            essayAnalysisResultMap = new HashMap<>();
+        }
+        // 不需要检查数据库，因为如果redis中没有就表示还没有做过分析，数据库中肯定没有
+
+        return JSONResult.ok(essayAnalysisResultMap);
+    }
 
 }
 

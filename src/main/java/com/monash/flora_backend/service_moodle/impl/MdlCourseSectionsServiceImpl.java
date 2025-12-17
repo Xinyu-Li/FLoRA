@@ -52,7 +52,9 @@ public class MdlCourseSectionsServiceImpl extends ServiceImpl<MdlCourseSectionsM
             });
 
             Collection<MdlCourseModules> mdlCourseModulesList = iMdlCourseModulesService.listByIds(moduleIdList);
-            Set<Long> collect = mdlCourseModulesList.stream().filter(m -> m.getVisible() && m.getModule() == 17).map(MdlCourseModules::getId).collect(Collectors.toSet());
+            Set<Long> collect = mdlCourseModulesList.stream().filter(
+                    m -> m.getVisible() && !m.getDeletioninprogress() && m.getModule() == 17 // 17 means it is a "page"
+            ).map(MdlCourseModules::getId).collect(Collectors.toSet());
 
             moduleIdList.forEach(id -> {
                 if (collect.contains(id)) {

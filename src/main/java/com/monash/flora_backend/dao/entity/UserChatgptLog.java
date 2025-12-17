@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import java.io.Serializable;
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author xinyu
@@ -19,7 +19,7 @@ public class UserChatgptLog extends Model<UserChatgptLog> {
     private Long id;
     private Long userId;
     private String courseId;
-    private String threadId; // ChatGPT Assistant Thread ID
+    private String chatgptRole;
     private String chatgptRoleDescription;
     private String questionId;
     private String userQuestions;
@@ -30,10 +30,89 @@ public class UserChatgptLog extends Model<UserChatgptLog> {
     private int responseRatingStar;   // 0 - no selection     1-5  - show stars
     private int responseRatingThumb;  // 0 - no selection     1 - thumb up      2 - thumb down
     private int responseGeneratedTimes;
-    private String chatgptRole;
+
     private String chatgptWholeResponse;
     private String chatgptWholePrompt;
-    private String type;
+
+    private Long topicId;
+    private String hidden;
+    private int questionVersion;
+
+
+    // -----------------------updates
+    private String assistantName; // type
+    private String responseType;
+    private String apiModel;
+    private String apiObject;
+    private String threadId; // ChatGPT Assistant Thread ID
+    private String runId;
+    private String assistantId;
+
+    private String openaiConversationId;
+
+    public String getOpenaiConversationId() {
+        return openaiConversationId;
+    }
+
+    public void setOpenaiConversationId(String openaiConversationId) {
+        this.openaiConversationId = openaiConversationId;
+    }
+
+    public String getAssistantName() {
+        return assistantName;
+    }
+
+    public void setAssistantName(String assistantName) {
+        this.assistantName = assistantName;
+    }
+
+    public String getResponseType() {
+        return responseType;
+    }
+
+    public void setResponseType(String responseType) {
+        this.responseType = responseType;
+    }
+
+    public String getApiModel() {
+        return apiModel;
+    }
+
+    public void setApiModel(String apiModel) {
+        this.apiModel = apiModel;
+    }
+
+    public String getApiObject() {
+        return apiObject;
+    }
+
+    public void setApiObject(String apiObject) {
+        this.apiObject = apiObject;
+    }
+
+    public String getRunId() {
+        return runId;
+    }
+
+    public void setRunId(String runId) {
+        this.runId = runId;
+    }
+
+    public String getAssistantId() {
+        return assistantId;
+    }
+
+    public void setAssistantId(String assistantId) {
+        this.assistantId = assistantId;
+    }
+
+    public Long getTopicId() {
+        return topicId;
+    }
+
+    public void setTopicId(Long topicId) {
+        this.topicId = topicId;
+    }
 
     public String getThreadId() {
         return threadId;
@@ -148,13 +227,13 @@ public class UserChatgptLog extends Model<UserChatgptLog> {
         this.userQuestions = userQuestions;
     }
 
-    public String getType() {
-        return type;
-    }
-    public void setType(String type) {
-        this.type = type;
-    }
 
+    public String getHidden() {
+        return hidden;
+    }
+    public void setHidden(String hidden) {
+        this.hidden = hidden;
+    }
     @Override
     protected Serializable pkVal() {
         return null;
@@ -183,6 +262,13 @@ public class UserChatgptLog extends Model<UserChatgptLog> {
     public void setChatgptWholePrompt(String chatgptWholePrompt) {
         this.chatgptWholePrompt = chatgptWholePrompt;
     }
+    public int getQuestionVersion() {
+        return questionVersion;
+    }
+
+    public void setQuestionVersion(int questionVersion) {
+        this.questionVersion = questionVersion;
+    }
 
     @Override
     public String toString() {
@@ -190,7 +276,7 @@ public class UserChatgptLog extends Model<UserChatgptLog> {
                 "id=" + id +
                 ", userId=" + userId +
                 ", courseId='" + courseId + '\'' +
-                ", threadId='" + threadId + '\'' +
+                ", chatgptRole='" + chatgptRole + '\'' +
                 ", chatgptRoleDescription='" + chatgptRoleDescription + '\'' +
                 ", questionId='" + questionId + '\'' +
                 ", userQuestions='" + userQuestions + '\'' +
@@ -201,10 +287,19 @@ public class UserChatgptLog extends Model<UserChatgptLog> {
                 ", responseRatingStar=" + responseRatingStar +
                 ", responseRatingThumb=" + responseRatingThumb +
                 ", responseGeneratedTimes=" + responseGeneratedTimes +
-                ", chatgptRole='" + chatgptRole + '\'' +
                 ", chatgptWholeResponse='" + chatgptWholeResponse + '\'' +
                 ", chatgptWholePrompt='" + chatgptWholePrompt + '\'' +
-                ", type='" + type + '\'' +
+                ", topicId=" + topicId +
+                ", hidden='" + hidden + '\'' +
+                ", questionVersion=" + questionVersion +
+                ", assistantName='" + assistantName + '\'' +
+                ", responseType='" + responseType + '\'' +
+                ", apiModel='" + apiModel + '\'' +
+                ", apiObject='" + apiObject + '\'' +
+                ", threadId='" + threadId + '\'' +
+                ", runId='" + runId + '\'' +
+                ", assistantId='" + assistantId + '\'' +
+                ", openaiConversationId='" + openaiConversationId + '\'' +
                 '}';
     }
 }

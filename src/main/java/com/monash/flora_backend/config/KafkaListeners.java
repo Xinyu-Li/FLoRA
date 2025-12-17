@@ -11,6 +11,8 @@ import com.monash.flora_backend.dao.entity.TraceData;
 import com.monash.flora_backend.service.IEssayService;
 import com.monash.flora_backend.service.ITraceDataService;
 import com.monash.flora_backend.service_func.ActionAndProcessService;
+import com.monash.flora_backend.service_func.OrderedFutures;
+import com.monash.flora_backend.service_func.SentenceClassificationBatcher;
 import com.monash.flora_backend.util.MyBeanCopyUtils;
 import com.monash.flora_backend.util.MyUtils;
 import lombok.RequiredArgsConstructor;
@@ -22,10 +24,9 @@ import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.event.ListenerContainerIdleEvent;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 
 @RequiredArgsConstructor
@@ -38,7 +39,11 @@ public class KafkaListeners implements ApplicationListener<ListenerContainerIdle
     private final IGlobalCache iGlobalCache;
     private final ActionAndProcessService actionAndProcessService;
     private List<TraceData> traceDataBuffer = new ArrayList<>();
+
+    private final SentenceClassificationBatcher batcher;
+    private final OrderedFutures orderedFutures = new OrderedFutures();
     private String tempSubActionValue = "";
+
 //    private TraceData tempCurrentTrace;
 
     // private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
@@ -103,7 +108,7 @@ public class KafkaListeners implements ApplicationListener<ListenerContainerIdle
             traceDataBuffer.forEach(t -> {
                 log.info(t.toString());
             });
-            log.info("-------------------------------------iTraceDataService.saveBatch end-----------------------------------------------");
+            log.info("-------------------------------------Exception iTraceDataService.saveBatch end-----------------------------------------------");
         }
 //        log.info("finish save data");
 
@@ -111,7 +116,7 @@ public class KafkaListeners implements ApplicationListener<ListenerContainerIdle
         for (TraceData traceData : traceDataBuffer) {
             try {
                 String redisTraceKey = MyConstant.REDIS_TEMP_TRACE_DATA_LIST + traceData.getUserId() + "-" + traceData.getCourseId();
-                String redisSimplifiedTraceKey = MyConstant.REDIS_SIMPLIFIED_TEMP_TRACE_DATA_LIST + traceData.getUserId() + "-" + traceData.getCourseId();
+//                String redisSimplifiedTraceKey = MyConstant.REDIS_SIMPLIFIED_TEMP_TRACE_DATA_LIST + traceData.getUserId() + "-" + traceData.getCourseId();
                 //放入redis 之后会自动根据时间戳排序
                 if (traceData.getSaveTime() == null) {
                     traceData.setSaveTime(MyUtils.getCurrentTimestamp());
@@ -146,7 +151,7 @@ public class KafkaListeners implements ApplicationListener<ListenerContainerIdle
             }
 
 
-            // 获取 SAVE_PLANNER 事件和 选择哪种 strategy
+            // 获取 SAVE_PLANNER 事件和 选择哪种 strategy -- 此处是为了后续判断planner 选择的时候用的
             if (Objects.equals(traceData.getSubActionLabel(), "SAVE_PLANNER")) {
                 if (!StrUtil.isEmpty(traceData.getEventValue()) && traceData.getEventValue().startsWith("SELECT_INDEX")) {
                     try {
@@ -255,6 +260,7 @@ public class KafkaListeners implements ApplicationListener<ListenerContainerIdle
             String toolAccessTimesKey = "tool-used-" + traceDataVO.getUserId() + "_" + traceDataVO.getCourseId() + "_" + traceDataVO.getSource();
             actionAndProcessService.processTimeEventForStartAndEnd(traceDataVO);
 
+            List<TraceData> sentenceClassificationTraceDataList = new ArrayList<>();
 
             if (Objects.equals(traceDataVO.getSubActionLabel(), "READING")) {
                 String[] tempUrlElements = iTraceDataService.checkUrlRelevant(traceDataVO.getUrl()).split(":::"); // return "READING:::RELEVANT" or "INSTRUCTION:::TASK_OVERVIEW"
@@ -331,12 +337,85 @@ public class KafkaListeners implements ApplicationListener<ListenerContainerIdle
                 checkNonCloseToolsEvent(traceDataVO);
             }
 
-//            log.info("Kafka listener (after): " + traceDataVO.toString());
-            traceDataBuffer.add(MyBeanCopyUtils.copyBean(traceDataVO, TraceData.class));
+            if (traceDataVO.getSource().equals("ESSAY") && traceDataVO.getPageEvent().equals("WRITE_SENTENCE")) {
+                String[] tempWriteSentence = traceDataVO.getEventValue().split(":::");
+                String writeSentence = tempWriteSentence.length > 1 ? tempWriteSentence[1] : "";
+                /* ----------------------original---------------
+                List<String> sentenceClassificationResults = iUserChatgptLogService.getWritingSentenceClassification(writeSentence); // ['O.T.2', 'O.T.2']
+
+                sentenceClassificationResults.forEach(classificationResult -> {
+                    TraceData tempTraceData = MyBeanCopyUtils.copyBean(traceDataVO, TraceData.class);
+                    tempTraceData.setSubActionLabel(tempTraceData.getSubActionLabel() + "_" + classificationResult);
+                    sentenceClassificationTraceDataList.add(tempTraceData);
+                });*/
+                /* -----------------------没有批处理 sentence classification
+                CompletableFuture<List<TraceData>> fut =
+                        CompletableFuture.supplyAsync(() -> {
+                                    // 1) HTTP 调用
+                                    List<String> cls = iUserChatgptLogService
+                                            .getWritingSentenceClassification(writeSentence);
+                                    // 2) 组装 TraceData
+                                    return cls.stream()
+                                            .map(c -> { TraceData t = MyBeanCopyUtils.copyBean(traceDataVO, TraceData.class);
+                                                t.setSubActionLabel(t.getSubActionLabel()+"_"+c);
+                                                return t; })
+                                            .collect(Collectors.toList());
+                                }, httpPool)
+                                .exceptionally(ex -> {        // 防止异常导致永远 isDone=false
+                                    log.error("HTTP 调用失败",ex);
+                                    return Collections.emptyList();
+                                });
+                orderedFutures.put(fut);             // 把 future 丢进去，记住顺序*/
+                log.info("writeSentence:" + writeSentence);
+                log.info("Kafka listener writeSentence: " + traceDataVO.toString());
+                if (!Objects.equals(MyConstant.SRL_MODEL, "copes")) { // 需要计算copes
+                    orderedFutures.put(CompletableFuture.completedFuture(
+                            Collections.singletonList(MyBeanCopyUtils.copyBean(traceDataVO, TraceData.class))));
+                } else {
+
+                    /***-----批处理sentence classification---*/
+                    // 1) 把句子交给 batcher，返回一个 future
+                    CompletableFuture<List<String>> futCls = batcher.submit(writeSentence);
+
+                    // 2) 把“分类结果 → TraceData 列表”的转换挂在 future 后面
+                    CompletableFuture<List<TraceData>> futTrace =
+                            futCls.thenApply(clsList -> clsList.stream()
+                                            .map(cls -> {
+                                                TraceData t = MyBeanCopyUtils.copyBean(traceDataVO, TraceData.class); // 此处需要复制traceDataVO，因为如果有粘贴多句话，此时每句话都有一个OR,OT,OA, 所以复制多次
+                                                t.setSubActionLabel(t.getSubActionLabel() + "_" + cls);
+                                                return t;
+                                            })
+                                            .collect(Collectors.toList()))
+                                    .exceptionally(ex -> {
+                                        log.error("批量分类失败", ex);
+                                        return Collections.singletonList(
+                                                MyBeanCopyUtils.copyBean(traceDataVO, TraceData.class)); // 回退原始
+                                    });
+
+                    orderedFutures.put(futTrace);   // 仍然按消费顺序排队
+                }
+            } else {
+                // 不需要 HTTP 的记录直接包一层已完成的 future
+                orderedFutures.put(CompletableFuture.completedFuture(
+                        Collections.singletonList(MyBeanCopyUtils.copyBean(traceDataVO, TraceData.class))));
+            }
+
+
+
+
+            /*//            log.info("Kafka listener (after): " + traceDataVO.toString());
+            if (!sentenceClassificationTraceDataList.isEmpty()) {
+                traceDataBuffer.addAll(sentenceClassificationTraceDataList);
+            } else {
+                traceDataBuffer.add(MyBeanCopyUtils.copyBean(traceDataVO, TraceData.class));
+            }*/
         });
 
+        // 把已经完成的 Future 按序写入 buffer
+        orderedFutures.flushTo(traceDataBuffer);
+
         if (traceDataBuffer.size() >= MyConstant.BATCH_SIZE) {
-            log.info("------------into batch process, start clearTraceDataBuffer-----------traceDataBuffer size:" + traceDataBuffer.size());
+            log.info("------------into batch process, start clearTraceDataBuffer-----------traceDataBuffer size:{}", traceDataBuffer.size());
             clearTraceDataBuffer();
         }
 //        lastReceived = Instant.now();

@@ -1,23 +1,5 @@
-/*.annotator-adder-actions:hover .annotator-adder-actions__button:not(:hover) {*/
-/*    color: #9c9c9c;*/
-/*}*/
 /*-------------------------- planner style -------------------------------------*/
 
-/**,*/
-/**:before,*/
-/**:after {*/
-/*    -webkit-box-sizing: content-box;*/
-/*    -moz-box-sizing: content-box;*/
-/*    box-sizing: content-box;*/
-/*}*/
-
-/*.container .row ,*/
-/*.container .row:before,*/
-/*.container .row:after {*/
-/*    -webkit-box-sizing: border-box;*/
-/*    -moz-box-sizing: border-box;*/
-/*    box-sizing: border-box;*/
-/*}*/
 .ui-state-highlight {
     width: 100%;
     height: 100px;
@@ -151,16 +133,16 @@ label.plan-item-unfinish {
     bottom: 0;
     z-index:100;
     height: 90%;
-    width: 40%;
-    margin-right: -40%;
+    width: 35%;
+    margin-right: -35%;
 }
 
 .my-horizontal-collapse-tools.search-panel {
     bottom: 0;
     z-index:100;
     height: 90%;
-    width: 40%;
-    margin-right:-40%;
+    width: 28%;
+    margin-right:-28%;
 }
 .my-horizontal-collapse-tools.write-essay {
     height: 60vh;   /*420px*/
@@ -170,7 +152,7 @@ label.plan-item-unfinish {
     margin-right: -50%;
 }
 .my-horizontal-collapse-tools.collaborate-write {
-    height: 98vh;   /*420px*/
+    height: 80vh;   /*420px*/
     bottom: 0;
     z-index:100;
     width: 50vw;
@@ -183,6 +165,7 @@ label.plan-item-unfinish {
     bottom: 20%;
     z-index:101;
     width: 455px;
+    min-width: 400px;
     margin-right: -455px;
 }
 .my-horizontal-collapse-tools.my-writing-suggestion {
@@ -196,23 +179,106 @@ label.plan-item-unfinish {
     height: 90vh;   /*420px*/
     bottom: 0;
     z-index:100;
-    width: 40%;
-    margin-right: -40%;    /* 455px*/
-}
-.my-horizontal-collapse-tools.chatgpt-multi-separate-agents {
-    height: 90vh;   /*420px*/
-    bottom: 0;
-    z-index:100;
-    width: 40%;
-    margin-right: -40%;    /* 455px*/
+    width: 45%;   /*jimmie: 35% */
+    margin-right: -50%;    /* 455px*/
 }
 .my-horizontal-collapse-tools.my-classification {
     height: 90vh;   /*420px*/
     bottom: 0;
     z-index:100;
-    width: 40%;
-    margin-right: -40%;    /* 455px*/
+    width: 28%;
+    margin-right: -28%;    /* 455px*/
 }
+.my-horizontal-collapse-tools.my-consultation-submit {
+    height: 85vh;   /*420px*/
+    bottom: 0;
+    z-index:100;
+    width: 30%;
+    margin-right: -30%;    /* 455px*/
+}
+
+.my-horizontal-collapse-tools.my-consultation-table {
+    bottom: 0;
+    z-index:1;
+    width: 90%;
+    margin-right: -90%;
+}
+
+/* 控制表格内容区的可视高度 + 竖向滚动 */
+.table-scroll-wrapper {
+    max-height: 520px;     /* 可按需调整，比如 220/300px */
+    /*overflow-y: auto;*/
+}
+
+/* 表头粘性 */
+.table-sticky thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;            /* 确保盖住滚动内容 */
+    background: #fff;      /* 避免透明 */
+    background-clip: padding-box;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.08); /* 可选：分隔线阴影 */
+}
+
+.filling-instruction {
+    color: #fd2f2f;
+    font-size: 12px;
+    position: absolute;
+    left: 80px;
+}
+
+.filling-consultation-table {
+    color: #fd2f2f;
+    font-size: 12px;
+    position: absolute;
+    left: 200px;
+    top:20px;
+}
+
+/*  generate tools css */
+/* ===== slide-out label for toolbar buttons ===== */
+.toolbar-btn{               /* 所有工具按钮通用类 */
+    position:relative;
+    overflow:visible;
+}
+.toolbar-btn::after{        /* 彩色文字卡片 */
+    content: attr(data-label);
+    position:absolute;
+    right:calc(100% + 8px); /* 紧贴按钮左侧 8px */
+    top:50%;
+    transform:translateX(20px) translateY(-50%);
+    opacity:0;
+    padding:4px 12px;
+    background:#0d6efd;     /* 主题色自调 */
+    color:#fff;
+    border-radius:6px;
+    white-space:nowrap;
+    font-size:12px;
+    line-height:1.2;
+    box-shadow:0 4px 12px rgba(0,0,0,.25);
+    transition:opacity .3s ease, transform .3s ease;
+    pointer-events:none;
+    z-index:9999;
+}
+.toolbar-btn::before{       /* 小箭头，可删 */
+    content:'';
+    position:absolute;
+    right:calc(100% + 1px);
+    top:50%;
+    transform:translateY(-50%);
+    border:6px solid transparent;
+    border-left-color:#0d6efd;
+    opacity:0;
+    transition:opacity .3s ease;
+    pointer-events:none;
+}
+.toolbar-btn:hover::after,
+.toolbar-btn:hover::before{
+    opacity:1;
+    transform:translateX(0) translateY(-50%);
+}
+.toolbar-btn:hover{ transform:scale(1.12); }
+
 
 /* checklist tools */
 .my-horizontal-collapse-tools.my-checklist {
@@ -221,6 +287,29 @@ label.plan-item-unfinish {
     z-index: 100;
     width: 605px;
     margin-right: -605px;    
+}
+/* zoteroNotes tool */
+.my-horizontal-collapse-tools.my-zoteronotes {
+    height: 60vh;   /*420px*/
+    bottom: 0;
+    z-index:100;
+    width: 50%;
+    margin-right: -50%;
+}
+/* processVisual tool */
+.my-horizontal-collapse-tools.my-processVisual {
+    height: 60vh;   /*420px*/
+    bottom: 0;
+    z-index:100;
+    width: 50%;
+    margin-right: -50%;
+}
+.my-jsmind-style {
+    width: 100%;
+    min-height: 200px; /* 确保有足够的高度 */
+    overflow: auto;
+    position: relative; /* 确保 z-index 生效 */
+    z-index: 1100; /* 确保在最前面 */
 }
 
 .my-horizontal-collapse-tools.math-editor {
@@ -262,22 +351,37 @@ label.plan-item-unfinish {
 }
 
 
+.my-horizontal-collapse-tools.my-essay-product-visual {
+    height: 40vh; /*420px*/
+    bottom: 0;
+    z-index: 100;
+    width: 455px;
+    margin-right: -455px;
+}
+
 .my-horizontal-collapse-tools.in-tools {
     transition-duration: .3s;
     margin-right: 50px;
+    width: 40%;
 }
 
 .my-horizontal-collapse-tools.in-tools-move-left {
     transition-duration: .3s;
-    margin-right: 42%;    /* 505px*/
+    margin-right: 35%;    /* 505px*/ /*jimmie: 35%*/
     width: 50%;      /* 645px*/
+}
+
+.my-horizontal-collapse-tools.in-tools-move-more-left {
+    transition-duration: .3s;
+    margin-right: 45%;     /*jimmie: 35%*/
+    width: 40%;      /* 645px*/
 }
 
 
 
 .my-side-annotation-toolbar {
     transition-duration: .3s;
-    left: -41px;
+    left: -45px;
 }
 .my-side-annotation-toolbar.clicked {
     transition-duration: .4s;
@@ -304,16 +408,10 @@ a {
 }
 
 /* Essay Product Visual Tool */
-.my-horizontal-collapse-tools.my-essay-product-visual {
-    height: 40vh; /*420px*/
-    bottom: 0;
-    z-index: 100;
-    width: 405px;
-    margin-right: -405px;
-}
+
 .essay-product-visual-dot {
-    height: 20px;
-    width: 20px;
+    height: 30px;
+    width: 30px;
     background-color: gray;
     border-radius: 50%;
     display: inline-block;
@@ -321,21 +419,15 @@ a {
 }
 
 .essay-product-visual-status-mainpoint-active {
-    background-color: #ffff7b; /* Customize color based on data */
+    background-color: #FFFA67; /* Customize color based on data */
 }
 .essay-product-visual-status-relevance-active {
-    background-color: rgb(170, 110, 241);
+    background-color: #9F67FF;
 }
 .essay-product-visual-status-structure-active {
-    background-color: rgb(237, 123, 237);
+    background-color: #FF67CC;
 }
 /*------------------------ horizontal collapse style end ---------------------------*/
-
-
-
-
-
-
 
 
 
@@ -644,10 +736,10 @@ span.classification-sentence:hover {
     word-wrap: break-word;
     padding: 10px;
     /* float: left; */
-    background-color: rgba(13, 110, 253, .25);
+    background-color: rgba(127, 171, 239, 0.29);
     color: #333;
     border-radius: 10px;
-    font-size: 18px;
+    font-size: 16px;
 }
 
 .form-control .doc-scaffold-content .timestamp {
@@ -666,8 +758,8 @@ span.classification-sentence:hover {
 }
 
 .form-control .bot-avatar {
-    width: 35px;
-    height: 35px;
+    width: 30px;
+    height: 30px;
     border-radius: 20%;
     margin-right: 10px;
     margin-bottom: 10px;
@@ -686,7 +778,7 @@ span.classification-sentence:hover {
 }
 
 .agent-name{
-    font-size: 12px;
+    font-size: 14px;
 }
 
 
@@ -705,9 +797,9 @@ span.classification-sentence:hover {
   padding: 10px;
   border-radius: 10px 10px 0 10px;
   margin-bottom: 10px;
-  max-width: 60%;
+  max-width: 80%;
   word-wrap: break-word;
-  box-shadow: 0px 0px 10px 4px rgb(227, 227, 227);
+  box-shadow: 0 0 10px 4px rgb(227, 227, 227);
 }
 
 .form-control .message-content .user-consultation {
@@ -727,7 +819,7 @@ span.classification-sentence:hover {
   align-self: flex-start;
   text-align: left;
   margin-bottom: 10px;
-  max-width: 60%;
+  max-width: 80%;
   word-wrap: break-word;
   padding: 10px;
   /* float: left; */
@@ -763,6 +855,13 @@ span.classification-sentence:hover {
 .gpt-scaffold-flash-icon {
     animation: gpt-scaffold-flashing 1s infinite;
 }
+.gpt-scaffold-chat-flash-icon {
+    animation: gpt-scaffold-flashing 1s infinite;
+}
+.chat-with-scaffold-flash-icon {
+    animation: gpt-scaffold-flashing 1s infinite;
+}
+
 
 /* Teacher handler tool status */
 .type-status {
@@ -802,63 +901,40 @@ span.classification-sentence:hover {
     border-color: #ccc;
     box-shadow: none !important;
 }
-.rounds {
+/* --------------------------Teacher handler tool status end--------------------------- */
+
+.chat-rounds {
     font-size: 10px;
     color: #fd0d45;
     margin-bottom: 10px;
 }
 
-#toeflEditor {
-    /*width: 100%;*/
-    height: 100px;
-    border: 1px solid #ddd;
-    outline: none;
-    padding: 10px;
-    font-size: 16px;
-    line-height: 1.5;
-    background-color: #fafafa;
-    border-radius: 4px;
-    overflow: auto;
-    word-wrap: break-word;
-    white-space: pre-wrap; /* 保持空格和换行符 */
-    float: left;
-}
-
-#toeflEditor:focus {
-    border-color: #0095ff;
-    box-shadow: 0 0 5px #0095ff;
-}
-
-#multi-agents-input {
-    /*width: 100%;*/
-    height: 100px;
-    border: 1px solid #ddd;
-    outline: none;
-    padding: 10px;
-    font-size: 16px;
-    line-height: 1.5;
-    background-color: #fafafa;
-    border-radius: 4px;
-    overflow: auto;
-    word-wrap: break-word;
-    white-space: pre-wrap; /* 保持空格和换行符 */
-    float: left;
-}
-
-#multi-agents-input:focus {
-    border-color: #0095ff;
-    box-shadow: 0 0 5px #0095ff;
-}
-
-#multi-agents-input .highlight {
-    color: #0077ff;
-}
-
-/*.highlight {*/
-    /*color: #0077ff;*/   /* 这里注释掉是因为，当用户自行删除内容时，无法彻底删除font的color样式，目前暂未解决 */
+/*#toeflEditor {*/
+/*    !*width: 100%;*!*/
+/*    height: 100px;*/
+/*    border: 1px solid #ddd;*/
+/*    outline: none;*/
+/*    padding: 10px;*/
+/*    font-size: 16px;*/
+/*    line-height: 1.5;*/
+/*    background-color: #fafafa;*/
+/*    border-radius: 4px;*/
+/*    overflow: auto;*/
+/*    word-wrap: break-word;*/
+/*    white-space: pre-wrap; !* 保持空格和换行符 *!*/
+/*    float: left;*/
 /*}*/
 
-.form-control .message-content .structure-expert-bg {
+/*#toeflEditor:focus {*/
+/*    border-color: #0095ff;*/
+/*    box-shadow: 0 0 5px #0095ff;*/
+/*}*/
+
+.highlight {
+    /*color: #0077ff;*/   /* 这里注释掉是因为，当用户自行删除内容时，无法彻底删除font的color样式，目前暂未解决 */
+}
+
+/*.form-control .message-content .structure-expert-bg {
     background-color: #feeebf;
 }
 
@@ -872,8 +948,129 @@ span.classification-sentence:hover {
 
 .form-control .message-content .mediator-bg {
     background-color: #f9d6ff;
-}
+}*/
 
 .placeholder {
     color: #aaa;
+}
+
+.consultation-table-row{
+    height: 150px;
+}
+
+textarea.consultation-table-row {
+    outline: none;
+    border: none;
+    resize: none;
+    height: 150px;
+}
+
+input.consultation-table-row {
+    outline: none;
+    border: none;
+    resize: none;
+}
+
+
+.form-control .popup-questionnaire {
+    display: inline-block;
+    align-self: flex-start;
+    text-align: left;
+    margin-bottom: 10px;
+    max-width: 100%;
+    word-wrap: break-word;
+    padding: 10px;
+    /* float: left; */
+    background-color: #e0e0e0;
+    color: #333;
+    border-radius: 10px;
+}
+
+.unfinished-questionnaire {
+    background-color: #F93827;
+}
+
+.popup-questionnaire-blocking {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 201; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    left: 0;
+    top: 0;
+    /*width: 1000px; !* Full width *!*/
+    /*height: 1000px; !* Full height *!*/
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+
+/*-----------------Collaborate write----------------------------*/
+.highLight-bkg{
+    background-color: red;
+}
+.collaborative-chat-select {
+    min-width: 350px;
+}
+
+.collaborative-chat-select select {
+    appearance: none;
+    font-size: 1.1rem;
+    padding: 0.1em 0.1em 0.1em 0.1em;
+    background-color: #fff;
+    border: 1px solid #caced1;
+    border-radius: 0.25rem;
+    color: #000;
+    cursor: pointer;
+}
+
+.collaborative-chat-select {
+    display: none;
+}
+.collaborative-chat-select.open {
+    display: block;
+}
+
+
+/*-----------------------------------------*/
+.my-text-success {
+    color: #0df089;
+}
+
+.my-text-danger {
+    color: #ebaea7;
+}
+
+
+/*-------------------newly added 2.5.1----------------------*/
+/*gpt scaffold chat message*/
+#gpt-scaffold-chat-panel-box [disabled], [contenteditable="false"] {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+
+.animate-instrumentation-tools-btn {
+    /*font-size: 24px;*/
+    /*padding: 16px 32px;*/
+    transform: scale(8);  /* 初始3倍大 */
+    transition: transform 0.8s;
+}
+.animate-instrumentation-tools-btn.shrinking {
+    animation: shrinkToNormal 1s forwards;
+}
+/* 定义动画 */
+@keyframes shrinkToNormal {
+    from { transform: scale(8);}
+    to   { transform: scale(1);}
+}
+
+.rating-gray {
+    filter: grayscale(90%);
+}
+body {
+    user-select: text;
+    -webkit-user-select: text;
 }

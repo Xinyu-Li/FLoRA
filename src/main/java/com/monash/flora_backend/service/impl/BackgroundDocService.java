@@ -98,7 +98,7 @@ public class BackgroundDocService extends ServiceImpl<BackgroundDocMapper, Backg
     public boolean saveDocuments(List<BackgroundDocVO> backgroundDocVOList){
         checkIndexExistence();
 
-        try (InputStream modelIn = BackgroundDocService.class.getResourceAsStream("/en-sent.bin")) {
+        try (InputStream modelIn = BackgroundDocService.class.getResourceAsStream("/templates/backup/en-sent.bin")) {
             if (modelIn == null) {
                 throw new IOException("Model file not found");
             }
