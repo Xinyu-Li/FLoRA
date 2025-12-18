@@ -84,8 +84,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: guanliang.chen@monash.edu # xinyu.li1@monash.edu
-    password: clkpwefattfqfmis # clkpwefattfqfmis  # yeabaipkilhinxas
+    username: your_email_address
+    password: your_passkey
     properties:
       mail:
         smtp:
