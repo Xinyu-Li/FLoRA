@@ -36,13 +36,13 @@ spring:
         master:
           driver-class-name: com.mysql.cj.jdbc.Driver
           url: jdbc:mysql://127.0.0.1:3306/flora_annotation?autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=CONVERT_TO_NULL&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=True&connectTimeout=1000&socketTimeout=180000
-          username: root
-          password: 1q2w3e4R
+          username: Your_username
+          password: Your_password
         slave_1:
           driver-class-name: com.mysql.cj.jdbc.Driver
           url: jdbc:mysql://127.0.0.1:3306/moodle?autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=CONVERT_TO_NULL&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=True&connectTimeout=1000&socketTimeout=30000
-          username: root
-          password: 1q2w3e4R
+          username: Your_username
+          password: Your_password
   servlet:
     multipart:
       max-file-size: 100MB
