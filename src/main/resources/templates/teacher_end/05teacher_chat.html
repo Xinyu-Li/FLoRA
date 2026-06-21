@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Teacher Chat</title>
+   <link th:href="@{${myUrl} + '/flora/css/bootstrap.min.css'}" rel="stylesheet"/>
+   <link th:href="@{${myUrl} + '/flora/css/postmanchat.min.css'}" rel="stylesheet"/>
+   <link th:href="@{${myUrl} + '/flora/css/teacherchat.css'}" rel="stylesheet"/>
+   <script th:src="@{${myUrl} + '/flora/js/jquery.min.js'}"></script>
+   <script th:src="@{${myUrl} + '/flora/js/bootstrap.bundle.min.js'}"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var websocketBaseUrl = /*[[${websocketBaseUrl}]]*/ {};
+        // var STUDENTID = /*[[${currentStudentID}]]*/ "";
+        var myUrl = /*[[${myUrl}]]*/ {};
+        var lastEssayUserId = /*[[${lastEssayUserId}]]*/ {};
+        var lastEssaySaveTime = /*[[${lastEssaySaveTime}]]*/ {};
+
+        console.log("websocketBaseUrl", websocketBaseUrl);
+        // console.log(STUDENTID);
+        /*]]>*/
+        // let websocketWebsiteUrl = websocketBaseUrl + "/myapi";
+        let websocketWebsiteUrl = websocketBaseUrl;
+    </script>
+   <script th:src="@{${myUrl} + '/flora/js/teacher_end/teacher_end_chat.js'}" defer></script>
+</head>
+<body>
+    <div class="container-full">
+        <!--  px-xl-5 px-lg-4 px-3 -->
+        <div class="main">
+            <div class="row">
+                <div class="col-md-4 type-status">
+                    <div class="online-status">
+                        <div>Connected to server:</div>
+                        <div class="status rounded-circle" id="wsStatusDiv"></div>
+                    </div>
+                    <div class="online-status">
+                        <div>Student online status:</div>
+                        <div class="status rounded-circle" id="studentStatusDiv"></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <h1 class="text-center text-primary">Teacher Chat</h1>
+                    <p class="text-center">1. select a student.  2. Send message</p>
+                </div>
+                <div class="col-md-4 type-status">
+                    <h5 class="text-center" id="type-status-info">Student is typing</h5>
+                </div>
+            </div>
+            <div class="row ">
+                <div class="col-md-6">
+                    <div class="leftpanel">
+                        <div class="student-list-div list-unstyled border border-3" id="student-list-div">
+                            <h3 th:if="${#lists.isEmpty(mdlUserVOList)}">No Student Found</h3>
+                            <ul class="chat-list" id="student-list-ul">
+                                <li th:each="item : ${mdlUserVOList}" th:data-userid="${item.id}" th:data-firstname="${item.firstname}">
+                                    <div class="card-body">
+                                        <div class="media">
+                                            <div class="media-body overflow-hidden">
+                                                <div class="d-flex align-items-center mb-1">
+                                                    <h6 class="text-truncate mb-0 me-auto" th:text="|ST: ${item.firstname + ' ' + item.lastname}|"></h6>
+                                                    <p class="small text-muted text-nowrap ms-4 mb-0"></p>
+                                                </div>
+                                                <div class="text-truncate">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="essayContent" id="essay-content">
+                            Please Select a student to view the essay.
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="chat-body pb-5">
+                        <!-- handler message history -->
+                        <div class="chat-content border border-3" id="chat-content">
+                            <div class="container-xxl" id="chat-container">
+                                <ul class="list-unstyled py-4" id="response-message-ul">
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="chat-footer border border-3 py-xl-4 py-lg-2 py-2">
+                            <div class="container-xxl">
+                                <div class="input-group align-items-center">
+                                    <textarea id="message-input" class="form-control border-0 pl-0" placeholder="Type your message here..."></textarea>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text border-0 pr-0">
+                                            <button type="button" class="btn btn-primary" id="test-send-message-btn">Send</button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

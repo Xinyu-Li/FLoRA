@@ -1,0 +1,487 @@
+<!--start_ADDITIONAL_HTML_HEAD-->
+<link href="/flora/css/jquery-ui.min.css" rel="stylesheet"/>
+<link href="/flora/css/flipdown.min.css" rel="stylesheet" />
+<link href="/flora/css/quill.snow.min.css" rel="stylesheet"/>
+<link href="/flora/css/instrumentationTools.css" rel="stylesheet" />
+<link href="/flora/css/my-timer.css" rel="stylesheet" />
+<!--end_ADDITIONAL_HTML_HEAD-->
+
+
+<!--start_ADDITIONAL_HTML_BODY-->
+
+<!-- The Modal -->
+<div id="myModal" class="my-modal">
+
+    <!-- Modal content -->
+    <div class="my-modal-content">
+        <div class="my-modal-header">
+            <h2 id="myModalTaskStartHeader">Start Main Essay Activity</h2>
+        </div>
+        <div class="my-modal-body">
+            <p id="myModalTaskStartBody">
+                This task has a time limit of 45 minutes. Note that only <strong>1 attempt</strong> is allowed. Are you sure you want enter the task?
+            </p>
+        </div>
+        <div style="text-align: center;">
+            <button type="button" class="my-modal-button" id="continueMainTaskBtn">Yes - Continue</button>
+            <button type="button" class="my-modal-button" id="backToHomepageBtn">No - Go to Homepage</button>
+        </div>
+    </div>
+</div>
+
+
+<div id="myTaskSwitchTaskModal" class="my-modal">
+
+    <!-- Modal content -->
+    <div class="my-modal-content">
+        <div class="my-modal-header">
+            <h2 id="myModalSwitchTaskHeader">Time is up</h2>
+        </div>
+        <div class="my-modal-body">
+            <p id="myModalSwitchTaskBody"></p>
+        </div>
+        <div style="text-align: center;">
+            <button type="button" class="my-modal-button" id="taskFinishSwitchToNextBtn">Next Task</button>
+        </div>
+    </div>
+</div>
+
+
+<div id="myTaskFinishModal" class="my-modal">
+
+    <!-- Modal content -->
+    <div class="my-modal-content">
+        <div class="my-modal-header">
+            <h2 id="myModalTaskEndHeader">Time is up</h2>
+        </div>
+        <div class="my-modal-body">
+            <p id="myModalTaskEndBody"></p>
+        </div>
+        <div style="text-align: center;">
+            <button type="button" class="my-modal-button" id="taskFinishBackToHomepageBtn">Back to Homepage</button>
+            <a id="downloadEssayLink" href="#">Download Essay</a>
+        </div>
+    </div>
+
+</div>
+<!--end_ADDITIONAL_HTML_BODY-->
+
+
+<!--start_ADDITIONAL_HTML_FOOTER-->
+<script>
+
+    function getURLParametersGeneral(url) {
+        var params = {};
+        var parser = document.createElement('a');
+        parser.href = url;
+        var query = parser.search.substring(1);
+        var vars = query.split('&');
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split('=');
+            params[pair[0]] = decodeURIComponent(pair[1]);
+        }
+        return params; // string 类型
+    }
+    function getCurrentCourseId() {
+        // console.log("in getCurrentCourseId");
+        //console.log(currentCourseId);
+        // console.log("-------------");
+        if (typeof currentCourseId !== "undefined") {
+            return currentCourseId;
+        } else {
+            let navTagAList = document.querySelectorAll("#page-navbar>nav>ol>li a");
+            let courseId = 0;
+            if (navTagAList != null) {
+                navTagAList.forEach(link => {
+                    if (link.href.includes("course/view.php?id=")) {
+                        courseId = getURLParametersGeneral(link.href).id;
+                    }
+                    // link.onclick = "return false";
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                    });
+                });
+            }
+            return courseId;
+        }
+    }
+    function signupConfig() { //only used in Beijing study
+        let email = document.getElementById("id_email");
+        let email2 = document.getElementById("id_email2");
+        let lastname = document.getElementById("id_lastname");
+        let password = document.getElementById("id_password");
+        let firstname = document.getElementById("id_firstname");
+
+        let passwordElement = document.getElementById("fitem_id_password");
+        let email2Element = document.getElementById("fitem_id_email2");
+        let lastnameElement = document.getElementById("fitem_id_lastname");
+        let cityElement = document.getElementById("fitem_id_city");
+        let country = document.getElementById("fitem_id_country");
+        let firstnameElement = document.getElementById("fitem_id_firstname");
+        let emailElement = document.getElementById("fitem_id_email");
+
+        email2Element.style.display = "none";
+        lastname.type="hidden";
+        // lastnameElement.style.display = "none";
+        cityElement.style.display = "none";
+        country.style.display = "none";
+        firstnameElement.style.display = "none";
+        passwordElement.style.display = "none";
+        emailElement.style.display = "none";
+
+        email.value = Date.now() + "prolific_email@localhost.com";
+        // email.onblur = function () {
+        email2.value = email.value;
+        // }
+        password.value = "12345";
+        firstname.value = "prolific_exp";
+        // const random = Math.floor(Math.random() * 4);
+        // const groupList = ["gpt-only", "search-only", "gpt-search", "search-gpt"];  // "cn", "pl", "ge"
+
+        const selectElem = document.createElement('select');
+        selectElem.classList.add('form-control');
+        // 添加required属性
+        selectElem.setAttribute('required', 'required');
+        // 设置select元素内的选项
+        const options = [
+            { text: 'Please select your group', value: '' },
+            // { text: 'Group A', value: 'gpt-only' },
+            // { text: 'Group B', value: 'search-only' },
+            // { text: 'Group C', value: 'gpt-search' },
+            // { text: 'Group D', value: 'search-gpt' },
+            { text: 'Group A', value: 'control' },
+            { text: 'Group B', value: 'unrestricted-ai' },
+            { text: 'Group C', value: 'metacognitive-ai' },
+            { text: 'Group D', value: 'ai-scaffold' },
+            { text: 'Group E', value: 'ai-for-learning' },
+            { text: 'Group F', value: 'learning-phase-ai' },
+            { text: 'Group G', value: 'obedient-ai' },
+
+        ];
+
+        options.forEach(({text, value}) => {
+            const option = document.createElement('option');
+            option.textContent = text;
+            option.value = value;
+            selectElem.appendChild(option);
+        });
+
+        // 在input元素后面插入select元素
+        lastname.parentNode.insertBefore(selectElem, lastname.nextSibling);
+        // select元素的change事件，用来把value赋值到hidden input上
+        selectElem.addEventListener('change', function() {
+            lastname.value = this.value;
+        });
+
+
+        //用户名变成学号
+        let usernameLabel = document.querySelector("#fitem_id_username>div>label");
+        usernameLabel.innerText = "Prolific Number";
+
+        let lastnameLabel = document.querySelector("#fitem_id_lastname>div>label");
+        lastnameLabel.innerText = "Group";
+    }
+    function removePageLink() { // 用于disable小标题链接，避免导航回到course page list
+        let elementPreviewFeedbackBtnList = document.querySelectorAll("div.navitem");
+        if (elementPreviewFeedbackBtnList != null) {
+            for (let i = 0; i < elementPreviewFeedbackBtnList.length; i++) {
+                if (elementPreviewFeedbackBtnList[i].innerText === "Preview questions") {
+                    elementPreviewFeedbackBtnList[i].className += " d-none";
+                }
+            }
+        }
+
+        let navTagAList = document.querySelectorAll("#page-navbar>nav>ol>li");
+        if (navTagAList != null) {
+            // console.log(navTagA.href);
+            // navTagA.href = "#";
+            // navTagA.onclick = "return false;";
+            for (let i = 0; i < navTagAList.length; i++) {
+                let newSpan = document.createElement('span');
+                newSpan.textContent = navTagAList[i].innerText;
+                // navTagAList[i].replaceWith(newSpan);
+                navTagAList[i].innerHTML = '';
+                navTagAList[i].appendChild(newSpan);
+            }
+        }
+
+        let elementsTagAList= document.getElementsByClassName("courseindex-link text-truncate");
+        if (elementsTagAList != null) {
+            for (let i = 0; i < elementsTagAList.length; i++) {
+                //console.log(elementsTagAList[i].dataset.for);
+                /*if (elementsTagAList[i].dataset.for === "section_title") {
+                    elementsTagAList[i].href = "#";
+                }*/
+                if (elementsTagAList[i].href.includes("/moodle/course/view.php")) {
+                    elementsTagAList[i].href = "";
+                    elementsTagAList[i].onclick = function() {
+                        return false;
+                    };
+                }
+            }
+        }
+    }
+
+    /*使用此代码使页面link 无效*/
+    window.addEventListener('load', function(){
+        //let baseUrl = "http://localhost:8088";
+
+        // let courseId = 4; //local: 2, cloud: 4
+        // let instructionPageId = 7; //local: 2, cloud 7
+
+        // let courseIdList = [4];   // course Id 与下面两个list 需要match
+        // 两个中的值的数量必须一致
+        // let coursePageStartList = [8]; //存储所有course 的第一个page id
+        // let coursePageEndList = [25];   // 存储所有course的最后一个page id
+
+        // 从java中设置
+//start_BASE_URL
+//         let baseUrl = 'https://study.floralearn.cn';
+        //从java 中设置 //存储所有courseid, 第一个和最后一个page id
+//start_SERVER_ALL_COURSE_ID_AND_PAGE_START_END_ID
+//         let courseIdAndStartPageIdAndEndPageIdList = [['2', [1,2,3,4,5,6]],['4', [8,9]]];
+//         let courseIdAndModalContentList = [['1', ['this is ','hello','123']],['2', ['111this is ','333hello','555123']],['3', ['222this is ','333hello','666123']]];
+        let courseIdAndModalContentMap = new Map();
+        courseIdAndModalContentList.forEach(value => {
+            courseIdAndModalContentMap.set(value[0], value[1]);
+        });
+        let courseIdAndStartPageIdAndEndPageIdMap = new Map();
+        courseIdAndStartPageIdAndEndPageIdList.forEach(value => {
+            courseIdAndStartPageIdAndEndPageIdMap.set(value[0], value[1])
+        });
+
+        let elementHomeBtn = document.querySelector("li[data-key='home']"); //查找到第一个元素
+        if (elementHomeBtn != null) {elementHomeBtn.className+= " d-none";}
+        // console.log(elementHomeBtn);
+
+        // localStorage.myUserEnterPageTimestamp = new Date().getTime();
+        // console.log("window onload finish");
+
+        // Get the modal
+        let myModal = document.getElementById("myModal");
+        let myModalTaskStartHeader = document.getElementById("myModalTaskStartHeader");
+        let myModalTaskStartBody = document.getElementById("myModalTaskStartBody");
+        let continueMainTaskBtn = document.getElementById("continueMainTaskBtn");
+        let backToHomepageBtn = document.getElementById('backToHomepageBtn'); //showing at the beginning
+
+        let taskFinishSwitchToNextBtn = document.getElementById("taskFinishSwitchToNextBtn");
+
+        let myModalTaskEndHeader = document.getElementById("myModalTaskEndHeader");
+        let myModalTaskEndBody = document.getElementById("myModalTaskEndBody");
+        let taskFinishBackToHomepageBtn = document.getElementById("taskFinishBackToHomepageBtn");
+
+
+        //add download link to modal
+        let downloadEssayLink = document.getElementById('downloadEssayLink');
+        let userIdContainer = document.querySelector('#nav-notification-popover-container');
+        if (userIdContainer !== null && downloadEssayLink !== null) {
+            let userId = userIdContainer.dataset.userid;
+            downloadEssayLink.href = 'download-student-essay/' + userId + '/' + getCurrentCourseId();
+        }
+
+        // console.log("additional html" + window.location.href);
+
+        if (window.location.href.startsWith(baseUrl + "/moodle/course/view.php?id=")) { // for start modal
+            let tempCurrentCourseId = getURLParametersGeneral(window.location.href).id;  // string 类型
+            if (courseIdAndStartPageIdAndEndPageIdMap.has(tempCurrentCourseId)) {
+                if (courseIdAndModalContentMap.has(tempCurrentCourseId)) {
+                    let allModalContentArray = courseIdAndModalContentMap.get(tempCurrentCourseId);
+                    myModalTaskStartHeader.textContent = allModalContentArray[0];
+                    myModalTaskStartBody.innerHTML = allModalContentArray[1];
+                    continueMainTaskBtn.textContent = allModalContentArray[2];
+                    backToHomepageBtn.textContent = allModalContentArray[3];
+
+                    // myModalTaskEndHeader.textContent = allModalContentArray[4];
+                    // myModalTaskEndBody.textContent = allModalContentArray[5];
+                    // taskFinishBackToHomepageBtn.textContent = allModalContentArray[6];
+                    // if (allModalContentArray[7] === "false") {
+                    //     downloadEssayLink.style.display = "none";
+                    // } else {
+                    //     downloadEssayLink.style.display = "";
+                    // }
+                    // downloadEssayLink.textContent = allModalContentArray[8];
+                }
+
+
+                // console.log(myModal.style.display);
+                myModal.style.display = "block";
+
+                backToHomepageBtn.onclick = function () {
+                    window.location.href = baseUrl + "/moodle/my/courses.php";
+                }
+                continueMainTaskBtn.onclick = function () {
+                    window.location.href = baseUrl + "/moodle/mod/page/view.php?id=" + courseIdAndStartPageIdAndEndPageIdMap.get(tempCurrentCourseId)[0]; //跳转到general instruction page
+                }
+            }
+        }
+
+        if (window.location.href.startsWith(baseUrl + "/moodle/mod/page/view.php?id=")) { // for finish modal
+            downloadEssayLink.style.display = "none"; //默认把 download essay 设置为hidden
+        }
+
+
+        // 消除页面course link，防止对tools 的影响
+        if (window.location.href.startsWith(baseUrl + "/moodle/mod/page/view.php?id=")) {
+            let pageId = getURLParametersGeneral(window.location.href).id; // string 类型
+
+            for (let value of courseIdAndStartPageIdAndEndPageIdMap.values()) {
+                // 该course 是 main task 需要消除link, training  中也需要消除
+                if (value.includes(parseInt(pageId))) {
+                    removePageLink();
+                    break;
+                }
+            }
+        }
+
+        taskFinishBackToHomepageBtn.onclick = function () {
+            localStorage.clear();
+            window.location.href = baseUrl + "/moodle/my/courses.php";
+        }
+
+        taskFinishSwitchToNextBtn.onclick = function () {
+            let myTaskSwitchTaskModal = document.getElementById("myTaskSwitchTaskModal");
+            if (myTaskSwitchTaskModal !== null) {
+                myTaskSwitchTaskModal.style.display = "none";
+            }
+            // 先用 GPT 或者先用 search
+            if (nhbTaskConfig !== "undefined") {
+                currentTask = (currentTask === 'chatgpt') ? 'search' : 'chatgpt'; localStorage.setItem(STORAGE_KEYS.currentTask, currentTask);
+                // 更新下一个切换deadline
+
+                localStorage.setItem(STORAGE_KEYS.currentTaskMinutes, task2Minutes + "");
+                totalMinutes = currentTaskMinutes;
+                // 加载新任务内容
+                loadContent(currentTask);
+                console.log('任务已切换，现在任务为：' + currentTask);
+            }
+
+            // 发送post 请求，发送当前时间戳 到server
+            const formData = new URLSearchParams();
+            formData.append("userId", userId);
+            formData.append("courseId", currentCourseId);
+            formData.append("currentTimestamp", getCurrentTimestamp() + "");
+
+            fetch(apiBaseUrl + "/add-task-start-time", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: formData.toString()
+            }).then(function (resp) {
+                console.log("add-task-start-time---------------setup timer");
+                // setupTimer();
+                window.location.reload();
+            });
+                /*.then(function(resp) {
+                if (!resp.ok) {
+                    console.error("network error");
+                }
+                return resp.json();
+            }).then(function(respData) {
+                console.log("resp data:", respData);
+            });*/
+
+            //<div class="gcse-searchbox"></div>
+            // <hr/>
+            // <div class="gcse-searchresults"></div>
+            //
+
+            //<div id="embedded-chatgpt"></div>
+            //<div id="embedded-search"></div>
+        }
+
+        if (window.location.href === baseUrl + "/moodle/login/signup.php") {
+            signupConfig();
+        }
+
+        document.querySelector("#page-footer").children[0].classList.add("d-none"); //隐藏右下角的help button
+    });
+
+
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 监听提交按钮
+        const nextNavBtn = document.getElementById('mod_quiz-next-nav');
+
+        if (nextNavBtn) {
+            nextNavBtn.addEventListener('click', function(e) {
+                let unansweredCount = 0;
+
+                // 定位单选题并检查
+                const mcQuestions = document.querySelectorAll('.que.multichoice');
+                mcQuestions.forEach(function(question) {
+                    // 排除隐藏的 "清除选择" 选项
+                    const validRadios = question.querySelectorAll('input[type="radio"]:not([value="-1"])');
+
+                    if (validRadios.length > 0) {
+                        const isChecked = Array.from(validRadios).some(radio => radio.checked);
+                        if (!isChecked) {
+                            unansweredCount++;
+                            question.style.border = "2px solid #dc3545";
+                            question.style.padding = "10px";
+                            question.style.borderRadius = "8px";
+                        } else {
+                            question.style.border = "none";
+                            question.style.padding = "0";
+                        }
+                    }
+                });
+
+                // 拦截与多语言提示
+                if (unansweredCount > 0) {
+                    e.preventDefault(); // 阻止提交
+
+                    // 1. 包含所有新语言的完整字典
+                    const messages = {
+                        'en': `There are still ${unansweredCount} unanswered multiple-choice questions on this page. Please check the questions marked in red before continuing!`,
+                        'zh_cn': `当前页面还有 ${unansweredCount} 道单选题未作答，请检查红框标记的题目后再继续！`,
+                        'zh_tw': `目前頁面還有 ${unansweredCount} 道單選題未作答，請檢查紅框標記的題目後再繼續！`,
+                        'de': `Es gibt noch ${unansweredCount} unbeantwortete Multiple-Choice-Fragen auf dieser Seite. Bitte überprüfen Sie die rot markierten Fragen, bevor Sie fortfahren!`,
+                        'nl': `Er zijn nog ${unansweredCount} onbeantwoorde meerkeuzevragen op deze pagina. Controleer de rood gemarkeerde vragen voordat u verdergaat!`,
+                        'fi': `Tällä sivulla on vielä ${unansweredCount} vastaamatonta monivalintakysymystä. Tarkista punaisella merkityt kysymykset ennen jatkamista!`,
+                        'ar': `لا يزال هناك ${unansweredCount} أسئلة خيارات متعددة غير مجاب عليها في هذه الصفحة. يرجى التحقق من الأسئلة المحددة باللون الأحمر قبل المتابعة!`,
+                        'cs': `Na této stránce je stále ${unansweredCount} nezodpovězených otázek s více možnostmi výběru. Před pokračováním prosím zkontrolujte červeně označené otázky!`,
+                        'da': `Der er stadig ${unansweredCount} ubesvarede multiple-choice-spørgsmål på denne side. Kontroller venligst de rødmarkerede spørgsmål, før du fortsætter!`,
+                        'es': `Todavía hay ${unansweredCount} preguntas de opción múltiple sin responder en esta página. ¡Por favor, revise las preguntas marcadas en rojo antes de continuar!`,
+                        'id': `Masih ada ${unansweredCount} pertanyaan pilihan ganda yang belum dijawab di halaman ini. Silakan periksa pertanyaan yang ditandai dengan warna merah sebelum melanjutkan!`,
+                        'ms': `Masih terdapat ${unansweredCount} soalan aneka pilihan yang belum dijawab pada halaman ini. Sila semak soalan yang ditandakan dengan warna merah sebelum meneruskan!`,
+                        'pt': `Ainda há ${unansweredCount} perguntas de múltipla escolha sem resposta nesta página. Por favor, verifique as perguntas marcadas em vermelho antes de continuar!`,
+                        'sk': `Na tejto stránke je stále ${unansweredCount} nezodpovedaných otázok s viacerými možnosťami výberu. Pred pokračovaním prosím skontrolujte červeno označené otázky!`,
+                        'th': `ยังมีคำถามแบบปรนัยที่ยังไม่ได้ตอบอีก ${unansweredCount} ข้อในหน้านี้ โปรดตรวจสอบคำถามที่ทำเครื่องหมายสีแดงก่อนดำเนินการต่อ!`,
+                        'vi': `Vẫn còn ${unansweredCount} câu hỏi trắc nghiệm chưa trả lời trên trang này. Vui lòng kiểm tra các câu hỏi được đánh dấu màu đỏ trước khi tiếp tục!`
+                    };
+
+                    // 2. 智能读取语言代码
+                    let currentLang = 'en'; // 绝对默认值
+                    let detectedLang = '';
+
+                    // 优先从下拉菜单读取，否则从网页底层标签读取
+                    const activeLangNode = document.querySelector('a[role="menuitem"][aria-current="true"]');
+                    if (activeLangNode && activeLangNode.getAttribute('lang')) {
+                        detectedLang = activeLangNode.getAttribute('lang').toLowerCase().replace('-', '_');
+                    } else {
+                        detectedLang = document.documentElement.lang.toLowerCase().replace('-', '_');
+                    }
+
+                    // 3. 匹配语言字典
+                    if (messages[detectedLang]) {
+                        // 精确匹配 (例如 'zh_cn' 或 'de')
+                        currentLang = detectedLang;
+                    } else {
+                        // 模糊匹配：比如 Moodle 传了 'es_mx' (墨西哥西语)，我们就截取前面的 'es' 来匹配
+                        const shortLang = detectedLang.split('_')[0];
+                        if (messages[shortLang]) {
+                            currentLang = shortLang;
+                        }
+                    }
+
+                    // 4. 弹出对应语言的提示框
+                    alert(messages[currentLang]);
+                }
+            });
+        }
+    });
+</script>
+<!--start_ADDITIONAL_HTML_FOOTER-->

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.monash.flora_backend.dao.mapper.MdlQuizMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.monash.flora_backend.dao.entity.MdlQuiz">
+        <id column="id" property="id" />
+        <result column="course" property="course" />
+        <result column="name" property="name" />
+        <result column="intro" property="intro" />
+        <result column="introformat" property="introformat" />
+        <result column="timeopen" property="timeopen" />
+        <result column="timeclose" property="timeclose" />
+        <result column="timelimit" property="timelimit" />
+        <result column="overduehandling" property="overduehandling" />
+        <result column="graceperiod" property="graceperiod" />
+        <result column="preferredbehaviour" property="preferredbehaviour" />
+        <result column="canredoquestions" property="canredoquestions" />
+        <result column="attempts" property="attempts" />
+        <result column="attemptonlast" property="attemptonlast" />
+        <result column="grademethod" property="grademethod" />
+        <result column="decimalpoints" property="decimalpoints" />
+        <result column="questiondecimalpoints" property="questiondecimalpoints" />
+        <result column="reviewattempt" property="reviewattempt" />
+        <result column="reviewcorrectness" property="reviewcorrectness" />
+        <result column="reviewmarks" property="reviewmarks" />
+        <result column="reviewspecificfeedback" property="reviewspecificfeedback" />
+        <result column="reviewgeneralfeedback" property="reviewgeneralfeedback" />
+        <result column="reviewrightanswer" property="reviewrightanswer" />
+        <result column="reviewoverallfeedback" property="reviewoverallfeedback" />
+        <result column="questionsperpage" property="questionsperpage" />
+        <result column="navmethod" property="navmethod" />
+        <result column="shuffleanswers" property="shuffleanswers" />
+        <result column="sumgrades" property="sumgrades" />
+        <result column="grade" property="grade" />
+        <result column="timecreated" property="timecreated" />
+        <result column="timemodified" property="timemodified" />
+        <result column="password" property="password" />
+        <result column="subnet" property="subnet" />
+        <result column="browsersecurity" property="browsersecurity" />
+        <result column="delay1" property="delay1" />
+        <result column="delay2" property="delay2" />
+        <result column="showuserpicture" property="showuserpicture" />
+        <result column="showblocks" property="showblocks" />
+        <result column="completionattemptsexhausted" property="completionattemptsexhausted" />
+        <result column="completionminattempts" property="completionminattempts" />
+        <result column="allowofflineattempts" property="allowofflineattempts" />
+    </resultMap>
+</mapper>

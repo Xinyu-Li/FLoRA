@@ -1,0 +1,38 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#chatbox {
+    height: 500px;
+    overflow-y: auto;
+    background-color: #f8f9fa;
+}
+
+.message {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.user-message .avatar {
+    content: url('/img/img.jpg');
+}
+
+.bot-message .avatar {
+    content: url('/img/chatgpt.svg');
+}
+
+.message-text {
+    font-weight: normal;
+}
+
+.bot-message .message-text {
+    font-style: italic;
+}

@@ -1,0 +1,23 @@
+.student-list-div {
+  /* width: 300px;
+  height: 80px;
+  border: 1px solid;
+  background: darkgray; */
+  display: grid;
+  grid-template-columns: 1fr;
+  row-gap: 12px;
+  overflow-y: auto;
+}
+
+.chat-history {
+  margin-top: 10px;
+  /* width: 300px;
+  height: 150px;
+  border: 1px solid; */
+  background: lightgray;
+  overflow-y: auto;
+}
+
+.user-id-btn {
+  font: normal
+}

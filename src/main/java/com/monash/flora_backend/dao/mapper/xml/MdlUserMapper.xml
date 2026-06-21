@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.monash.flora_backend.dao.mapper.MdlUserMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.monash.flora_backend.dao.entity.MdlUser">
+        <id column="id" property="id" />
+        <result column="auth" property="auth" />
+        <result column="confirmed" property="confirmed" />
+        <result column="policyagreed" property="policyagreed" />
+        <result column="deleted" property="deleted" />
+        <result column="suspended" property="suspended" />
+        <result column="mnethostid" property="mnethostid" />
+        <result column="username" property="username" />
+        <result column="password" property="password" />
+        <result column="idnumber" property="idnumber" />
+        <result column="firstname" property="firstname" />
+        <result column="lastname" property="lastname" />
+        <result column="email" property="email" />
+        <result column="emailstop" property="emailstop" />
+        <result column="phone1" property="phone1" />
+        <result column="phone2" property="phone2" />
+        <result column="institution" property="institution" />
+        <result column="department" property="department" />
+        <result column="address" property="address" />
+        <result column="city" property="city" />
+        <result column="country" property="country" />
+        <result column="lang" property="lang" />
+        <result column="calendartype" property="calendartype" />
+        <result column="theme" property="theme" />
+        <result column="timezone" property="timezone" />
+        <result column="firstaccess" property="firstaccess" />
+        <result column="lastaccess" property="lastaccess" />
+        <result column="lastlogin" property="lastlogin" />
+        <result column="currentlogin" property="currentlogin" />
+        <result column="lastip" property="lastip" />
+        <result column="secret" property="secret" />
+        <result column="picture" property="picture" />
+        <result column="description" property="description" />
+        <result column="descriptionformat" property="descriptionformat" />
+        <result column="mailformat" property="mailformat" />
+        <result column="maildigest" property="maildigest" />
+        <result column="maildisplay" property="maildisplay" />
+        <result column="autosubscribe" property="autosubscribe" />
+        <result column="trackforums" property="trackforums" />
+        <result column="timecreated" property="timecreated" />
+        <result column="timemodified" property="timemodified" />
+        <result column="trustbitmask" property="trustbitmask" />
+        <result column="imagealt" property="imagealt" />
+        <result column="lastnamephonetic" property="lastnamephonetic" />
+        <result column="firstnamephonetic" property="firstnamephonetic" />
+        <result column="middlename" property="middlename" />
+        <result column="alternatename" property="alternatename" />
+        <result column="moodlenetprofile" property="moodlenetprofile" />
+    </resultMap>
+
+    <select id="selectCustomResult" resultType="com.monash.flora_backend.controller.vo.MdlUserEnrolCourseIdVO">
+        select a.id, username, email, a.timecreated, courseid
+        from mdl_user a join mdl_user_enrolments b join mdl_enrol c
+        where a.id=b.userid and b.enrolid=c.id;
+    </select>
+</mapper>

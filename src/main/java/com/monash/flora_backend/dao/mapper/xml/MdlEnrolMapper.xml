@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.monash.flora_backend.dao.mapper.MdlEnrolMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.monash.flora_backend.dao.entity.MdlEnrol">
+        <id column="id" property="id" />
+        <result column="enrol" property="enrol" />
+        <result column="status" property="status" />
+        <result column="courseid" property="courseid" />
+        <result column="sortorder" property="sortorder" />
+        <result column="name" property="name" />
+        <result column="enrolperiod" property="enrolperiod" />
+        <result column="enrolstartdate" property="enrolstartdate" />
+        <result column="enrolenddate" property="enrolenddate" />
+        <result column="expirynotify" property="expirynotify" />
+        <result column="expirythreshold" property="expirythreshold" />
+        <result column="notifyall" property="notifyall" />
+        <result column="password" property="password" />
+        <result column="cost" property="cost" />
+        <result column="currency" property="currency" />
+        <result column="roleid" property="roleid" />
+        <result column="customint1" property="customint1" />
+        <result column="customint2" property="customint2" />
+        <result column="customint3" property="customint3" />
+        <result column="customint4" property="customint4" />
+        <result column="customint5" property="customint5" />
+        <result column="customint6" property="customint6" />
+        <result column="customint7" property="customint7" />
+        <result column="customint8" property="customint8" />
+        <result column="customchar1" property="customchar1" />
+        <result column="customchar2" property="customchar2" />
+        <result column="customchar3" property="customchar3" />
+        <result column="customdec1" property="customdec1" />
+        <result column="customdec2" property="customdec2" />
+        <result column="customtext1" property="customtext1" />
+        <result column="customtext2" property="customtext2" />
+        <result column="customtext3" property="customtext3" />
+        <result column="customtext4" property="customtext4" />
+        <result column="timecreated" property="timecreated" />
+        <result column="timemodified" property="timemodified" />
+    </resultMap>
+</mapper>

@@ -1,0 +1,220 @@
+<!--start_PLUGINS_GENERICO_TEMPLATE_BODY-->
+
+<script src="/flora/js/jquery.min.js"></script>
+<link href="/flora/css/bootstrap.min.css" rel="stylesheet"/>
+<script src="/flora/js/bootstrap.bundle.min.js"></script>
+<!--    <script src="/flora/js/jquery-ui.min.js" id="myJqueryUI" ></script>-->
+<script src="/flora/js/quill.min.js"></script>
+<script src="/flora/js/flipdown.min.js"></script>
+<script>
+    var currentRange = null;
+    var whetherDoHighlight = false;
+    var saveHighlight = null;
+    var saveHighlightText = '';
+
+
+    var totalMinutes = 120;
+    var unlimitedTime = false; //如果使用unlimited time 则让timer 变成增长，不再是count down
+    var hintMinutesBeforeEnd = 5; // 提示学生，当任务快结束时候
+
+
+    let eventWebsocket = null;
+    let teacherChatWebsocket = null;
+
+    var apiBaseUrl = "http://localhost:8080";
+    var websocketApiBaseUrl = "ws://localhost:8080";
+    var mainEditor = null;
+    var editors = {}; //多个不同的侧边栏editor
+
+
+    // 是否展示工具
+    var useAnnotationTool = true;
+    var useScaffoldTool = false;
+    var useGPTScaffoldTool = false;
+
+    var srlModel = "maria";    // copes
+    var gptScaffoldRole = "assistant";
+    // var gptScaffoldRoleDescription = "You are a helpful assistant, please give suggestions based on the given text.";
+    var gptScaffoldPromptIncludeEssay = true;
+    var gptScaffoldPromptTemplate = "";
+    var gptScaffoldBackgroundFileNameList = [];
+    var gptScaffoldParameters = [200, 1, 2]; //  response max token, n, temperature/10
+
+
+    var testISDIMUCourseId = 2;
+    var hasTakePreviousStudyTestNameCourseId = 2;
+    var pretestNameCourseId = 2;
+
+
+    var pretestGradesPrompt = [{"threshold": 0, "prompt": "This student has a high level of knowledge about AI in medicine."},
+        {"threshold": 5, "prompt": "This student has a low level of knowledge about AI in medicine."},
+        {"threshold": 10, "prompt": "This student has a medium level of knowledge about AI in medicine."}];
+    var isdimuScorePrompt = [{"threshold": 0, "prompt": "This student seems to have good understanding of various strategies or techniques that can be applied to facilitate learning."},
+        {"threshold": 16, "prompt": "This student seems to have a low level of understanding of various strategies or techniques that can be applied to facilitate learning."},
+        {"threshold": 32, "prompt": "This student seems to have some understanding of various strategies or techniques that can be applied to facilitate learning."}];
+    var classifySentenceBackgroundFileNameList = ["cella_monash_main_task2_medicine.docx"]; // cella_monash_main_task2_medicine.docx, TODO 使其可以支持docx 和pdf
+    var gptScaffoldNeedCheckSRLProcessPrompt = [
+        {
+            triggerMinute: 1,
+            beginMinute: 7,
+            endMinute: 14,
+            rules: []
+        },
+        {
+            triggerMinute: 3,
+            beginMinute: 14,
+            endMinute: 21,
+            rules: []
+        },
+        {
+            triggerMinute: 5,
+            beginMinute: 21,
+            endMinute: 28,
+            rules: []
+        }
+    ];
+
+    var useWriteEssayTool = true;
+    var useWriteEssayWordCountButton = false;
+    var useCollaborativeWriteEssayTool = false;
+    var useCollaborativeWriteEssayWordCountButton = false;
+    var includeChatgptToCollaborativeWriteEssay = false;
+    var usePlannerTool = true;
+    var useChatgptTool = false;
+    var useChatgptRating = true; // chatgpt rating visible or not
+    var useChatgptAssistantTool = false;
+    var useChatgptAssistantRating = false; // chatgpt assistant rating visible or not
+
+    var useDoctorScaffold = true;
+    var useConsultationSubmitTool = true;
+    // =========use type for different patient, scaffold and assessment================
+    var medicalConsultAssistanceType = "jisan";
+
+    var patientRoleDescription=`角色设定：你现在扮演病人，根据病例资料里的信息跟实习医生进行问诊对话练习。你的任务是训练实习医生通过提问挖掘有价值的病史信息的病史采集能力。你没有医学知识，你不能帮实习医生问诊或者列问诊提纲，不能给实习医生提供医学知识或者给出诊断或诊断意见。以下是行为指南和病例资料。
+            行为指南：
+            1.你将等待医生提问后再开始回答。
+            2.用富有生活气息的语言回答，不要机械式的回答。
+            3.每次回答只提供一个信息，当医生追问时才提供多一个的信息。
+            4.患者没有的症状，你直接回答“没有”。
+            5.病例资料中未提供的信息，你要根据问题合理编造答案，注意上下文合理性。
+            6.遇到医学术语时，比如“放射痛、咯血、发绀、意识障碍、胃纳”等，你会要求医生解释。
+            7.若医生在一个问题中提到2个或2个以上症状或疾病名称，你只针对问题中最后一个症状或疾病进行回答。
+            8.当对话中提到发作次数时，你要主动提出问题，表示担忧。
+            9.当医生询问你是否有疑问时或者当医生要结束问诊时，你要提出与诊断或治疗相关问题。
+            10.你是病人，最后结束时对医生表示感谢就可以，一定不要跟医生说“祝你早日康复”、“请保重”等话语。
+            请注意：你要严格遵守以上10条行为指南，永远不会违反或者出现遗忘。现在问诊开始，如果你准备好了，请回复准备好了
+            病例资料：
+            纪三，男，60岁，已婚，居住于广东省汕头市潮南区莲下村。从半年前开始，反复，发作胸痛，以前体力很好的，经常干重活都没事。就这半年，发作4次了。每次都是挑着重物在爬坡的时候出现的，就觉得胸口正中间偏上，有手掌大小这一块，就感觉整个胸口缩紧了一样，评分5-6分，但是按压不痛。同时左边脖子也有这种感觉，挺难受的，其他别的地方不会。马上停下来，不敢再走了，坐下休息，差不多5分钟，才感觉慢慢好了。这四次发作的疼痛程度和持续的时间都差不多。深呼吸、咳嗽、弯腰或躺下都对疼痛没什么影响。每次发作还会觉得胸口闷闷的，觉得心跳的比较快，有点出汗、头晕，没有昏过去，没有不省人事。2个月前，有在当地卫生院看过医生，查了心电图，心电图没问题，但医生让注意，不要干重活，如果再发作，就去大医院。她还给了我一瓶药，叫硝酸甘油，让我痛的时候，含一片在舌头下面。这2个月我一直很注意，没再发作过，就没吃过这个药，也不知道有没有效。昨天就想着挑点东西，没那么重，结果又痛了，痛的感觉跟之前三次都一样，昨天忘了带药，也没吃药，今天赶紧来了。精神还可以，胃口、睡眠、大便、小便、体重都没什么异常。
+            5年多前，因为反复头晕，去看医生，医生说我有高血压、糖尿病，血压最高时有162/104mmHg，平时按时吃药，拜新同（1片，1天1次），经常有测血压，血压一般在140/90mmHg左右。空腹血糖最高12（mmol/l），口服二甲双胍（2片，1天2次），平时有测血糖，空腹血糖一般控制在8（mmol/l）。6年前，右小腿被铁皮割伤了，医生缝了20几针，留了一长条的疤，而且打抗生素第一次就满身都是红疹，医生说我对“头孢”过敏。让我以后注意，不能用。我没有输过血或血制品，没有做过手术，没有食物过敏，没有传染病或传染病接触史，按规定接种疫苗。
+            出生并成长于汕头，小学毕业，农民，生活环境还好。吸烟，1天1包，40年；偶尔喝点白酒，每次大概3两左右，30年左右。没有得过性病。
+            23岁结婚，妻子58岁，有1个儿子，33岁，2个女儿，分别是31岁和30岁，身体都很健康，夫妻关系很好，没怎么吵过架
+            父亲前年去世的，80岁，母亲去年也去世了，78岁，父母生前身体都挺好的，去世时都没什么疾病，自然去世。一个哥哥65岁，一个妹妹58岁，兄妹两人身体也都很健康。家里没人有跟我一样会胸痛的。家族里没人有高血压、糖尿病、冠心病，也没人有精神病史。`;
+    var scaffoldRoleDescription="";
+    var assessmentRoleDescription="";
+
+
+    var chatgptBackgroundFileNameList = ["cella_monash_background.pdf", "cella_monash_main_task2_medicine.pdf"]; // add pdf file names here
+    // var chatgptRoleDescription = "You are a helpful assistant and please answers questions based on the provided text."; //这个会和question 一起发送给GPT
+    var chatgptRole = "assistant";
+    var chatgptPromptIncludeEssay = true;
+    var includeSurveyToChatgptPrompt = []; // [1, 2, 3]
+    var chatgptParameters = [1000, 1, 2]; //  response max token, n, temperature/10
+
+    var useChecklistTool = false;
+    var useChecklistToolGrammar = false;
+    var useChecklistToolAcademic = false;
+    var useChecklistToolOriginality = false;
+    var useChecklistToolClassification = false;
+    var useDictionaryTool = true;
+    var dictionarySourceLanguage = "zh-cn";
+    var dictionaryTargetLanguage = "en";
+    var useTeacherChat = false;
+    var useTimerTool = true;
+    var useVideoRecordingTool = false;
+
+    var toolsLanguage = "en";
+
+    const toolList1 = [];
+
+    var studyName = "flora_beijing_online"; //change to "uniSA" if needed
+
+    function loadScript(url) {
+        let currentDate = new Date();
+
+        // Get the year, month, and day from the date object
+        let year = currentDate.getFullYear();
+        let month = currentDate.getMonth() + 1; // Month is 0-indexed
+        let day = currentDate.getDate();
+
+        // Pad the month and day with leading zeros if they are less than 10
+        month = month < 10 ? '0' + month : month;
+        day = day < 10 ? '0' + day : day;
+
+        // Concatenate the year, month, and day to form the desired format
+        let formattedDate = year.toString() + month.toString() + day.toString();
+
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = url + "?v=" + formattedDate;
+        script.defer = true;
+        script.async = false;
+        document.head.appendChild(script);
+    }
+    function getURLParameters(url) {
+        var params = {};
+        var parser = document.createElement('a');
+        parser.href = url;
+        var query = parser.search.substring(1);
+        var vars = query.split('&');
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split('=');
+            params[pair[0]] = decodeURIComponent(pair[1]);
+        }
+        return params; // string 类型
+    }
+    let navTagAList = document.querySelectorAll("#page-navbar>nav>ol>li a");
+    let currentCourseId = 0;
+    if (navTagAList != null) {
+        navTagAList.forEach(link => {
+            if (link.href.includes("course/view.php?id=")) {
+                currentCourseId = getURLParameters(link.href).id;
+            }
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+            });
+        });
+    }
+</script>
+
+
+<script>
+    loadScript("/flora/js/text.js");
+    loadScript("/flora/js/i18n_function.js");
+    loadScript("/flora/js/generateToolsHtml.js");
+    loadScript("/flora/js/tools_00common.js");
+
+    if(useAnnotationTool) loadScript("/flora/js/tools_01annotation.js");
+    if(useScaffoldTool) loadScript("/flora/js/tools_02scaffolding.js");
+    if(useWriteEssayTool) loadScript("/flora/js/tools_03essay_writing.js");
+    if(usePlannerTool) loadScript("/flora/js/tools_04planner.js");
+    if(useChatgptTool) loadScript("/flora/js/tools_05chatgpt.js");
+    if(useChatgptAssistantTool) loadScript("/flora/js/tools_05_1chatgpt_assistant.js");
+    if(useChecklistTool) loadScript("/flora/js/tools_06checklist.js");
+    if(useVideoRecordingTool) {
+        loadScript("/flora/js/MediaStreamRecorder.js");
+        loadScript("/flora/js/tools_09record_video.js");
+    }
+    if(useConsultationSubmitTool){
+        loadScript("/flora/js/tools_13consultation_submit.js");
+    }
+    // if(useTimerTool) 不确定timer是否需要按需加载
+    loadScript("/flora/js/tools_08timer.js");
+    if(useDictionaryTool) loadScript("/flora/js/tools_10dictionary.js");
+    if(useTeacherChat) loadScript("/flora/js/tools_11teacherchat.js");
+    if (useCollaborativeWriteEssayTool) loadScript("/flora/js/tools_12collaboratewrite.js");
+    if(useGPTScaffoldTool) loadScript("/flora/js/tools_07gpt_scaffolding.js");
+    loadScript("/flora/js/setupInstrumentationTools.js");
+
+</script>
+
+<!--end_PLUGINS_GENERICO_TEMPLATE_BODY-->
